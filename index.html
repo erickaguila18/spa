@@ -335,6 +335,59 @@
     </div>
 </div>
 
+<!-- MODAL DE CARGA JSON -->
+<div id="json-upload-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 650px; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;">
+                <i class="fi fi-ss-folder-open"></i> Cargar Actividad
+            </h2>
+            <button onclick="window.closeJsonModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;">
+                <i class="fi fi-ss-cross"></i>
+            </button>
+        </div>
+        
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 15px; width: 100%;">
+            Puedes pegar directamente tu contenido en formato JSON o seleccionar el archivo <code>.json</code> validado.
+        </p>
+
+        <input type="file" id="json-file-input" accept=".json" style="margin-bottom: 15px; font-size: 0.9rem; width: 100%; border: 1px solid #E0E0E0; padding: 10px; border-radius: 8px; background: #FAFAFA; cursor: pointer;">
+        
+        <textarea id="json-textarea-input" rows="8" placeholder="Pega tu JSON aquí..." style="font-family: monospace; font-size: 0.85rem; width: 100%; resize: vertical; margin-bottom: 20px; box-sizing: border-box;"></textarea>
+        
+        <button id="btn-process-json" onclick="window.handleJsonSubmit()" style="width: 100%;">
+            <i class="fi fi-ss-check"></i> Cargar
+        </button>
+    </div>
+</div>
+
+<!-- NUEVO MODAL CONSTRUCTOR VISUAL MANUAL -->
+<div id="builder-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 800px; max-height: 90vh; overflow-y: auto; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 id="builder-title" style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;">
+                <i class="fi fi-ss-magic-wand"></i> Creador Manual
+            </h2>
+            <button onclick="window.closeBuilderModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;">
+                <i class="fi fi-ss-cross"></i>
+            </button>
+        </div>
+        <p id="builder-subtitle" style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 20px;">Agrega las preguntas o lecciones necesarias.</p>
+
+        <!-- Dynamic Form Area -->
+        <div id="builder-form-area" style="background: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+        </div>
+
+        <button class="btn-secondary" onclick="window.addBuilderItem()" style="width: 100%; margin-bottom: 20px;"><i class="fi fi-ss-add"></i> Agregar a la lista</button>
+
+        <h3 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px; font-size: 1.1rem; color: var(--primary-dark);">Elementos Agregados (<span id="builder-count">0</span>)</h3>
+        <div id="builder-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;">
+        </div>
+
+        <button id="btn-finish-build" class="btn-success" onclick="window.finishBuilding()" style="width: 100%;"><i class="fi fi-ss-check-circle"></i> Finalizar y Crear Actividad</button>
+    </div>
+</div>
+
 <div class="container">
     <div id="blocked-view" class="card status-container hidden" style="border: 2px solid var(--danger); background-color: var(--danger-light);">
         <i class="fi fi-ss-ban modal-icon" style="color: var(--danger);"></i>
@@ -565,8 +618,10 @@
             <input type="datetime-local" id="exam-expiration">
         </div>
 
-        <input type="file" id="json-file" accept=".json" class="hidden">
-        <label for="json-file" class="btn-upload" id="upload-trigger"><i class="fi fi-ss-upload"></i> Cargar Archivo JSON</label>
+        <div style="display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap;">
+            <button class="btn-upload" id="upload-trigger" style="flex: 1;"><i class="fi fi-ss-upload"></i> Cargar JSON</button>
+            <button class="btn-success" id="builder-trigger" onclick="window.openBuilderModal()" style="flex: 1; background-color: var(--success);"><i class="fi fi-ss-magic-wand"></i> Crear Manualmente</button>
+        </div>
     </div>
 
     <div id="instructor-grades" class="card hidden">
@@ -580,7 +635,6 @@
             </div>
         </div>
         
-        <!-- AQUI ESTÁ EL BOTÓN DE EXPORTAR A PDF -->
         <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
             <button onclick="window.loadGrades(window.currentExamId)" class="btn-sm" style="width: auto;"><i class="fi fi-ss-refresh"></i> Actualizar</button>
             <button class="btn-success btn-sm" onclick="window.gradeAllPendings()" style="width: auto;"><i class="fi fi-ss-check-clipboard"></i> Calificar Pendientes</button>
@@ -622,6 +676,22 @@
         </div>
 
         <div id="analytics-container"></div>
+
+        <h3 style="margin-top: 30px; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-users"></i> Gestor de Participantes</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary);">Lista de alumnos que han contestado. Puedes eliminar su registro individualmente para reiniciar su intento.</p>
+        <div class="table-responsive">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">#</th>
+                        <th>Alumno</th>
+                        <th>Generación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="survey-participants-body"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="exam-view" class="card hidden">
@@ -722,6 +792,7 @@
     window.currentCourseModules = [];
     window.currentModuleIndex = 0;
     window.uploadType = 'exam';
+    window.builderItems = []; // Nuevo array para el constructor
     
     const urlParams = new URLSearchParams(window.location.search);
     window.currentExamId = urlParams.get('examId'); 
@@ -921,7 +992,7 @@
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            const modals = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal'];
+            const modals = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal'];
             modals.forEach(id => {
                 const el = document.getElementById(id);
                 if (el && !el.classList.contains('hidden')) {
@@ -952,7 +1023,7 @@
     function hideAll() {
         ['loading-screen', 'role-selector', 'login-view', 'student-login-view', 'student-portal', 
          'instructor-dashboard', 'instructor-upload', 'instructor-grades', 'exam-view', 'course-view',
-         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal'].forEach(id => {
+         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal'].forEach(id => {
              const el = document.getElementById(id);
              if (el) el.classList.add('hidden');
          });
@@ -1078,6 +1149,378 @@
         window.setLoading('std-login-btn', false, '<i class="fi fi-ss-user-check"></i> Entrar a mi Aula');
     };
 
+    window.closeJsonModal = () => {
+        document.getElementById('json-upload-modal').classList.add('hidden');
+        document.getElementById('json-file-input').value = "";
+        document.getElementById('json-textarea-input').value = "";
+    };
+
+    window.handleJsonSubmit = async () => {
+        const fileInput = document.getElementById('json-file-input');
+        const textArea = document.getElementById('json-textarea-input');
+        let rawData = null;
+
+        window.setLoading('btn-process-json', true);
+
+        try {
+            if (textArea.value.trim() !== "") {
+                rawData = JSON.parse(textArea.value.trim());
+            } else if (fileInput.files.length > 0) {
+                const text = await fileInput.files[0].text(); 
+                rawData = JSON.parse(text);
+            } else {
+                window.setLoading('btn-process-json', false, '<i class="fi fi-ss-check"></i> Cargar');
+                return window.CustomDialog.alert("Por favor, selecciona un archivo o pega el código JSON.");
+            }
+
+            const newExamId = 'EXM-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            let dbStruct, masterKey;
+
+            if(window.uploadType === 'survey') {
+                const safeData = rawData.map(q => ({ q: q.q, type: q.type || 'multiple', opts: q.opts || [] }));
+                dbStruct = {
+                    instructorId: currentUser.uid,
+                    config: {
+                        name: document.getElementById('exam-name').value.trim(), 
+                        gen: document.getElementById('exam-gen').value.trim().toUpperCase() || "GLOBAL",
+                        expiration: document.getElementById('exam-expiration').value, 
+                        type: 'survey'
+                    }, 
+                    questions: safeData, 
+                    timestamp: new Date().toISOString()
+                };
+                masterKey = { instructorId: currentUser.uid, answers: [] }; 
+            } else if (window.uploadType === 'course') {
+                const safeData = rawData.map(m => ({ title: m.title || "Lección", video: m.video || "", attachments: m.attachments || [] }));
+                dbStruct = {
+                    instructorId: currentUser.uid,
+                    config: {
+                        name: document.getElementById('exam-name').value.trim(), 
+                        gens_string: document.getElementById('exam-gen').value.trim().toUpperCase(),
+                        expiration: document.getElementById('exam-expiration').value, 
+                        type: 'course'
+                    }, 
+                    modules: safeData, 
+                    timestamp: new Date().toISOString()
+                };
+                masterKey = { instructorId: currentUser.uid, answers: [] }; 
+            } else {
+                const safeData = rawData.map(q => ({ q: q.q, opts: q.opts, topic: q.topic || "Sin tema" }));
+                const qToShow = parseInt(document.getElementById('exam-q-to-show').value) || safeData.length;
+                const securityLvl = document.getElementById('exam-security').value;
+
+                dbStruct = {
+                    instructorId: currentUser.uid,
+                    config: {
+                        name: document.getElementById('exam-name').value.trim(), 
+                        gen: document.getElementById('exam-gen').value.trim().toUpperCase(),
+                        minScore: parseInt(document.getElementById('exam-min-score').value.trim()), 
+                        duration: parseInt(document.getElementById('exam-duration').value.trim()),
+                        expiration: document.getElementById('exam-expiration').value, 
+                        totalQuestions: safeData.length, 
+                        questionsToShow: qToShow,
+                        securityLevel: securityLvl,
+                        type: 'exam'
+                    }, 
+                    questions: safeData, 
+                    timestamp: new Date().toISOString()
+                };
+                masterKey = { instructorId: currentUser.uid, answers: rawData.map(q => q.ans) };
+            }
+
+            await setDoc(doc(db, "exams", newExamId), dbStruct);
+            await setDoc(doc(db, "exam_keys", newExamId), masterKey);
+            
+            let strTipo = window.uploadType === 'survey' ? 'Encuesta' : (window.uploadType === 'course' ? 'Curso' : 'Evaluación');
+            
+            window.closeJsonModal();
+            window.setLoading('btn-process-json', false, '<i class="fi fi-ss-check"></i> Cargar');
+            await window.CustomDialog.alert(`¡${strTipo} Creado(a) con Éxito!`, "Éxito");
+            window.backToDashboard();
+
+        } catch (err) { 
+            console.error("Error validando JSON:", err);
+            window.setLoading('btn-process-json', false, '<i class="fi fi-ss-check"></i> Cargar');
+            await window.CustomDialog.alert("Error al procesar el JSON. Verifica que la estructura sea correcta y no falten comillas o comas.", "Error de Formato"); 
+        }
+    };
+
+    // FUNCIONES DEL CONSTRUCTOR VISUAL
+    window.openBuilderModal = async (e) => {
+        if(e) e.preventDefault();
+        const isSurvey = window.uploadType === 'survey';
+        const nameValid = document.getElementById('exam-name').value.trim();
+        const genValid = document.getElementById('exam-gen').value.trim();
+        const qValid = (isSurvey || window.uploadType === 'course') ? true : document.getElementById('exam-q-to-show').value;
+
+        if(!nameValid || !genValid || !qValid) { 
+            return await window.CustomDialog.alert("Llena todos los campos obligatorios antes de configurar la actividad."); 
+        }
+
+        window.builderItems = [];
+        window.renderBuilderForm();
+        window.renderBuilderList();
+        document.getElementById('builder-modal').classList.remove('hidden');
+    };
+
+    window.closeBuilderModal = () => {
+        document.getElementById('builder-modal').classList.add('hidden');
+    };
+
+    window.renderBuilderForm = () => {
+        const formArea = document.getElementById('builder-form-area');
+        if (window.uploadType === 'exam') {
+            document.getElementById('builder-subtitle').innerText = "Agrega mínimo 10 preguntas para tu evaluación.";
+            formArea.innerHTML = `
+                <div class="form-group"><label>Pregunta</label><input type="text" id="b-exam-q" placeholder="Ej. ¿Qué es la RCP?"></div>
+                <div class="grid-layout" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group"><label><input type="radio" name="b-exam-correct" value="0" checked style="width:auto; margin-right:5px; transform:scale(1.2);"> Opción A (Correcta)</label><input type="text" id="b-exam-opt0"></div>
+                    <div class="form-group"><label><input type="radio" name="b-exam-correct" value="1" style="width:auto; margin-right:5px; transform:scale(1.2);"> Opción B</label><input type="text" id="b-exam-opt1"></div>
+                    <div class="form-group"><label><input type="radio" name="b-exam-correct" value="2" style="width:auto; margin-right:5px; transform:scale(1.2);"> Opción C</label><input type="text" id="b-exam-opt2"></div>
+                    <div class="form-group"><label><input type="radio" name="b-exam-correct" value="3" style="width:auto; margin-right:5px; transform:scale(1.2);"> Opción D</label><input type="text" id="b-exam-opt3"></div>
+                </div>
+                <div class="form-group" style="margin-top:10px;"><label>Tema / Etiqueta</label><input type="text" id="b-exam-topic" placeholder="Ej. Soporte Vital"></div>
+            `;
+        } else if (window.uploadType === 'survey') {
+            document.getElementById('builder-subtitle').innerText = "Agrega mínimo 5 preguntas para tu encuesta.";
+            formArea.innerHTML = `
+                <div class="form-group"><label>Pregunta</label><input type="text" id="b-survey-q" placeholder="Ej. ¿Cómo calificarías el curso?"></div>
+                <div class="form-group">
+                    <label>Tipo de Pregunta</label>
+                    <select id="b-survey-type" onchange="window.toggleSurveyOpts()">
+                        <option value="open">Abierta (Texto)</option>
+                        <option value="scale">Escala Numérica (1 al 10)</option>
+                        <option value="multiple">Opción Múltiple</option>
+                    </select>
+                </div>
+                <div id="b-survey-opts-container" class="hidden grid-layout" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group"><label>Opción 1</label><input type="text" id="b-surv-opt0"></div>
+                    <div class="form-group"><label>Opción 2</label><input type="text" id="b-surv-opt1"></div>
+                    <div class="form-group"><label>Opción 3</label><input type="text" id="b-surv-opt2"></div>
+                    <div class="form-group"><label>Opción 4</label><input type="text" id="b-surv-opt3"></div>
+                </div>
+            `;
+        } else if (window.uploadType === 'course') {
+            document.getElementById('builder-subtitle').innerText = "Agrega mínimo 1 módulo (debe incluir 1 video y 1 documento de presentación).";
+            formArea.innerHTML = `
+                <div class="form-group"><label>Título del Módulo / Lección</label><input type="text" id="b-course-title" placeholder="Ej. Módulo 1: Introducción"></div>
+                <div class="form-group"><label>URL del Video (YouTube)</label><input type="text" id="b-course-video" placeholder="Ej. https://youtube.com/watch?v=..."></div>
+                <div class="form-group" style="background:#E3F2FD; padding:15px; border-radius:8px;">
+                    <label style="color:var(--primary-dark);">Material de Apoyo (Presentación)</label>
+                    <input type="text" id="b-course-att-name" placeholder="Nombre del archivo (Ej. Diapositivas M1)" style="margin-bottom:10px;">
+                    <input type="text" id="b-course-att-url" placeholder="URL del archivo (Ej. Enlace de Google Drive)">
+                </div>
+            `;
+        }
+    };
+
+    window.toggleSurveyOpts = () => {
+        const type = document.getElementById('b-survey-type').value;
+        const container = document.getElementById('b-survey-opts-container');
+        if (type === 'multiple') container.classList.remove('hidden');
+        else container.classList.add('hidden');
+    };
+
+    window.addBuilderItem = () => {
+        if (window.uploadType === 'exam') {
+            const q = document.getElementById('b-exam-q').value.trim();
+            const o0 = document.getElementById('b-exam-opt0').value.trim();
+            const o1 = document.getElementById('b-exam-opt1').value.trim();
+            const o2 = document.getElementById('b-exam-opt2').value.trim();
+            const o3 = document.getElementById('b-exam-opt3').value.trim();
+            const topic = document.getElementById('b-exam-topic').value.trim();
+            const ansStr = document.querySelector('input[name="b-exam-correct"]:checked');
+            
+            if(!q || !o0 || !o1 || !o2 || !o3 || !topic || !ansStr) return window.CustomDialog.alert("Llena todos los campos para agregar la pregunta.");
+            
+            window.builderItems.push({
+                q: q,
+                opts: [o0, o1, o2, o3],
+                ans: parseInt(ansStr.value),
+                topic: topic
+            });
+
+            document.getElementById('b-exam-q').value = "";
+            document.getElementById('b-exam-opt0').value = "";
+            document.getElementById('b-exam-opt1').value = "";
+            document.getElementById('b-exam-opt2').value = "";
+            document.getElementById('b-exam-opt3').value = "";
+            document.getElementById('b-exam-topic').value = "";
+            document.querySelector('input[name="b-exam-correct"][value="0"]').checked = true;
+
+        } else if (window.uploadType === 'survey') {
+            const q = document.getElementById('b-survey-q').value.trim();
+            const type = document.getElementById('b-survey-type').value;
+            if(!q) return window.CustomDialog.alert("Escribe la pregunta.");
+
+            let opts = [];
+            if(type === 'multiple') {
+                const o0 = document.getElementById('b-surv-opt0').value.trim();
+                const o1 = document.getElementById('b-surv-opt1').value.trim();
+                const o2 = document.getElementById('b-surv-opt2').value.trim();
+                const o3 = document.getElementById('b-surv-opt3').value.trim();
+                if(!o0 || !o1) return window.CustomDialog.alert("Debes llenar al menos las opciones 1 y 2.");
+                opts.push(o0); opts.push(o1);
+                if(o2) opts.push(o2);
+                if(o3) opts.push(o3);
+            }
+
+            window.builderItems.push({
+                q: q,
+                type: type,
+                opts: opts
+            });
+
+            document.getElementById('b-survey-q').value = "";
+            if(type === 'multiple') {
+                document.getElementById('b-surv-opt0').value = "";
+                document.getElementById('b-surv-opt1').value = "";
+                document.getElementById('b-surv-opt2').value = "";
+                document.getElementById('b-surv-opt3').value = "";
+            }
+
+        } else if (window.uploadType === 'course') {
+            const title = document.getElementById('b-course-title').value.trim();
+            const video = document.getElementById('b-course-video').value.trim();
+            const attName = document.getElementById('b-course-att-name').value.trim();
+            const attUrl = document.getElementById('b-course-att-url').value.trim();
+
+            if(!title || !video || !attName || !attUrl) return window.CustomDialog.alert("Llena todos los campos (título, video, nombre de presentación y URL).");
+
+            window.builderItems.push({
+                title: title,
+                video: video,
+                attachments: [{ name: attName, url: attUrl }]
+            });
+
+            document.getElementById('b-course-title').value = "";
+            document.getElementById('b-course-video').value = "";
+            document.getElementById('b-course-att-name').value = "";
+            document.getElementById('b-course-att-url').value = "";
+        }
+
+        window.renderBuilderList();
+    };
+
+    window.removeBuilderItem = (index) => {
+        window.builderItems.splice(index, 1);
+        window.renderBuilderList();
+    };
+
+    window.renderBuilderList = () => {
+        const listArea = document.getElementById('builder-list');
+        document.getElementById('builder-count').innerText = window.builderItems.length;
+        listArea.innerHTML = "";
+
+        if (window.builderItems.length === 0) {
+            listArea.innerHTML = "<p style='color:var(--text-secondary); text-align:center;'>Aún no has agregado elementos.</p>";
+            return;
+        }
+
+        window.builderItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.style = "display: flex; justify-content: space-between; align-items: center; background: #FFF; padding: 10px; border: 1px solid #E0E0E0; border-radius: 8px; margin-bottom: 5px;";
+            
+            let text = "";
+            if (window.uploadType === 'exam') text = `<b>P${index+1}:</b> ${item.q} <small>(${item.topic})</small>`;
+            else if (window.uploadType === 'survey') text = `<b>P${index+1}:</b> ${item.q} <small>(${item.type})</small>`;
+            else if (window.uploadType === 'course') text = `<b>M${index+1}:</b> ${item.title}`;
+
+            div.innerHTML = `
+                <span style="font-size: 0.9rem;">${text}</span>
+                <button onclick="window.removeBuilderItem(${index})" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:5px;"><i class="fi fi-ss-trash"></i></button>
+            `;
+            listArea.appendChild(div);
+        });
+    };
+
+    window.finishBuilding = async () => {
+        if (window.uploadType === 'exam' && window.builderItems.length < 10) {
+            return window.CustomDialog.alert(`Debes agregar al menos 10 preguntas. Llevas ${window.builderItems.length}.`);
+        }
+        if (window.uploadType === 'survey' && window.builderItems.length < 5) {
+            return window.CustomDialog.alert(`Debes agregar al menos 5 preguntas. Llevas ${window.builderItems.length}.`);
+        }
+        if (window.uploadType === 'course' && window.builderItems.length < 1) {
+            return window.CustomDialog.alert(`Debes agregar al menos 1 módulo con video y presentación.`);
+        }
+
+        const rawData = window.builderItems;
+        window.setLoading('btn-finish-build', true);
+
+        try {
+            const newExamId = 'EXM-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            let dbStruct, masterKey;
+
+            if(window.uploadType === 'survey') {
+                const safeData = rawData.map(q => ({ q: q.q, type: q.type || 'multiple', opts: q.opts || [] }));
+                dbStruct = {
+                    instructorId: currentUser.uid,
+                    config: {
+                        name: document.getElementById('exam-name').value.trim(), 
+                        gen: document.getElementById('exam-gen').value.trim().toUpperCase() || "GLOBAL",
+                        expiration: document.getElementById('exam-expiration').value, 
+                        type: 'survey'
+                    }, 
+                    questions: safeData, 
+                    timestamp: new Date().toISOString()
+                };
+                masterKey = { instructorId: currentUser.uid, answers: [] }; 
+            } else if (window.uploadType === 'course') {
+                const safeData = rawData.map(m => ({ title: m.title || "Lección", video: m.video || "", attachments: m.attachments || [] }));
+                dbStruct = {
+                    instructorId: currentUser.uid,
+                    config: {
+                        name: document.getElementById('exam-name').value.trim(), 
+                        gens_string: document.getElementById('exam-gen').value.trim().toUpperCase(),
+                        expiration: document.getElementById('exam-expiration').value, 
+                        type: 'course'
+                    }, 
+                    modules: safeData, 
+                    timestamp: new Date().toISOString()
+                };
+                masterKey = { instructorId: currentUser.uid, answers: [] }; 
+            } else {
+                const safeData = rawData.map(q => ({ q: q.q, opts: q.opts, topic: q.topic || "Sin tema" }));
+                const qToShow = parseInt(document.getElementById('exam-q-to-show').value) || safeData.length;
+                const securityLvl = document.getElementById('exam-security').value;
+
+                dbStruct = {
+                    instructorId: currentUser.uid,
+                    config: {
+                        name: document.getElementById('exam-name').value.trim(), 
+                        gen: document.getElementById('exam-gen').value.trim().toUpperCase(),
+                        minScore: parseInt(document.getElementById('exam-min-score').value.trim()), 
+                        duration: parseInt(document.getElementById('exam-duration').value.trim()),
+                        expiration: document.getElementById('exam-expiration').value, 
+                        totalQuestions: safeData.length, 
+                        questionsToShow: qToShow,
+                        securityLevel: securityLvl,
+                        type: 'exam'
+                    }, 
+                    questions: safeData, 
+                    timestamp: new Date().toISOString()
+                };
+                masterKey = { instructorId: currentUser.uid, answers: rawData.map(q => q.ans) };
+            }
+
+            await setDoc(doc(db, "exams", newExamId), dbStruct);
+            await setDoc(doc(db, "exam_keys", newExamId), masterKey);
+            
+            let strTipo = window.uploadType === 'survey' ? 'Encuesta' : (window.uploadType === 'course' ? 'Curso' : 'Evaluación');
+            
+            window.closeBuilderModal();
+            window.setLoading('btn-finish-build', false, '<i class="fi fi-ss-check-circle"></i> Finalizar y Crear Actividad');
+            await window.CustomDialog.alert(`¡${strTipo} Creado(a) Manualmente con Éxito!`, "Éxito");
+            window.backToDashboard();
+
+        } catch (err) { 
+            console.error("Error creando:", err);
+            window.setLoading('btn-finish-build', false, '<i class="fi fi-ss-check-circle"></i> Finalizar y Crear Actividad');
+            await window.CustomDialog.alert("Error al procesar los datos manuales.", "Error"); 
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
         const loginPwd = document.getElementById('login-pwd');
         if (loginPwd) { loginPwd.addEventListener('keypress', (e) => { if (e.key === 'Enter') window.loginInstructor(); }); }
@@ -1107,89 +1550,29 @@
         const uploadTriggerEl = document.getElementById('upload-trigger');
         if (uploadTriggerEl) {
             uploadTriggerEl.addEventListener('click', async (e) => {
+                e.preventDefault();
                 const isSurvey = window.uploadType === 'survey';
                 const nameValid = document.getElementById('exam-name').value.trim();
                 const genValid = document.getElementById('exam-gen').value.trim();
                 const qValid = (isSurvey || window.uploadType === 'course') ? true : document.getElementById('exam-q-to-show').value;
 
                 if(!nameValid || !genValid || !qValid) { 
-                    e.preventDefault(); 
-                    await window.CustomDialog.alert("Llena todos los campos obligatorios."); 
+                    return await window.CustomDialog.alert("Llena todos los campos obligatorios antes de configurar la actividad."); 
                 }
+                
+                document.getElementById('json-upload-modal').classList.remove('hidden');
             });
         }
 
-        const jsonFileEl = document.getElementById('json-file');
-        if (jsonFileEl) {
-            jsonFileEl.addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if(!file) return;
+        const jsonFileInput = document.getElementById("json-file-input");
+        if (jsonFileInput) {
+            jsonFileInput.addEventListener("change", function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
                 const reader = new FileReader();
-                reader.onload = async function(e) {
-                    try {
-                        const rawData = JSON.parse(e.target.result);
-                        const newExamId = 'EXM-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-                        let dbStruct, masterKey;
-
-                        if(window.uploadType === 'survey') {
-                            const safeData = rawData.map(q => ({ q: q.q, type: q.type || 'multiple', opts: q.opts || [] }));
-                            dbStruct = {
-                                instructorId: currentUser.uid,
-                                config: {
-                                    name: document.getElementById('exam-name').value.trim(), 
-                                    gen: document.getElementById('exam-gen').value.trim().toUpperCase() || "GLOBAL",
-                                    expiration: document.getElementById('exam-expiration').value, 
-                                    type: 'survey'
-                                }, 
-                                questions: safeData, 
-                                timestamp: new Date().toISOString()
-                            };
-                            masterKey = { instructorId: currentUser.uid, answers: [] }; 
-                        } else if (window.uploadType === 'course') {
-                            const safeData = rawData.map(m => ({ title: m.title || "Lección", video: m.video || "", attachments: m.attachments || [] }));
-                            dbStruct = {
-                                instructorId: currentUser.uid,
-                                config: {
-                                    name: document.getElementById('exam-name').value.trim(), 
-                                    gens_string: document.getElementById('exam-gen').value.trim().toUpperCase(),
-                                    expiration: document.getElementById('exam-expiration').value, 
-                                    type: 'course'
-                                }, 
-                                modules: safeData, 
-                                timestamp: new Date().toISOString()
-                            };
-                            masterKey = { instructorId: currentUser.uid, answers: [] }; 
-                        } else {
-                            const safeData = rawData.map(q => ({ q: q.q, opts: q.opts, topic: q.topic || "Sin tema" }));
-                            const qToShow = parseInt(document.getElementById('exam-q-to-show').value) || safeData.length;
-                            const securityLvl = document.getElementById('exam-security').value;
-
-                            dbStruct = {
-                                instructorId: currentUser.uid,
-                                config: {
-                                    name: document.getElementById('exam-name').value.trim(), 
-                                    gen: document.getElementById('exam-gen').value.trim().toUpperCase(),
-                                    minScore: parseInt(document.getElementById('exam-min-score').value.trim()), 
-                                    duration: parseInt(document.getElementById('exam-duration').value.trim()),
-                                    expiration: document.getElementById('exam-expiration').value, 
-                                    totalQuestions: safeData.length, 
-                                    questionsToShow: qToShow,
-                                    securityLevel: securityLvl,
-                                    type: 'exam'
-                                }, 
-                                questions: safeData, 
-                                timestamp: new Date().toISOString()
-                            };
-                            masterKey = { instructorId: currentUser.uid, answers: rawData.map(q => q.ans) };
-                        }
-
-                        await setDoc(doc(db, "exams", newExamId), dbStruct);
-                        await setDoc(doc(db, "exam_keys", newExamId), masterKey);
-                        
-                        let strTipo = window.uploadType === 'survey' ? 'Encuesta' : (window.uploadType === 'course' ? 'Curso' : 'Evaluación');
-                        await window.CustomDialog.alert(`¡${strTipo} Creado(a) con Éxito!`, "Éxito");
-                        window.backToDashboard();
-                    } catch (err) { await window.CustomDialog.alert("Error al procesar el JSON.", "Error"); }
+                reader.onload = function(evt) {
+                    document.getElementById("json-textarea-input").value = evt.target.result;
                 };
                 reader.readAsText(file);
             });
@@ -1667,7 +2050,6 @@
         document.getElementById('exam-min-score').value = "80";
         document.getElementById('exam-duration').value = "60";
         document.getElementById('exam-expiration').value = "";
-        document.getElementById('json-file').value = "";
 
         const titleEl = document.getElementById('upload-panel-title');
         const specificFields = document.getElementById('exam-specific-fields');
@@ -1675,6 +2057,9 @@
         const genContainer = document.getElementById('container-exam-gen');
         const genLabel = document.getElementById('label-exam-gen');
         const genHint = document.getElementById('hint-exam-gen');
+        
+        // Cambio de texto dinámico en el botón del constructor según actividad
+        const builderBtn = document.getElementById('builder-trigger');
 
         if(type === 'survey') {
             titleEl.innerHTML = '<i class="fi fi-ss-comment-alt" style="color:var(--primary);"></i> Configurar Nueva Encuesta';
@@ -1684,6 +2069,7 @@
             genLabel.innerHTML = '<i class="fi fi-ss-users-alt"></i> Código de Clase (Generación)';
             document.getElementById('exam-gen').placeholder = "Ej. G30, G31, GLOBAL";
             genHint.innerText = "Escribe GLOBAL para todos los alumnos, o especifica una generación.";
+            builderBtn.innerHTML = '<i class="fi fi-ss-magic-wand"></i> Crear Encuesta Manual';
         } else if (type === 'course') {
             titleEl.innerHTML = '<i class="fi fi-ss-e-learning" style="color:var(--primary);"></i> Configurar Nuevo Curso';
             specificFields.classList.add('hidden');
@@ -1692,6 +2078,7 @@
             genLabel.innerHTML = '<i class="fi fi-ss-users-alt"></i> Generaciones Destino';
             document.getElementById('exam-gen').placeholder = "Ej. G30, G31, GLOBAL";
             genHint.innerText = "Separa por comas las generaciones que podrán ver este curso, o usa GLOBAL.";
+            builderBtn.innerHTML = '<i class="fi fi-ss-magic-wand"></i> Crear Curso Manual';
         } else {
             titleEl.innerHTML = '<i class="fi fi-ss-file-edit"></i> Configurar Nuevo Examen';
             specificFields.classList.remove('hidden');
@@ -1700,6 +2087,7 @@
             genLabel.innerHTML = '<i class="fi fi-ss-key"></i> Código de Clase (Generación)';
             document.getElementById('exam-gen').placeholder = "Ej. G30-TEXCOCO";
             genHint.innerText = "Los alumnos necesitarán este código exacto para ver y entrar al examen.";
+            builderBtn.innerHTML = '<i class="fi fi-ss-magic-wand"></i> Crear Examen Manual';
         }
     };
 
@@ -1873,7 +2261,6 @@
         document.body.removeChild(link);
     };
 
-    // AQUI AGREGUÉ EL CÓDIGO PARA PDF DIRECTAMENTE
     window.exportToPDF = function() {
         if(!window.gradesList || window.gradesList.length === 0) return window.CustomDialog.alert("No hay datos para exportar.");
         
@@ -2045,7 +2432,10 @@
         document.getElementById('survey-share-link').innerText = shareUrl;
 
         const container = document.getElementById('analytics-container');
+        const pBody = document.getElementById('survey-participants-body');
+        
         container.innerHTML = "<p style='text-align:center;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Tabulando datos...</p>";
+        if(pBody) pBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando participantes...</td></tr>";
         
         try {
             const examSnap = await getDoc(doc(db, "exams", examId));
@@ -2054,11 +2444,13 @@
             const subQuery = await getDocs(query(collection(db, "submissions"), where("examId", "==", examId)));
             let submissions = [];
             subQuery.forEach(d => {
-                if(d.data().status === "COMPLETED") submissions.push(d.data());
+                if(d.data().status === "COMPLETED") submissions.push({ docId: d.id, ...d.data() });
             });
 
             if(submissions.length === 0) {
-                return container.innerHTML = "<p style='text-align:center; color:var(--text-secondary); padding: 40px;'>No hay respuestas registradas aún.</p>";
+                container.innerHTML = "<p style='text-align:center; color:var(--text-secondary); padding: 40px;'>No hay respuestas registradas aún.</p>";
+                if(pBody) pBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No hay entregas.</td></tr>";
+                return;
             }
 
             let html = `<p style="color:var(--primary-dark); font-weight:bold; margin-bottom:20px;">Total de participantes: ${submissions.length}</p>`;
@@ -2100,7 +2492,32 @@
                 html += `</div>`;
             });
             container.innerHTML = html;
+
+            if(pBody) {
+                let pHTML = "";
+                submissions.forEach((sub, i) => {
+                    pHTML += `<tr>
+                        <td style="text-align: center;"><b>${i+1}</b></td>
+                        <td>${sub.student.name}<br><small>${sub.student.email}</small></td>
+                        <td>${sub.student.gen || '--'}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn-danger btn-sm" title="Eliminar Registro" onclick="window.resetSurveyAttempt('${sub.docId}')"><i class="fi fi-ss-trash"></i> Reiniciar Intento</button>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+                pBody.innerHTML = pHTML;
+            }
+
         } catch (e) { container.innerHTML = "<p>Error al cargar analíticas.</p>"; }
+    };
+
+    window.resetSurveyAttempt = async (docId) => {
+        if(await window.CustomDialog.confirm("¿Seguro de eliminar esta respuesta? El alumno perderá su registro y podrá volver a realizar la encuesta.")) {
+            await deleteDoc(doc(db, "submissions", docId));
+            window.viewSurveyAnalytics(window.currentExamId); 
+        }
     };
 
     window.gradeSubmission = async (docId) => {
@@ -2399,8 +2816,7 @@
             if (!docSnap.exists()) {
                 document.getElementById('full-screen-loader').classList.add('hidden');
                 document.getElementById('loading-screen').classList.remove('hidden');
-                document.getElementById('loading-text').innerText = "Actividad no encontrada";
-                return;
+                return document.getElementById('loading-text').innerText = "Actividad no encontrada";
             }
             
             const data = docSnap.data();

@@ -54,7 +54,7 @@
         button, .btn-upload { background-color: var(--primary); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; text-transform: uppercase; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-sizing: border-box; text-decoration: none;}
         button:hover:not(:disabled), .btn-upload:hover:not(:disabled) { background-color: var(--primary-dark); }
         .btn-secondary { background-color: var(--text-secondary); }
-        .btn-warning { background-color: var(--warning); padding: 8px 15px; font-size: 0.85rem; }
+        .btn-warning { background-color: var(--warning); padding: 8px 15px; font-size: 0.85rem; color: white; }
         .btn-success { background-color: var(--success); padding: 8px 15px; font-size: 0.85rem; }
         .btn-danger { background-color: var(--danger); padding: 8px 15px; font-size: 0.85rem;}
         
@@ -327,12 +327,12 @@
 </div>
 
 <div id="severe-modal" class="modal-overlay hidden">
-    <div class="modal-content danger-top" style="background-color: #FFEBEE; border: 4px solid var(--danger);">
-        <i class="fi fi-ss-shield-exclamation modal-icon" style="color: var(--danger);"></i>
-        <h2 style="color: var(--danger); font-size: 1.8rem; font-weight: 900; justify-content: center; text-align:center;">¡INFRACCIÓN GRAVE!</h2>
-        <p id="severe-reason" style="font-size: 1.2rem; font-weight: bold; color: var(--danger); text-align: center; margin: 15px 0;"></p>
-        <p style="color: var(--text-main); text-align: center;">La actividad ha sido cancelada automáticamente y reportada al sistema.</p>
-        <button onclick="window.exitActivity()" style="background-color: var(--danger); width: 100%; margin-top: 20px;"><i class="fi fi-ss-sign-out-alt"></i> Salir</button>
+    <div class="modal-content" style="border-top: 8px solid var(--warning); background-color: var(--surface);">
+        <i class="fi fi-ss-shield-exclamation modal-icon" style="color: var(--warning);"></i>
+        <h2 style="color: var(--warning); font-size: 1.6rem; font-weight: bold; justify-content: center; text-align:center;">Aviso de Seguridad</h2>
+        <p id="severe-reason" style="font-size: 1.1rem; font-weight: 500; color: var(--text-main); text-align: center; margin: 15px 0;"></p>
+        <p style="color: var(--text-secondary); text-align: center; font-size: 0.9rem;">Por motivos de integridad académica, la actividad ha sido pausada y enviada a revisión de acuerdo con las reglas de seguridad.</p>
+        <button onclick="window.exitActivity()" style="background-color: var(--warning); width: 100%; margin-top: 20px; color: white;"><i class="fi fi-ss-sign-out-alt"></i> Salir</button>
     </div>
 </div>
 
@@ -388,7 +388,7 @@
     </div>
 </div>
 
-<!-- NUEVO MODAL DE CÓDIGO QR -->
+<!-- MODAL DE CÓDIGO QR -->
 <div id="qr-modal" class="modal-overlay hidden">
     <div class="modal-content primary-top" style="max-width: 400px; padding: 30px 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%;">
@@ -409,7 +409,59 @@
         </div>
     </div>
 </div>
-<!-- FIN MODAL QR -->
+
+<!-- MODAL DE CAMBIO DE CUENTA DE FIREBASE (WHITE-LABEL BACKEND) -->
+<div id="firebase-account-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 650px; max-height: 90vh; overflow-y: auto; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;">
+                <i class="fi fi-ss-link-alt"></i> Cuenta de Firebase
+            </h2>
+            <button onclick="window.closeFirebaseAccountModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;">
+                <i class="fi fi-ss-cross"></i>
+            </button>
+        </div>
+
+        <div style="background: #FFF8E1; border: 1px solid var(--warning); border-radius: 8px; padding: 12px 15px; margin-bottom: 20px; width: 100%; box-sizing: border-box;">
+            <p style="margin: 0; font-size: 0.85rem; color: #6B4E00;"><i class="fi fi-ss-triangle-warning" style="color: var(--warning);"></i> Función avanzada: conectar la plataforma a otro proyecto de Firebase cerrará la sesión actual y recargará la aplicación usando ese nuevo backend. Verifica los datos antes de continuar.</p>
+        </div>
+
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 5px; width: 100%;">
+            Ingresa las credenciales del proyecto (Consola de Firebase &gt; Configuración del Proyecto &gt; Tus Apps &gt; SDK de Firebase).
+        </p>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0; margin-bottom: 15px; width: 100%;">Proyecto activo actual: <strong id="fb-modal-active-project">-</strong></p>
+
+        <div class="form-group">
+            <label><i class="fi fi-ss-key"></i> API Key</label>
+            <input type="text" id="fb-cfg-apiKey" placeholder="AIzaSy..." autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-group">
+            <label><i class="fi fi-ss-globe"></i> Auth Domain</label>
+            <input type="text" id="fb-cfg-authDomain" placeholder="tu-proyecto.firebaseapp.com" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-group">
+            <label><i class="fi fi-ss-folder-tree"></i> Project ID</label>
+            <input type="text" id="fb-cfg-projectId" placeholder="tu-proyecto" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-group">
+            <label><i class="fi fi-ss-disk"></i> Storage Bucket</label>
+            <input type="text" id="fb-cfg-storageBucket" placeholder="tu-proyecto.firebasestorage.app" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-group">
+            <label><i class="fi fi-ss-paper-plane"></i> Messaging Sender ID</label>
+            <input type="text" id="fb-cfg-messagingSenderId" placeholder="1234567890" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-group">
+            <label><i class="fi fi-ss-lock"></i> App ID</label>
+            <input type="text" id="fb-cfg-appId" placeholder="1:1234567890:web:abcdef" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn-secondary" onclick="window.restoreDefaultFirebaseAccount()" style="flex: 1; min-width: 160px;"><i class="fi fi-ss-refresh"></i> Usar Predeterminada</button>
+            <button type="button" id="btn-save-firebase-account" class="btn-danger" onclick="window.saveFirebaseAccount()" style="flex: 1; min-width: 160px;"><i class="fi fi-ss-disk"></i> Guardar y Reiniciar</button>
+        </div>
+    </div>
+</div>
 
 <div class="container">
     <div id="blocked-view" class="card status-container hidden" style="border: 2px solid var(--danger); background-color: var(--danger-light);">
@@ -603,6 +655,14 @@
             <button id="btn-save-settings" onclick="window.savePlatformSettings()" style="flex: 1;"><i class="fi fi-ss-disk"></i> Guardar Cambios</button>
             <button class="btn-danger" onclick="window.promptResetSettings()" style="flex: 1; background-color: var(--danger);"><i class="fi fi-ss-time-past"></i> Restaurar de Fábrica</button>
         </div>
+
+        <h3 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px; margin-top: 30px;"><i class="fi fi-ss-settings"></i> Zona Avanzada</h3>
+        <div class="form-group" style="background: #FAFAFA; padding: 15px; border-radius: 8px;">
+            <label><i class="fi fi-ss-link-alt"></i> Backend / Cuenta de Firebase</label>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0;">Conecta esta plataforma a un proyecto de Firebase distinto (multi-tenant / white-label) para llevar la personalización de marca a otro nivel.</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0; margin-bottom: 10px;">Proyecto activo actual: <strong id="config-active-firebase-project">-</strong></p>
+            <button type="button" class="btn-secondary" onclick="window.openFirebaseAccountModal()" style="width: auto;"><i class="fi fi-ss-shuffle"></i> Cambiar Cuenta de Firebase</button>
+        </div>
     </div>
 
     <div id="instructor-upload" class="card hidden">
@@ -612,9 +672,10 @@
             <div class="form-group">
                 <label><i class="fi fi-ss-shield-check"></i> Nivel de Seguridad</label>
                 <select id="exam-security">
-                    <option value="easy">Fácil (Bloqueo básico, 5 infracciones)</option>
-                    <option value="medium">Medio (Anti-inactividad 15s, 3 infracciones)</option>
-                    <option value="advanced" disabled>Avanzado (Próximamente - Monitoreo por Cámara)</option>
+                    <option value="basic">Básico (5 advertencias, sin captura de pantalla)</option>
+                    <option value="medium">Medio (3 advertencias, sin captura de pantalla)</option>
+                    <option value="advanced">Avanzado (2 advertencias, sin captura, sin copiar/pegar/clic derecho)</option>
+                    <option value="certification" disabled>Certificación (1 advertencia, estricto, monitoreo por cámara - Próximamente)</option>
                 </select>
             </div>
         </div>
@@ -661,9 +722,13 @@
         
         <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
             <button onclick="window.loadGrades(window.currentExamId)" class="btn-sm" style="width: auto;"><i class="fi fi-ss-refresh"></i> Actualizar</button>
-            <button class="btn-success btn-sm" onclick="window.gradeAllPendings()" style="width: auto;"><i class="fi fi-ss-check-clipboard"></i> Calificar Pendientes</button>
             <button class="btn-primary btn-sm" onclick="window.exportToCSV()" style="width: auto; background-color: var(--text-secondary);"><i class="fi fi-ss-file-excel"></i> Exportar CSV</button>
             <button class="btn-danger btn-sm" onclick="window.exportToPDF()" style="width: auto; background-color: var(--danger);"><i class="fi fi-ss-file-pdf"></i> Guardar PDF</button>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-secondary); margin-bottom: 5px; display: block;"><i class="fi fi-ss-search"></i> Buscar Alumno (Nombre y/o Correo)</label>
+            <input type="text" id="grades-search-input" placeholder="Ej. Juan Pérez o juan@correo.com" onkeyup="window.filterGrades()" style="padding: 10px; margin:0;">
         </div>
         
         <div class="table-responsive">
@@ -790,7 +855,8 @@
     import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    const firebaseConfig = {
+    // Configuración predeterminada (de fábrica) del proyecto Firebase.
+    const DEFAULT_FIREBASE_CONFIG = {
         apiKey: "AIzaSyDf5LjSwUoFN8g6VBpoRR3v15VUWPCF5M4",
         authDomain: "simuladores-99c1e.firebaseapp.com",
         projectId: "simuladores-99c1e",
@@ -798,6 +864,28 @@
         messagingSenderId: "1048172617482",
         appId: "1:1048172617482:web:10a77eea8e21e0900e64f3"
     };
+    const FIREBASE_OVERRIDE_KEY = 'eems_firebase_override';
+
+    // Permite conectar la plataforma a otro proyecto de Firebase (white-label / multi-tenant)
+    // usando una configuración guardada localmente desde el panel de Instructor > Configuración Global.
+    function resolveFirebaseConfig() {
+        try {
+            const overrideStr = localStorage.getItem(FIREBASE_OVERRIDE_KEY);
+            if (overrideStr) {
+                const override = JSON.parse(overrideStr);
+                if (override && override.apiKey && override.projectId && override.appId) {
+                    return { config: override, isCustom: true };
+                }
+            }
+        } catch (e) {
+            console.warn('Configuración de Firebase personalizada inválida, usando la predeterminada.', e);
+        }
+        return { config: DEFAULT_FIREBASE_CONFIG, isCustom: false };
+    }
+
+    const { config: firebaseConfig, isCustom: isCustomFirebaseAccount } = resolveFirebaseConfig();
+    window.__ACTIVE_FIREBASE_PROJECT__ = firebaseConfig.projectId;
+    window.__IS_CUSTOM_FIREBASE_ACCOUNT__ = isCustomFirebaseAccount;
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -1001,54 +1089,95 @@
         } catch(e) { applyStoredBranding(); }
     }
 
-    window.addEventListener('pageshow', function(event) {
-        if (localStorage.getItem('estado_examen_bloqueado') === 'true') {
-            hideAll();
-            document.getElementById('blocked-title').innerText = "ANULADO";
-            document.getElementById('blocked-msg').innerText = "El sistema detectó que intentaste regresar a la actividad bloqueada.";
-            document.getElementById('blocked-view').classList.remove('hidden');
-            document.getElementById('nav-ingresar').classList.add('hidden');
-            document.getElementById('nav-settings').classList.add('hidden');
-            document.getElementById('nav-volver').classList.add('hidden');
-            document.querySelector('.container').classList.remove('expanded');
-            isPermanentlyBlocked = true;
+    // LISTÉNERS GLOBALES ANTI-FRAUDE
+    ['copy', 'cut', 'paste'].forEach(evt => {
+        window.addEventListener(evt, (e) => {
+            if (isExamActive && examConfig && examConfig.type === 'exam') {
+                if (examConfig.securityLevel === 'advanced' || examConfig.securityLevel === 'certification') {
+                    e.preventDefault();
+                    triggerSevereInfraction("Examen Anulado: Intento de copiar y pegar");
+                }
+            }
+        });
+    });
+
+    window.addEventListener('contextmenu', (e) => {
+        if (isExamActive && examConfig && examConfig.type === 'exam') {
+            if (examConfig.securityLevel === 'advanced' || examConfig.securityLevel === 'certification') {
+                e.preventDefault();
+                triggerSevereInfraction("Examen Anulado: Intento de Clic Derecho");
+            }
         }
     });
 
-    document.addEventListener('keydown', (e) => {
+    window.addEventListener('keyup', (e) => {
+        if (isExamActive && examConfig && examConfig.type === 'exam' && e.key === 'PrintScreen') {
+            e.preventDefault();
+            triggerSevereInfraction("Examen Anulado: Intento de captura de pantalla");
+        }
+    });
+
+    // Cierra un modal-overlay visible aplicando la misma lógica especial que cada uno requiere
+    // (usado tanto por la tecla ESC como por el clic fuera del contenido del modal).
+    function closeModalOverlay(id) {
+        const el = document.getElementById(id);
+        if (!el || el.classList.contains('hidden')) return;
+        if (id === 'custom-dialog') {
+            const cancel = document.getElementById('dialog-cancel-btn');
+            if (cancel && !cancel.classList.contains('hidden')) cancel.click();
+            else { const ok = document.getElementById('dialog-ok-btn'); if (ok) ok.click(); }
+        } else if (id === 'certificate-modal') {
+            el.classList.add('hidden');
+            window.exitActivity();
+        } else if (id === 'warning-modal') {
+            window.closeModal();
+        } else if (id === 'severe-modal') {
+            window.exitActivity();
+        } else {
+            el.classList.add('hidden');
+        }
+    }
+
+    // IDs de todos los modal-overlay que pueden cerrarse con ESC o clic fuera del contenido.
+    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal'];
+
+    window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            const modals = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal'];
-            modals.forEach(id => {
-                const el = document.getElementById(id);
-                if (el && !el.classList.contains('hidden')) {
-                    if (id === 'custom-dialog') {
-                        const cancel = document.getElementById('dialog-cancel-btn');
-                        if (cancel && !cancel.classList.contains('hidden')) cancel.click();
-                        else { const ok = document.getElementById('dialog-ok-btn'); if(ok) ok.click(); }
-                    } else if (id === 'certificate-modal') {
-                        el.classList.add('hidden');
-                        window.exitActivity();
-                    } else if (id === 'warning-modal') {
-                        window.closeModal();
-                    } else if (id === 'severe-modal') {
-                        window.exitActivity();
-                    } else {
-                        el.classList.add('hidden');
-                    }
-                }
-            });
+            DISMISSABLE_MODAL_IDS.forEach(closeModalOverlay);
         }
         
-        if (isExamActive && (!examConfig || (examConfig.type !== 'survey' && examConfig.type !== 'course')) && (e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 's' || e.key === 'S' || e.key === '3' || e.key === '4')) {
-            e.preventDefault();
-            triggerSevereInfraction("Comando de recorte detectado.");
+        if (isExamActive && examConfig && examConfig.type === 'exam') {
+            if ((e.metaKey || e.ctrlKey) && e.shiftKey && ['3', '4', '5', 's', 'S'].includes(e.key)) {
+                e.preventDefault();
+                triggerSevereInfraction("Examen Anulado: Intento de captura de pantalla");
+            }
+            if (examConfig.securityLevel === 'advanced' || examConfig.securityLevel === 'certification') {
+                if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'p', 'x', 'C', 'V', 'P', 'X'].includes(e.key)) {
+                    e.preventDefault();
+                    triggerSevereInfraction("Examen Anulado: Intento de copiar y pegar");
+                }
+                if (e.key === 'F12' || ((e.ctrlKey || e.metaKey) && e.shiftKey && ['i', 'j', 'c', 'I', 'J', 'C'].includes(e.key))) {
+                    e.preventDefault();
+                    triggerSevereInfraction("Examen Anulado: Intento de inspeccionar código");
+                }
+            }
         }
+    });
+
+    // Cierre táctil/clic fuera del contenido: indispensable en pantallas pequeñas donde no hay
+    // tecla ESC disponible (móviles y tablets).
+    DISMISSABLE_MODAL_IDS.forEach(id => {
+        const overlay = document.getElementById(id);
+        if (!overlay) return;
+        overlay.addEventListener('mousedown', (e) => {
+            if (e.target === overlay) closeModalOverlay(id);
+        });
     });
 
     function hideAll() {
         ['loading-screen', 'role-selector', 'login-view', 'student-login-view', 'student-portal', 
          'instructor-dashboard', 'instructor-upload', 'instructor-grades', 'exam-view', 'course-view',
-         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal'].forEach(id => {
+         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal'].forEach(id => {
              const el = document.getElementById(id);
              if (el) el.classList.add('hidden');
          });
@@ -1061,6 +1190,8 @@
 
     window.exitActivity = () => {
         isExamActive = false;
+        isBlocked = false;
+        isHandlingInfraction = false;
         window.currentExamId = null;
         clearInterval(timerInterval);
         clearTimeout(inactivityTimer);
@@ -1078,22 +1209,15 @@
     }
 
     window.goHome = () => {
-        if (isPermanentlyBlocked || localStorage.getItem('estado_examen_bloqueado') === 'true') {
-            hideAll(); document.getElementById('blocked-view').classList.remove('hidden'); 
-            document.getElementById('nav-actions').classList.remove('hidden'); 
-            document.getElementById('nav-ingresar').classList.add('hidden');
-            document.getElementById('nav-settings').classList.add('hidden');
-            document.getElementById('nav-volver').classList.add('hidden');
-            return;
-        }
-        
         if (window.currentExamId && !isExamActive) {
             window.exitActivity();
             return;
         }
 
         hideAll();
-        isExamActive = false; clearInterval(timerInterval);
+        isExamActive = false; 
+        isBlocked = false;
+        clearInterval(timerInterval);
         document.getElementById('nav-volver').classList.add('hidden');
         document.getElementById('nav-actions').classList.remove('hidden'); 
         
@@ -1150,6 +1274,91 @@
             window.setLoading('btn-confirm-reset', false, '<i class="fi fi-ss-trash"></i> Restaurar');
             window.CustomDialog.alert("Error al restaurar la configuración.", "Error");
         }
+    };
+
+    // --- Zona Avanzada: Cambio de Cuenta de Firebase (backend white-label) ---
+    window.openFirebaseAccountModal = () => {
+        let cfg = {};
+        try {
+            const stored = localStorage.getItem(FIREBASE_OVERRIDE_KEY);
+            cfg = stored ? JSON.parse(stored) : {};
+        } catch (e) { cfg = {}; }
+
+        document.getElementById('fb-cfg-apiKey').value = cfg.apiKey || '';
+        document.getElementById('fb-cfg-authDomain').value = cfg.authDomain || '';
+        document.getElementById('fb-cfg-projectId').value = cfg.projectId || '';
+        document.getElementById('fb-cfg-storageBucket').value = cfg.storageBucket || '';
+        document.getElementById('fb-cfg-messagingSenderId').value = cfg.messagingSenderId || '';
+        document.getElementById('fb-cfg-appId').value = cfg.appId || '';
+
+        document.getElementById('fb-modal-active-project').textContent = window.__ACTIVE_FIREBASE_PROJECT__ || '-';
+        document.getElementById('firebase-account-modal').classList.remove('hidden');
+    };
+
+    window.closeFirebaseAccountModal = () => {
+        document.getElementById('firebase-account-modal').classList.add('hidden');
+    };
+
+    window.saveFirebaseAccount = async () => {
+        const fields = {
+            apiKey: document.getElementById('fb-cfg-apiKey').value.trim(),
+            authDomain: document.getElementById('fb-cfg-authDomain').value.trim(),
+            projectId: document.getElementById('fb-cfg-projectId').value.trim(),
+            storageBucket: document.getElementById('fb-cfg-storageBucket').value.trim(),
+            messagingSenderId: document.getElementById('fb-cfg-messagingSenderId').value.trim(),
+            appId: document.getElementById('fb-cfg-appId').value.trim()
+        };
+        const modal = document.getElementById('firebase-account-modal');
+
+        if (!fields.apiKey || !fields.authDomain || !fields.projectId || !fields.appId) {
+            // Se cierra primero el modal para que la alerta pueda mostrarse por encima (mismo z-index).
+            modal.classList.add('hidden');
+            await window.CustomDialog.alert("Completa al menos API Key, Auth Domain, Project ID y App ID para continuar.");
+            modal.classList.remove('hidden');
+            return;
+        }
+
+        modal.classList.add('hidden');
+        const confirmed = await window.CustomDialog.confirm(
+            "La sesión actual se cerrará y la página se recargará para conectarse al nuevo proyecto de Firebase. ¿Deseas continuar?",
+            "Confirmar Cambio de Cuenta"
+        );
+        if (!confirmed) {
+            modal.classList.remove('hidden');
+            return;
+        }
+
+        window.setLoading('btn-save-firebase-account', true);
+        try {
+            localStorage.setItem(FIREBASE_OVERRIDE_KEY, JSON.stringify(fields));
+            window.location.reload();
+        } catch (error) {
+            window.setLoading('btn-save-firebase-account', false, '<i class="fi fi-ss-disk"></i> Guardar y Reiniciar');
+            modal.classList.remove('hidden');
+            window.CustomDialog.alert("No fue posible guardar la configuración: " + error.message, "Error");
+        }
+    };
+
+    window.restoreDefaultFirebaseAccount = async () => {
+        const modal = document.getElementById('firebase-account-modal');
+        // Se cierra primero el modal para que el diálogo de aviso/confirmación quede visible por encima.
+        modal.classList.add('hidden');
+
+        if (!window.__IS_CUSTOM_FIREBASE_ACCOUNT__ && !localStorage.getItem(FIREBASE_OVERRIDE_KEY)) {
+            await window.CustomDialog.alert("La plataforma ya está usando la cuenta de Firebase predeterminada.");
+            modal.classList.remove('hidden');
+            return;
+        }
+        const confirmed = await window.CustomDialog.confirm(
+            "Se eliminará la configuración personalizada de Firebase y la plataforma volverá a la cuenta predeterminada. La página se recargará. ¿Continuar?",
+            "Restaurar Cuenta Predeterminada"
+        );
+        if (!confirmed) {
+            modal.classList.remove('hidden');
+            return;
+        }
+        localStorage.removeItem(FIREBASE_OVERRIDE_KEY);
+        window.location.reload();
     };
 
     window.showInstructorLogin = () => { 
@@ -1545,7 +1754,6 @@
         }
     };
 
-    // FUNCIONES DEL CÓDIGO QR
     window.showQRModal = (linkId) => {
         const link = document.getElementById(linkId).href;
         if(!link || link.trim() === "" || link.includes("#")) {
@@ -1718,6 +1926,7 @@
 
     window.logoutStudent = () => { 
         document.getElementById('full-screen-loader').classList.remove('hidden');
+        isPermanentlyBlocked = false;
         window.currentExamId = null; 
         localStorage.removeItem('tumb_student');
         sessionStorage.clear();
@@ -2048,7 +2257,10 @@
         hideAll(); document.getElementById('admin-settings').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
-        
+
+        const activeProjectLabel = document.getElementById('config-active-firebase-project');
+        if (activeProjectLabel) activeProjectLabel.textContent = window.__ACTIVE_FIREBASE_PROJECT__ || '-';
+
         const configSnap = await getDoc(doc(db, "settings", "branding_" + currentUser.uid));
         if(configSnap.exists()) {
             const data = configSnap.data();
@@ -2291,18 +2503,36 @@
     window.sortGrades = (column) => {
         if (currentSort.column === column) { currentSort.asc = !currentSort.asc; } 
         else { currentSort.column = column; currentSort.asc = true; }
-        let sorted = [...window.gradesList];
-        sorted.sort((a, b) => {
-            let valA, valB;
-            if (column === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); }
-            if (column === 'score') { valA = a.percentage; valB = b.percentage; }
-            if (column === 'status') { valA = a.passed ? 1 : (a.status === "BLOCKED" ? -1 : 0); valB = b.passed ? 1 : (b.status === "BLOCKED" ? -1 : 0); }
-            if (valA < valB) return currentSort.asc ? -1 : 1;
-            if (valA > valB) return currentSort.asc ? 1 : -1;
-            return 0;
-        });
-        renderGradesTable(sorted);
+        renderGradesTable(getSortedFilteredGrades());
     };
+
+    window.filterGrades = () => {
+        renderGradesTable(getSortedFilteredGrades());
+    };
+
+    function getSortedFilteredGrades() {
+        const searchInput = document.getElementById('grades-search-input');
+        const term = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+        let list = term
+            ? window.gradesList.filter(g =>
+                (g.name || '').toLowerCase().includes(term) ||
+                (g.email || '').toLowerCase().includes(term))
+            : [...window.gradesList];
+
+        if (currentSort.column) {
+            list.sort((a, b) => {
+                let valA, valB;
+                if (currentSort.column === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); }
+                if (currentSort.column === 'score') { valA = a.percentage; valB = b.percentage; }
+                if (currentSort.column === 'status') { valA = a.passed ? 1 : (a.status === "BLOCKED" ? -1 : 0); valB = b.passed ? 1 : (b.status === "BLOCKED" ? -1 : 0); }
+                if (valA < valB) return currentSort.asc ? -1 : 1;
+                if (valA > valB) return currentSort.asc ? 1 : -1;
+                return 0;
+            });
+        }
+        return list;
+    }
 
     window.exportToCSV = function() {
         if(!window.gradesList || window.gradesList.length === 0) return window.CustomDialog.alert("No hay datos para exportar.");
@@ -2346,10 +2576,18 @@
         
         const isCourse = window.gradesList[0].score === 'Curso';
         const title = isCourse ? "Resultados del Curso" : "Resultados de Evaluación";
+        const examName = window.currentExamName || "(sin nombre)";
+        const examId = window.currentExamId || "N/A";
         
         doc.setFontSize(16);
         doc.text(title, 14, 15);
+        // Nombre e ID de la actividad, para que el reporte nunca pierda referencia de a qué
+        // evaluación pertenece, incluso si se guarda o comparte por separado.
         doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Actividad: ${examName}`, 14, 21);
+        doc.text(`ID: ${examId}`, 14, 26);
+        doc.setTextColor(0);
         
         let head = [];
         let body = [];
@@ -2386,13 +2624,30 @@
         doc.autoTable({
             head: head,
             body: body,
-            startY: 25,
+            startY: 32,
             theme: 'striped',
             headStyles: { fillColor: [2, 136, 209] }, 
-            styles: { fontSize: 8 }
+            styles: { fontSize: 8 },
+            didParseCell: function(data) {
+                // Resalta en verde "APROBADO" y en rojo "REPROBADO" en la columna de Estatus
+                // para facilitar la lectura rápida del reporte (no aplica a la tabla de cursos).
+                if (!isCourse && data.section === 'body' && data.column.index === 6) {
+                    const statusValue = String(data.cell.raw || '').trim().toUpperCase();
+                    if (statusValue === 'APROBADO') {
+                        data.cell.styles.textColor = [56, 142, 60];
+                        data.cell.styles.fontStyle = 'bold';
+                    } else if (statusValue === 'REPROBADO') {
+                        data.cell.styles.textColor = [183, 58, 58];
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            }
         });
         
-        doc.save("Resultados_EEMS.pdf");
+        // El ID de la actividad se concatena en el nombre del archivo para evitar confusiones
+        // al tener varios PDFs descargados de distintas evaluaciones.
+        const safeExamId = examId.replace(/[^a-zA-Z0-9_-]/g, '_');
+        doc.save(`Resultados_EEMS_${safeExamId}.pdf`);
     };
 
     function renderGradesTable(dataList) {
@@ -2646,61 +2901,6 @@
         }
     };
 
-    window.gradeAllPendings = async () => {
-        const pendings = window.gradesList.filter(g => g.status === 'COMPLETED' && !g.graded && g.score !== 'Curso');
-        if(pendings.length === 0) return window.CustomDialog.alert("No hay exámenes pendientes de calificar.", "Atención");
-        
-        document.getElementById('loading-screen').classList.remove('hidden');
-        document.getElementById('loading-text').innerText = "Calificando todos los pendientes...";
-
-        try {
-            const keySnap = await getDoc(doc(db, "exam_keys", window.currentExamId));
-            const examSnap = await getDoc(doc(db, "exams", window.currentExamId));
-            const correctAnswers = keySnap.data().answers;
-            const originalQuestions = examSnap.data().questions || [];
-
-            for(let p of pendings) {
-                const subRef = doc(db, "submissions", p.docId);
-                const subSnap = await getDoc(subRef);
-                const sub = subSnap.data();
-
-                const evalTotal = sub.examInfo.questionsToShow || correctAnswers.length;
-                let score = 0; 
-                let failedTopics = [];
-
-                if (sub.answers) {
-                    sub.answers.forEach(a => { 
-                        if(a.selectedOption === correctAnswers[a.questionIndex]) {
-                            score++; 
-                        } else {
-                            let qObj = originalQuestions[a.questionIndex];
-                            if (qObj) {
-                                failedTopics.push(qObj.topic || "Repasar conceptos generales");
-                            }
-                        }
-                    });
-                }
-                
-                failedTopics = [...new Set(failedTopics)];
-                let percentage = (score / evalTotal) * 100;
-                let passed = percentage >= sub.examInfo.passingThreshold;
-
-                await setDoc(subRef, {
-                    score: score,
-                    total: evalTotal,
-                    percentage: percentage,
-                    passed: passed,
-                    failedTopics: failedTopics,
-                    graded: true
-                }, { merge: true });
-            }
-            window.loadGrades(window.currentExamId);
-        } catch(e) {
-            window.CustomDialog.alert("Error al calificar masivamente.");
-            document.getElementById('loading-screen').classList.add('hidden');
-        }
-    };
-
     window.showSubmissionDetails = async (docId) => {
         document.getElementById('loading-screen').classList.remove('hidden');
         document.getElementById('loading-text').innerText = "Cargando detalles de evaluación...";
@@ -2766,6 +2966,7 @@
 
     window.viewExamGrades = (examId, examName) => {
         window.currentExamId = examId;
+        window.currentExamName = examName;
         hideAll(); document.getElementById('instructor-grades').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
@@ -2781,6 +2982,8 @@
         hideAll();
         document.getElementById('instructor-grades').classList.remove('hidden');
         document.querySelector('.container').classList.add('expanded');
+        const searchInput = document.getElementById('grades-search-input');
+        if (searchInput) searchInput.value = '';
         const tbody = document.getElementById('grades-body');
         tbody.innerHTML = "<tr><td colspan='7' style='text-align:center;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando datos...</td></tr>";
         
@@ -2924,45 +3127,71 @@
             document.getElementById('display-exam-gen').innerText = isSurvey ? "Encuesta: " + gensStr : "Clase(s): " + gensStr;
             
             const rulesList = document.getElementById('exam-rules-list');
-            if (isSurvey) {
+            
+            if (examConfig.securityLevel === 'advanced') {
+                MAX_INFRACTIONS = 2;
                 rulesList.innerHTML = `
-                    <li style="color:var(--text-main);"><strong><i class="fi fi-ss-info"></i> Esta es una encuesta de opinión abierta.</strong></li>
-                    <li style="color:var(--text-main);">No hay límite de tiempo.</li>
-                    <li style="color:var(--text-main);">Tus respuestas nos ayudan a mejorar. ¡Gracias por tu honestidad!</li>
+                    <li><strong>Las preguntas y opciones aparecerán en orden aleatorio.</strong></li>
+                    <li>Tiempo límite: <span id="display-duration">${examConfig.duration || 60}</span> minutos.</li>
+                    <li><strong>Nivel Avanzado:</strong> Prohibido copiar, pegar, usar clic derecho o capturar pantalla.</li>
+                    <li><strong>Límite: 2 advertencias</strong> por salir de la ventana.</li>
                 `;
-                rulesList.style.background = "#FFFDE7";
-                rulesList.style.border = "1px solid #FFF59D";
-                rulesList.style.color = "var(--text-main)";
-            } else if (isCourse) {
-                rulesList.innerHTML = `
-                    <li style="color:var(--text-main);"><strong><i class="fi fi-ss-info"></i> Curso de Formación Asíncrona.</strong></li>
-                    <li style="color:var(--text-main);">Consta de videos y material de lectura descargable.</li>
-                    <li style="color:var(--text-main);">Podrás obtener tu constancia al finalizar todos los módulos.</li>
-                `;
-                rulesList.style.background = "#E3F2FD";
-                rulesList.style.border = "1px solid #90CAF9";
-                rulesList.style.color = "var(--primary-dark)";
+                rulesList.style.background = "var(--danger-light)";
+                rulesList.style.color = "var(--danger)";
+                rulesList.style.border = "none";
             } else if (examConfig.securityLevel === 'medium') {
+                MAX_INFRACTIONS = 3;
                 rulesList.innerHTML = `
                     <li><strong>Las preguntas y opciones aparecerán en orden aleatorio.</strong></li>
                     <li>Tiempo límite: <span id="display-duration">${examConfig.duration || 60}</span> minutos.</li>
-                    <li><strong>Prohibido copiar o capturar pantalla (Anulación inmediata).</strong></li>
-                    <li><strong>Límite de 3 advertencias</strong> al perder enfoque.</li>
-                    <li><strong>Control de inactividad:</strong> No puedes soltar el ratón o teclado por más de 15 segundos continuos.</li>
+                    <li><strong>Nivel Medio:</strong> Prohibido capturar pantalla.</li>
+                    <li><strong>Límite: 3 advertencias</strong> por salir de la ventana.</li>
                 `;
                 rulesList.style.background = "var(--danger-light)";
-                rulesList.style.border = "none";
                 rulesList.style.color = "var(--danger)";
+                rulesList.style.border = "none";
+            } else if (examConfig.securityLevel === 'certification') {
+                MAX_INFRACTIONS = 1;
+                rulesList.innerHTML = `
+                    <li><strong>Las preguntas y opciones aparecerán en orden aleatorio.</strong></li>
+                    <li>Tiempo límite: <span id="display-duration">${examConfig.duration || 60}</span> minutos.</li>
+                    <li><strong>Nivel de Certificación:</strong> Estricto. Monitorización constante.</li>
+                    <li><strong>Límite: 1 advertencia</strong> por salir de la ventana.</li>
+                `;
+                rulesList.style.background = "var(--danger-light)";
+                rulesList.style.color = "var(--danger)";
+                rulesList.style.border = "none";
             } else {
-                rulesList.innerHTML = `
-                    <li><strong>Las preguntas y opciones aparecerán en orden aleatorio.</strong></li>
-                    <li>Tiempo límite: <span id="display-duration">${examConfig.duration || 60}</span> minutos.</li>
-                    <li><strong>Prohibido copiar o capturar pantalla (Anulación inmediata).</strong></li>
-                    <li><strong>Límite de 5 advertencias</strong> al perder enfoque.</li>
-                `;
-                rulesList.style.background = "var(--danger-light)";
-                rulesList.style.border = "none";
-                rulesList.style.color = "var(--danger)";
+                MAX_INFRACTIONS = 5;
+                if (isSurvey) {
+                    rulesList.innerHTML = `
+                        <li style="color:var(--text-main);"><strong><i class="fi fi-ss-info"></i> Esta es una encuesta de opinión abierta.</strong></li>
+                        <li style="color:var(--text-main);">No hay límite de tiempo ni monitoreo de atención.</li>
+                        <li style="color:var(--text-main);">Tus respuestas nos ayudan a mejorar. ¡Gracias por tu honestidad!</li>
+                    `;
+                    rulesList.style.background = "#FFFDE7";
+                    rulesList.style.color = "var(--text-main)";
+                    rulesList.style.border = "1px solid #FFF59D";
+                } else if (isCourse) {
+                    rulesList.innerHTML = `
+                        <li style="color:var(--text-main);"><strong><i class="fi fi-ss-info"></i> Curso de Formación Asíncrona.</strong></li>
+                        <li style="color:var(--text-main);">Consta de videos y material de lectura descargable.</li>
+                        <li style="color:var(--text-main);">Podrás obtener tu constancia al finalizar todos los módulos.</li>
+                    `;
+                    rulesList.style.background = "#E3F2FD";
+                    rulesList.style.color = "var(--primary-dark)";
+                    rulesList.style.border = "1px solid #90CAF9";
+                } else {
+                    rulesList.innerHTML = `
+                        <li><strong>Las preguntas y opciones aparecerán en orden aleatorio.</strong></li>
+                        <li>Tiempo límite: <span id="display-duration">${examConfig.duration || 60}</span> minutos.</li>
+                        <li><strong>Nivel Básico:</strong> Prohibido capturar pantalla.</li>
+                        <li><strong>Límite: 5 advertencias</strong> por salir de la ventana.</li>
+                    `;
+                    rulesList.style.background = "var(--danger-light)";
+                    rulesList.style.color = "var(--danger)";
+                    rulesList.style.border = "none";
+                }
             }
 
             hideAll(); 
@@ -3147,7 +3376,7 @@
                         document.getElementById('blocked-title').innerText = "INTENTO AGOTADO";
                         document.getElementById('blocked-msg').innerText = "Ya has completado esta actividad previamente.";
                     } else if (existingStatus === "BLOCKED") {
-                        document.getElementById('blocked-title').innerText = "ANULADO";
+                        document.getElementById('blocked-title').innerText = "ACTIVIDAD ANULADA";
                         document.getElementById('blocked-msg').innerText = "Tu actividad fue anulada previamente.";
                     } else if (existingStatus === "IN_PROGRESS") {
                         document.getElementById('blocked-title').innerText = "INTENTO ANULADO";
@@ -3177,6 +3406,14 @@
                         });
                         return;
                     }
+                } else if (existingStatus === "BLOCKED") {
+                    isExamActive = false; 
+                    hideAll(); 
+                    document.getElementById('blocked-view').classList.remove('hidden');
+                    document.getElementById('nav-actions').classList.remove('hidden');
+                    document.getElementById('blocked-title').innerText = "ACTIVIDAD ANULADA";
+                    document.getElementById('blocked-msg').innerText = "Tu actividad fue anulada previamente.";
+                    return;
                 }
             }
 
@@ -3227,7 +3464,6 @@
                         return { ...q, shuffledOpts: shuffleArray(optsWithRef) };
                     });
 
-                    MAX_INFRACTIONS = examConfig.securityLevel === 'medium' ? 3 : 5;
                     document.getElementById('modal-max-count').innerText = MAX_INFRACTIONS;
 
                     if(examConfig.securityLevel === 'medium') {
@@ -3243,7 +3479,7 @@
             }
 
             history.pushState(null, null, location.href);
-            window.onpopstate = function () { if (isExamActive || isPermanentlyBlocked) { history.go(1); } };
+            window.onpopstate = function () { if (isExamActive) { history.go(1); } };
 
         } catch(e) { 
             isExamActive = false;
@@ -3491,18 +3727,22 @@
     async function triggerSevereInfraction(reason) {
         if (!isExamActive || isBlocked || isHandlingInfraction || examConfig.type === 'survey' || examConfig.type === 'course') return;
         isHandlingInfraction = true; cheatCount = MAX_INFRACTIONS; 
+        
+        await cancelExamDb(reason);
+        
         document.getElementById('severe-reason').innerText = reason;
         document.getElementById('severe-modal').classList.remove('hidden');
-        await cancelExamDb(reason);
     }
 
-    function checkInfraction(reason = "Se detectó pérdida de enfoque del examen.") {
+    function checkInfraction(reason = "Aviso: Saliste de la ventana de la actividad.") {
         if (!isExamActive || isBlocked || isHandlingInfraction || examConfig.type === 'survey' || examConfig.type === 'course') return;
-        isHandlingInfraction = true; cheatCount++;
+        isHandlingInfraction = true; 
+        cheatCount++;
         clearTimeout(inactivityTimer); 
 
-        if (cheatCount >= MAX_INFRACTIONS) { cancelExamDb(reason); } 
-        else { 
+        if (cheatCount >= MAX_INFRACTIONS) { 
+            cancelExamDb(reason); 
+        } else { 
             document.getElementById('warning-reason').innerText = reason;
             document.getElementById('modal-count').innerText = cheatCount;
             document.getElementById('warning-modal').classList.remove('hidden');
@@ -3511,22 +3751,18 @@
     }
 
     async function cancelExamDb(logReason) {
-        isBlocked = true; isPermanentlyBlocked = true; isExamActive = false; 
+        isBlocked = true; 
+        isExamActive = false; 
         clearInterval(timerInterval);
         clearTimeout(inactivityTimer);
-        document.removeEventListener('mousemove', window.resetInactivity);
-        document.removeEventListener('keydown', window.resetInactivity);
-        document.removeEventListener('touchstart', window.resetInactivity);
 
-        localStorage.setItem('estado_examen_bloqueado', 'true');
-        document.getElementById('nav-actions').classList.remove('hidden');
+        hideAll();
         
-        if(!logReason.includes("captura") && !logReason.includes("copia")) {
-            hideAll();
-            document.getElementById('blocked-title').innerText = "EXAMEN ANULADO";
-            document.getElementById('blocked-msg').innerText = logReason;
-            document.getElementById('blocked-view').classList.remove('hidden');
-        }
+        document.getElementById('nav-actions').classList.remove('hidden');
+        document.getElementById('blocked-title').innerText = "ACTIVIDAD ANULADA";
+        document.getElementById('blocked-msg').innerText = logReason;
+        document.getElementById('blocked-view').classList.remove('hidden');
+        
         await setDoc(doc(db, "submissions", sessionData.docId), { status: "BLOCKED", metrics: { infractions: cheatCount, detail: logReason } }, { merge: true });
         if(document.fullscreenElement) document.exitFullscreen();
     }
@@ -3535,9 +3771,6 @@
     window.addEventListener("blur", () => { if(!examConfig || (examConfig.type !== 'survey' && examConfig.type !== 'course')) checkInfraction(); });
     window.closeModal = function() { 
         document.getElementById('warning-modal').classList.add('hidden'); 
-        if(isExamActive && examConfig.securityLevel === 'medium') {
-            window.resetInactivity();
-        }
     }
 
     window.downloadCertificateCanvas = function(format) {

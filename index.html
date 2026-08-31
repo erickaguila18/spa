@@ -9,9 +9,10 @@
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/4.0.0/uicons-solid-straight/css/uicons-solid-straight.css'>
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/4.0.0/uicons-brands/css/uicons-brands.css'>
     
-    <!-- jsPDF & AutoTable para exportación a PDF -->
+    <!-- Librerías de Exportación y QR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
         :root {
@@ -361,7 +362,7 @@
     </div>
 </div>
 
-<!-- NUEVO MODAL CONSTRUCTOR VISUAL MANUAL -->
+<!-- CONSTRUCTOR VISUAL MANUAL -->
 <div id="builder-modal" class="modal-overlay hidden">
     <div class="modal-content primary-top" style="max-width: 800px; max-height: 90vh; overflow-y: auto; text-align: left; padding: 25px; align-items: stretch;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
@@ -374,7 +375,6 @@
         </div>
         <p id="builder-subtitle" style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 20px;">Agrega las preguntas o lecciones necesarias.</p>
 
-        <!-- Dynamic Form Area -->
         <div id="builder-form-area" style="background: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
         </div>
 
@@ -387,6 +387,29 @@
         <button id="btn-finish-build" class="btn-success" onclick="window.finishBuilding()" style="width: 100%;"><i class="fi fi-ss-check-circle"></i> Finalizar y Crear Actividad</button>
     </div>
 </div>
+
+<!-- NUEVO MODAL DE CÓDIGO QR -->
+<div id="qr-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 400px; padding: 30px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%;">
+            <h2 style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;">
+                <i class="fi fi-ss-scan"></i> Código QR
+            </h2>
+            <button onclick="window.closeQRModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;">
+                <i class="fi fi-ss-cross"></i>
+            </button>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Escanea este código para acceder directamente a la actividad.</p>
+        
+        <div id="qr-code-container" style="display: flex; justify-content: center; align-items: center; background: white; padding: 20px; border-radius: 12px; border: 1px solid #E0E0E0; margin-bottom: 20px; min-height: 250px;"></div>
+        
+        <div style="display: flex; gap: 10px; width: 100%;">
+            <button class="btn-secondary" onclick="window.closeQRModal()" style="flex: 1;"><i class="fi fi-ss-cross"></i> Cerrar</button>
+            <button class="btn-success" onclick="window.downloadQR()" style="flex: 1;"><i class="fi fi-ss-download"></i> Descargar</button>
+        </div>
+    </div>
+</div>
+<!-- FIN MODAL QR -->
 
 <div class="container">
     <div id="blocked-view" class="card status-container hidden" style="border: 2px solid var(--danger); background-color: var(--danger-light);">
@@ -632,6 +655,7 @@
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <a href="#" id="exam-share-link" onclick="window.handleInstructorLinkClick(event)" style="color: var(--primary); font-weight: bold; word-break: break-all;"></a>
                 <button onclick="window.copyLink('exam-share-link')" class="btn-secondary btn-sm" style="width: auto;"><i class="fi fi-ss-copy"></i> Copiar</button>
+                <button onclick="window.showQRModal('exam-share-link')" class="btn-sm" style="width: auto; background-color: #2C3E50;"><i class="fi fi-ss-scan"></i> Generar QR</button>
             </div>
         </div>
         
@@ -668,6 +692,7 @@
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <a href="#" id="survey-share-link" onclick="window.handleInstructorLinkClick(event)" style="color: var(--primary); font-weight: bold; word-break: break-all;"></a>
                 <button onclick="window.copyLink('survey-share-link')" class="btn-secondary btn-sm" style="width: auto;"><i class="fi fi-ss-copy"></i> Copiar</button>
+                <button onclick="window.showQRModal('survey-share-link')" class="btn-sm" style="width: auto; background-color: #2C3E50;"><i class="fi fi-ss-scan"></i> Generar QR</button>
             </div>
         </div>
 
@@ -792,7 +817,7 @@
     window.currentCourseModules = [];
     window.currentModuleIndex = 0;
     window.uploadType = 'exam';
-    window.builderItems = []; // Nuevo array para el constructor
+    window.builderItems = []; 
     
     const urlParams = new URLSearchParams(window.location.search);
     window.currentExamId = urlParams.get('examId'); 
@@ -992,7 +1017,7 @@
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            const modals = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal'];
+            const modals = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal'];
             modals.forEach(id => {
                 const el = document.getElementById(id);
                 if (el && !el.classList.contains('hidden')) {
@@ -1023,7 +1048,7 @@
     function hideAll() {
         ['loading-screen', 'role-selector', 'login-view', 'student-login-view', 'student-portal', 
          'instructor-dashboard', 'instructor-upload', 'instructor-grades', 'exam-view', 'course-view',
-         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal'].forEach(id => {
+         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal'].forEach(id => {
              const el = document.getElementById(id);
              if (el) el.classList.add('hidden');
          });
@@ -1245,7 +1270,6 @@
         }
     };
 
-    // FUNCIONES DEL CONSTRUCTOR VISUAL
     window.openBuilderModal = async (e) => {
         if(e) e.preventDefault();
         const isSurvey = window.uploadType === 'survey';
@@ -1519,6 +1543,56 @@
             window.setLoading('btn-finish-build', false, '<i class="fi fi-ss-check-circle"></i> Finalizar y Crear Actividad');
             await window.CustomDialog.alert("Error al procesar los datos manuales.", "Error"); 
         }
+    };
+
+    // FUNCIONES DEL CÓDIGO QR
+    window.showQRModal = (linkId) => {
+        const link = document.getElementById(linkId).href;
+        if(!link || link.trim() === "" || link.includes("#")) {
+            return window.CustomDialog.alert("El enlace aún no está listo.");
+        }
+        
+        const qrContainer = document.getElementById('qr-code-container');
+        qrContainer.innerHTML = ""; 
+        
+        try {
+            new QRCode(qrContainer, {
+                text: link,
+                width: 250,
+                height: 250,
+                colorDark : "#2C3E50", 
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+            document.getElementById('qr-modal').classList.remove('hidden');
+        } catch(e) {
+            window.CustomDialog.alert("Error al generar el código QR.");
+        }
+    };
+
+    window.closeQRModal = () => {
+        document.getElementById('qr-modal').classList.add('hidden');
+    };
+
+    window.downloadQR = () => {
+        const qrContainer = document.getElementById('qr-code-container');
+        const img = qrContainer.querySelector('img');
+        const canvas = qrContainer.querySelector('canvas');
+        
+        let dataUrl = "";
+        
+        if(img && img.src && img.src.startsWith("data:")) {
+            dataUrl = img.src;
+        } else if (canvas) {
+            dataUrl = canvas.toDataURL("image/png");
+        } else {
+            return window.CustomDialog.alert("La imagen no está disponible para descargar.");
+        }
+        
+        const link = document.createElement('a');
+        link.download = `QR_Actividad_${window.currentExamId || 'EEMS'}.png`;
+        link.href = dataUrl;
+        link.click();
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -2058,7 +2132,6 @@
         const genLabel = document.getElementById('label-exam-gen');
         const genHint = document.getElementById('hint-exam-gen');
         
-        // Cambio de texto dinámico en el botón del constructor según actividad
         const builderBtn = document.getElementById('builder-trigger');
 
         if(type === 'survey') {

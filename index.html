@@ -463,6 +463,41 @@
     </div>
 </div>
 
+<!-- MODAL PARA COMPARTIR UNA ACTIVIDAD CON OTRO INSTRUCTOR -->
+<div id="share-exam-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 550px; max-height: 90vh; overflow-y: auto; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;">
+                <i class="fi fi-ss-share"></i> Compartir Actividad
+            </h2>
+            <button onclick="window.closeShareExamModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;">
+                <i class="fi fi-ss-cross"></i>
+            </button>
+        </div>
+
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0; margin-bottom: 15px; width: 100%;">
+            "<strong id="share-exam-name-text"></strong>" — el correo que agregues aquí podrá ver el examen y las calificaciones de los alumnos, iniciando sesión como instructor con ese mismo correo.
+        </p>
+
+        <div id="share-not-owner-notice" class="hidden" style="background: #FFF8E1; border: 1px solid var(--warning); border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; width: 100%; box-sizing: border-box;">
+            <p style="margin: 0; font-size: 0.82rem; color: #6B4E00;"><i class="fi fi-ss-triangle-warning" style="color: var(--warning);"></i> Solo el dueño o creador de la actividad puede quitar correos de esta lista.</p>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fi fi-ss-user"></i> Agregar Correo de Instructor</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="email" id="share-email-input" placeholder="instructor@correo.com" autocomplete="off" style="flex: 1;">
+                <button type="button" id="btn-add-shared-email" onclick="window.addSharedInstructor()" style="width: auto;"><i class="fi fi-ss-add"></i> Agregar</button>
+            </div>
+        </div>
+
+        <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-secondary); margin: 15px 0 5px 0; display: block;">Correos con acceso:</label>
+        <div id="share-email-list" style="display: flex; flex-direction: column; gap: 8px; width: 100%; margin-bottom: 10px;">
+            <p style="text-align:center; color: var(--text-secondary); font-size: 0.85rem;">Cargando...</p>
+        </div>
+    </div>
+</div>
+
 <div class="container">
     <div id="blocked-view" class="card status-container hidden" style="border: 2px solid var(--danger); background-color: var(--danger-light);">
         <i class="fi fi-ss-ban modal-icon" style="color: var(--danger);"></i>
@@ -681,6 +716,16 @@
         </div>
 
         <div class="form-group"><label><i class="fi fi-ss-text"></i> Nombre de la Actividad</label><input type="text" id="exam-name" placeholder="Ej. Examen Módulo 1 / Curso de Inducción"></div>
+
+        <div class="form-group">
+            <label><i class="fi fi-ss-picture"></i> Miniatura de la Actividad (Opcional)</label>
+            <input type="file" id="exam-thumbnail-input" accept="image/*" onchange="window.previewExamThumbnail(event)">
+            <small style="color: var(--text-secondary); display:block; margin-top:5px;">Se muestra junto a la actividad en tu lista del panel de instructor para ubicarla más fácil.</small>
+            <div id="exam-thumbnail-preview-wrap" class="hidden" style="margin-top:10px; display:flex; align-items:center; gap:12px;">
+                <img id="exam-thumbnail-preview" src="" alt="Miniatura" style="width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid #E0E0E0;">
+                <button type="button" class="btn-secondary" onclick="window.clearExamThumbnail()" style="width:auto; padding:8px 14px;"><i class="fi fi-ss-cross"></i> Quitar</button>
+            </div>
+        </div>
         
         <div class="form-group" id="container-exam-gen">
             <label id="label-exam-gen"><i class="fi fi-ss-key"></i> Código de Clase (Generación)</label>
@@ -852,7 +897,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, deleteDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     // Configuración predeterminada (de fábrica) del proyecto Firebase.
@@ -960,6 +1005,68 @@
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
+    };
+
+    // Redimensiona una imagen a un tamaño pequeño (miniatura) antes de convertirla a Data URL,
+    // para no inflar los documentos de Firestore ni la carga del listado de actividades.
+    const resizeImageToDataURL = (file, maxDim = 400, quality = 0.72) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > height && width > maxDim) {
+                        height = Math.round(height * (maxDim / width));
+                        width = maxDim;
+                    } else if (height >= width && height > maxDim) {
+                        width = Math.round(width * (maxDim / height));
+                        height = maxDim;
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = () => reject(new Error("No se pudo leer la imagen."));
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    // --- Miniatura de la actividad (exámenes, cursos y encuestas) ---
+    let examThumbnailDataUrl = null;
+
+    window.previewExamThumbnail = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            event.target.value = "";
+            return window.CustomDialog.alert("Selecciona un archivo de imagen válido.");
+        }
+
+        try {
+            examThumbnailDataUrl = await resizeImageToDataURL(file);
+            document.getElementById('exam-thumbnail-preview').src = examThumbnailDataUrl;
+            document.getElementById('exam-thumbnail-preview-wrap').classList.remove('hidden');
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible procesar la imagen seleccionada.");
+        }
+    };
+
+    window.clearExamThumbnail = () => {
+        examThumbnailDataUrl = null;
+        const input = document.getElementById('exam-thumbnail-input');
+        if (input) input.value = "";
+        const preview = document.getElementById('exam-thumbnail-preview-wrap');
+        if (preview) preview.classList.add('hidden');
+        const img = document.getElementById('exam-thumbnail-preview');
+        if (img) img.src = "";
     };
 
     function getYTid(url) {
@@ -1139,7 +1246,7 @@
     }
 
     // IDs de todos los modal-overlay que pueden cerrarse con ESC o clic fuera del contenido.
-    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal'];
+    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal'];
 
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1177,7 +1284,7 @@
     function hideAll() {
         ['loading-screen', 'role-selector', 'login-view', 'student-login-view', 'student-portal', 
          'instructor-dashboard', 'instructor-upload', 'instructor-grades', 'exam-view', 'course-view',
-         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal'].forEach(id => {
+         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal'].forEach(id => {
              const el = document.getElementById(id);
              if (el) el.classList.add('hidden');
          });
@@ -1418,7 +1525,8 @@
                         name: document.getElementById('exam-name').value.trim(), 
                         gen: document.getElementById('exam-gen').value.trim().toUpperCase() || "GLOBAL",
                         expiration: document.getElementById('exam-expiration').value, 
-                        type: 'survey'
+                        type: 'survey',
+                        thumbnail: examThumbnailDataUrl || null
                     }, 
                     questions: safeData, 
                     timestamp: new Date().toISOString()
@@ -1432,7 +1540,8 @@
                         name: document.getElementById('exam-name').value.trim(), 
                         gens_string: document.getElementById('exam-gen').value.trim().toUpperCase(),
                         expiration: document.getElementById('exam-expiration').value, 
-                        type: 'course'
+                        type: 'course',
+                        thumbnail: examThumbnailDataUrl || null
                     }, 
                     modules: safeData, 
                     timestamp: new Date().toISOString()
@@ -1454,7 +1563,8 @@
                         totalQuestions: safeData.length, 
                         questionsToShow: qToShow,
                         securityLevel: securityLvl,
-                        type: 'exam'
+                        type: 'exam',
+                        thumbnail: examThumbnailDataUrl || null
                     }, 
                     questions: safeData, 
                     timestamp: new Date().toISOString()
@@ -1693,7 +1803,8 @@
                         name: document.getElementById('exam-name').value.trim(), 
                         gen: document.getElementById('exam-gen').value.trim().toUpperCase() || "GLOBAL",
                         expiration: document.getElementById('exam-expiration').value, 
-                        type: 'survey'
+                        type: 'survey',
+                        thumbnail: examThumbnailDataUrl || null
                     }, 
                     questions: safeData, 
                     timestamp: new Date().toISOString()
@@ -1707,7 +1818,8 @@
                         name: document.getElementById('exam-name').value.trim(), 
                         gens_string: document.getElementById('exam-gen').value.trim().toUpperCase(),
                         expiration: document.getElementById('exam-expiration').value, 
-                        type: 'course'
+                        type: 'course',
+                        thumbnail: examThumbnailDataUrl || null
                     }, 
                     modules: safeData, 
                     timestamp: new Date().toISOString()
@@ -1729,7 +1841,8 @@
                         totalQuestions: safeData.length, 
                         questionsToShow: qToShow,
                         securityLevel: securityLvl,
-                        type: 'exam'
+                        type: 'exam',
+                        thumbnail: examThumbnailDataUrl || null
                     }, 
                     questions: safeData, 
                     timestamp: new Date().toISOString()
@@ -2180,15 +2293,24 @@
 
         document.getElementById('exams-list-container').innerHTML = "<p style='text-align:center;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando actividades...</p>";
 
-        const q = query(collection(db, "exams"), where("instructorId", "==", currentUser.uid));
-        const snapshot = await getDocs(q);
+        const ownedQ = query(collection(db, "exams"), where("instructorId", "==", currentUser.uid));
+        const sharedQ = query(collection(db, "exams"), where("sharedWith", "array-contains", (currentUser.email || "").toLowerCase()));
+        const [ownedSnap, sharedSnap] = await Promise.all([getDocs(ownedQ), getDocs(sharedQ)]);
         const container = document.getElementById('exams-list-container');
-        container.innerHTML = snapshot.empty ? "<p style='text-align:center;'>No has creado ninguna actividad.</p>" : "";
-        
+
         window.allInstructorActivities = [];
-        snapshot.forEach(d => {
-            window.allInstructorActivities.push({ id: d.id, data: d.data() });
+        const seenIds = new Set();
+        ownedSnap.forEach(d => {
+            seenIds.add(d.id);
+            window.allInstructorActivities.push({ id: d.id, data: d.data(), isOwner: true });
         });
+        sharedSnap.forEach(d => {
+            if (seenIds.has(d.id)) return; // ya está como propio, no duplicar
+            seenIds.add(d.id);
+            window.allInstructorActivities.push({ id: d.id, data: d.data(), isOwner: false });
+        });
+
+        container.innerHTML = window.allInstructorActivities.length === 0 ? "<p style='text-align:center;'>No has creado ni tienes actividades compartidas contigo.</p>" : "";
         
         window.filterActivities();
     };
@@ -2204,6 +2326,7 @@
         window.allInstructorActivities.forEach(item => {
             const exam = item.data;
             const docId = item.id;
+            const isOwner = item.isOwner !== false;
             
             const isSurvey = exam.config.type === 'survey';
             const isCourse = exam.config.type === 'course';
@@ -2227,23 +2350,38 @@
             let iconMain, textMain, actionCall, itemClass;
 
             if (isSurvey) {
-                iconMain = "fi-ss-poll-h"; textMain = "Detalles"; itemClass = "survey";
+                iconMain = "fi-ss-poll-h"; textMain = ""; itemClass = "survey";
                 actionCall = `window.viewSurveyAnalytics('${docId}', '${exam.config.name}')`;
             } else if (isCourse) {
-                iconMain = "fi-ss-users-alt"; textMain = "Detalles"; itemClass = "course";
+                iconMain = "fi-ss-users-alt"; textMain = ""; itemClass = "course";
                 actionCall = `window.viewExamGrades('${docId}', '${exam.config.name}')`;
             } else {
-                iconMain = "fi-ss-stats"; textMain = "Detalles"; itemClass = "";
+                iconMain = "fi-ss-stats"; textMain = ""; itemClass = "";
                 actionCall = `window.viewExamGrades('${docId}', '${exam.config.name}')`;
             }
 
             const iconHeader = isSurvey ? '<i class="fi fi-ss-comment-alt" style="color:var(--primary); margin-right:5px;"></i>' : (isCourse ? '<i class="fi fi-ss-e-learning" style="color:var(--primary); margin-right:5px;"></i>' : '<i class="fi fi-ss-file-signature" style="color:var(--primary); margin-right:5px;"></i>');
+            const sharedBadge = isOwner ? "" : ' <span style="font-size:0.7rem; font-weight:normal; background:#E3F2FD; color:var(--primary); padding:2px 8px; border-radius:10px; vertical-align:middle;"><i class="fi fi-ss-share"></i> Compartido contigo</span>';
+            const deleteBtn = isOwner ? `<button onclick="window.promptDeleteExam('${docId}', '${exam.config.name}')" class="btn-danger" style="width: auto; padding: 14px;"><i class="fi fi-ss-trash"></i></button>` : "";
+
+            // Miniatura para ubicar la actividad visualmente en la lista; si no tiene, se muestra
+            // un ícono acorde al tipo de actividad como respaldo.
+            const thumbHtml = exam.config.thumbnail
+                ? `<img src="${exam.config.thumbnail}" alt="" style="width:56px; height:56px; object-fit:cover; border-radius:8px; border:1px solid #E0E0E0; flex-shrink:0;">`
+                : `<div style="width:56px; height:56px; border-radius:8px; background:#ECEFF1; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi ${iconMain}" style="font-size:1.4rem; color:var(--primary);"></i></div>`;
 
             container.innerHTML += `<div class="exam-item ${itemClass}">
-                <div><h3 style="margin:0;">${iconHeader}${exam.config.name}</h3><p style="margin:5px 0 0 0; color:var(--text-secondary); font-size:0.9rem;">Clase(s): ${exam.config.gens_string || exam.config.gen || "GLOBAL"} | ${expText}</p></div>
+                <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                    ${thumbHtml}
+                    <div style="min-width:0;">
+                        <h3 style="margin:0;">${iconHeader}${exam.config.name}${sharedBadge}</h3>
+                        <p style="margin:5px 0 0 0; color:var(--text-secondary); font-size:0.9rem;">Clase(s): ${exam.config.gens_string || exam.config.gen || "GLOBAL"} | ${expText}</p>
+                    </div>
+                </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button onclick="${actionCall}" style="width: auto;"><i class="fi ${iconMain}"></i> ${textMain}</button>
-                    <button onclick="window.promptDeleteExam('${docId}', '${exam.config.name}')" class="btn-danger" style="width: auto; padding: 14px;"><i class="fi fi-ss-trash"></i></button>
+                    <button onclick="window.openShareExamModal('${docId}', '${(exam.config.name || '').replace(/'/g, "\\'")}', ${isOwner})" class="btn-secondary" style="width: auto; padding: 14px;"><i class="fi fi-ss-share"></i></button>
+                    ${deleteBtn}
                 </div>
             </div>`;
         });
@@ -2336,6 +2474,7 @@
         document.getElementById('exam-min-score').value = "80";
         document.getElementById('exam-duration').value = "60";
         document.getElementById('exam-expiration').value = "";
+        window.clearExamThumbnail();
 
         const titleEl = document.getElementById('upload-panel-title');
         const specificFields = document.getElementById('exam-specific-fields');
@@ -2388,6 +2527,92 @@
         document.getElementById('delete-modal').classList.add('hidden');
     };
 
+    // --- Compartir actividad con otro instructor (por correo) ---
+    let shareExamState = { examId: null, examName: null, isOwner: false };
+
+    window.openShareExamModal = async (examId, examName, isOwner) => {
+        shareExamState = { examId, examName, isOwner: !!isOwner };
+        document.getElementById('share-exam-name-text').innerText = examName;
+        document.getElementById('share-not-owner-notice').classList.toggle('hidden', shareExamState.isOwner);
+        document.getElementById('share-email-input').value = '';
+        document.getElementById('share-exam-modal').classList.remove('hidden');
+        await window.refreshShareEmailList();
+    };
+
+    window.closeShareExamModal = () => {
+        document.getElementById('share-exam-modal').classList.add('hidden');
+        shareExamState = { examId: null, examName: null, isOwner: false };
+    };
+
+    window.refreshShareEmailList = async () => {
+        const listEl = document.getElementById('share-email-list');
+        listEl.innerHTML = "<p style='text-align:center; color: var(--text-secondary); font-size: 0.85rem;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando...</p>";
+        try {
+            const examSnap = await getDoc(doc(db, "exams", shareExamState.examId));
+            const sharedWith = examSnap.exists() ? (examSnap.data().sharedWith || []) : [];
+
+            if (sharedWith.length === 0) {
+                listEl.innerHTML = "<p style='text-align:center; color: var(--text-secondary); font-size: 0.85rem;'>Aún no has compartido esta actividad con nadie.</p>";
+                return;
+            }
+
+            listEl.innerHTML = sharedWith.map(email => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#FAFAFA; border:1px solid #E0E0E0; border-radius:8px; padding:8px 12px;">
+                    <span style="font-size:0.9rem; word-break:break-all;"><i class="fi fi-ss-user" style="color:var(--primary);"></i> ${email}</span>
+                    ${shareExamState.isOwner ? `<button type="button" onclick="window.removeSharedInstructor('${email.replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:0; width:auto; margin:0;" title="Quitar acceso"><i class="fi fi-ss-trash"></i></button>` : ''}
+                </div>
+            `).join('');
+        } catch (e) {
+            listEl.innerHTML = "<p style='text-align:center; color: var(--danger); font-size: 0.85rem;'>Error al cargar la lista.</p>";
+        }
+    };
+
+    window.addSharedInstructor = async () => {
+        const input = document.getElementById('share-email-input');
+        const email = input.value.trim().toLowerCase();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(email)) {
+            return window.CustomDialog.alert("Ingresa un correo electrónico válido.");
+        }
+        if (currentUser.email && email === currentUser.email.toLowerCase()) {
+            return window.CustomDialog.alert("Ese correo ya tiene acceso: es el tuyo.");
+        }
+
+        window.setLoading('btn-add-shared-email', true);
+        try {
+            await updateDoc(doc(db, "exams", shareExamState.examId), {
+                sharedWith: arrayUnion(email)
+            });
+            input.value = '';
+            await window.refreshShareEmailList();
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible compartir la actividad: " + e.message);
+        } finally {
+            window.setLoading('btn-add-shared-email', false, '<i class="fi fi-ss-add"></i> Agregar');
+        }
+    };
+
+    window.removeSharedInstructor = async (email) => {
+        // Limitante de negocio: solo el dueño/creador de la actividad puede quitar accesos.
+        // (Esta app no maneja reglas de seguridad de Firestore en este archivo; la validación
+        // real de permisos debe reforzarse también del lado del servidor/reglas de Firestore.)
+        if (!shareExamState.isOwner) {
+            return window.CustomDialog.alert("Solo el dueño o creador de la actividad puede quitar correos de esta lista.");
+        }
+        const confirmed = await window.CustomDialog.confirm(`¿Quitar el acceso de "${email}" a esta actividad?`, "Quitar Acceso");
+        if (!confirmed) return;
+
+        try {
+            await updateDoc(doc(db, "exams", shareExamState.examId), {
+                sharedWith: arrayRemove(email)
+            });
+            await window.refreshShareEmailList();
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible quitar el acceso: " + e.message);
+        }
+    };
+
     window.executeDeleteExam = async () => {
         const input = document.getElementById('delete-confirm-input').value.trim().toLowerCase();
         if (input !== "eliminar") {
@@ -2404,6 +2629,14 @@
             const examType = examSnap.exists() ? examSnap.data().config.type : 'exam';
             const isSurvey = examType === 'survey';
             const isCourse = examType === 'course';
+
+            // Defensa adicional: solo el dueño/creador puede eliminar, incluso si esta actividad
+            // llegó a listarse por estar compartida con el usuario actual.
+            if (examSnap.exists() && examSnap.data().instructorId !== currentUser.uid) {
+                window.setLoading('btn-confirm-delete', false, '<i class="fi fi-ss-trash"></i> Borrar');
+                window.closeDeleteModal();
+                return window.CustomDialog.alert("Solo el dueño o creador de la actividad puede eliminarla.");
+            }
 
             const keySnap = await getDoc(doc(db, "exam_keys", examId));
             let correctAnswers = [];
@@ -2738,7 +2971,7 @@
                 <td style="font-weight:bold;">${formattedPercentage}</td>
                 <td><span class="badge ${badgeClass}"><i class="fi ${iconEstatus}"></i> ${estatusTxt}</span></td>
                 <td><div class="table-actions">
-                    <button style="background-color: var(--text-secondary);" class="btn-sm" title="Ver Detalles" onclick="window.showSubmissionDetails('${sub.docId}')"><i class="fi fi-ss-eye"></i> Detalles</button>
+                    <button style="background-color: var(--text-secondary);" class="btn-sm" title="Detalles" onclick="window.showSubmissionDetails('${sub.docId}')"><i class="fi fi-ss-eye"></i></button>
                     <button class="btn-warning btn-sm" title="Reiniciar" onclick="window.resetAttempt('${sub.docId}')"><i class="fi fi-ss-refresh"></i></button>
                 </div></td>
             </tr>`;

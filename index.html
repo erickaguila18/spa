@@ -44,7 +44,7 @@
         
         .form-group { margin-bottom: 20px; text-align: left; }
         .form-group label { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
-        input[type="text"], input[type="email"], input[type="number"], input[type="password"], input[type="datetime-local"], select, textarea { width: 100%; padding: 12px 15px; border: 1px solid #BDC3C7; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 1rem; transition: border-color 0.3s; background-color: white; }
+        input[type="text"], input[type="email"], input[type="number"], input[type="password"], input[type="datetime-local"], input[type="date"], select, textarea { width: 100%; padding: 12px 15px; border: 1px solid #BDC3C7; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 1rem; transition: border-color 0.3s; background-color: white; }
         input[type="color"] { width: 100%; height: 50px; padding: 5px; border: 1px solid #BDC3C7; border-radius: 8px; cursor: pointer; }
         .color-picker-wrapper { display: flex; gap: 10px; align-items: center; }
         .color-picker-wrapper input[type="color"] { width: 60px; height: 45px; }
@@ -104,10 +104,11 @@
         .badge-progress { background-color: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; cursor: help;}
         .badge-pending { background-color: #E1F5FE; color: #1565C0; border: 1px solid #81D4FA; cursor: help;}
         
-        .exam-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #E0E0E0; border-radius: 8px; margin-bottom: 10px; background: #FAFAFA; flex-wrap: wrap; gap: 10px;}
+        .exam-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #E0E0E0; border-radius: 8px; background: #FAFAFA; flex-wrap: wrap; gap: 12px; width: 100%; box-sizing: border-box; }
         .exam-item.pending { border-left: 4px solid var(--warning); }
         .exam-item.survey { border-left: 4px solid var(--primary); }
         .exam-item.course { border-left: 4px solid var(--primary); }
+        #exams-list-container { display: flex; flex-direction: column; gap: 12px; width: 100%; }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
         .modal-content { background: white; border-radius: 12px; padding: 30px 20px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center;}
@@ -137,6 +138,19 @@
         .social-link:hover { opacity: 1; transform: scale(1.15); }
 
         .grid-layout { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .gen-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 18px; }
+        .gen-card { border: 1px solid #E0E0E0; border-radius: 12px; overflow: hidden; cursor: pointer; background: #FAFAFA; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .gen-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+        .gen-card-img { width: 100%; height: 110px; object-fit: cover; display: block; background: #ECEFF1; }
+        .gen-card-noimg { width: 100%; height: 110px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-light, #64B5F6), var(--primary)); }
+        .gen-card-body { padding: 12px; }
+        .gen-card-new { border: 2px dashed #BDBDBD; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 168px; color: var(--text-secondary); background: #fff; }
+        .student-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border: 1px solid #E0E0E0; border-radius: 8px; margin-bottom: 10px; background: #FAFAFA; flex-wrap: wrap; gap: 10px; }
+        .student-row-info { display: flex; align-items: center; gap: 12px; cursor: pointer; min-width: 0; }
+        .student-row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .student-row-actions button { width: auto; padding: 8px 10px; font-size: 0.85rem; }
+        .sc-detail-section { background: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
+        .sc-detail-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #ECECEC; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; gap: 10px; }
         
         @media (max-width: 600px) {
             .navbar-brand .brand-title { display: none; }
@@ -217,6 +231,9 @@
         <button id="nav-volver" class="hidden" onclick="window.backToDashboard()"><i class="fi fi-ss-arrow-left"></i> Volver</button>
         <button id="nav-settings" class="icon-btn hidden" onclick="window.showSettingsPanel()" title="Ajustes de Plataforma">
             <i class="fi fi-ss-settings"></i>
+        </button>
+        <button id="nav-school-control" class="icon-btn hidden" onclick="window.showSchoolControlPanel()" title="Control Escolar">
+            <i class="fi fi-ss-graduation-cap"></i>
         </button>
         <button onclick="window.showInstructorLogin()" id="nav-ingresar" class="hidden"><i class="fi fi-ss-sign-in-alt"></i> Ingresar</button>
     </div>
@@ -498,6 +515,103 @@
     </div>
 </div>
 
+<!-- CONTROL ESCOLAR: MODAL NUEVA GENERACIÓN -->
+<div id="school-gen-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 480px; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 id="school-gen-modal-title" style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;"><i class="fi fi-ss-graduation-cap"></i> Nueva Generación</h2>
+            <button onclick="window.closeGenerationModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;"><i class="fi fi-ss-cross"></i></button>
+        </div>
+        <div class="form-group"><label><i class="fi fi-ss-text"></i> Nombre de la Generación</label><input type="text" id="school-gen-name" placeholder="Ej. Generación 30 - Texcoco"></div>
+        <div class="form-group"><label><i class="fi fi-ss-key"></i> Código (Opcional)</label><input type="text" id="school-gen-code" placeholder="Ej. G30-TEXCOCO"></div>
+        <div class="form-group">
+            <label><i class="fi fi-ss-picture"></i> Imagen de la Generación (Opcional)</label>
+            <input type="file" id="school-gen-image-input" accept="image/*" onchange="window.previewGenerationImage(event)">
+            <div id="school-gen-image-preview-wrap" class="hidden" style="margin-top:10px; display:flex; align-items:center; gap:12px;">
+                <img id="school-gen-image-preview" src="" alt="" style="width:70px; height:70px; object-fit:cover; border-radius:8px; border:1px solid #E0E0E0;">
+                <button type="button" class="btn-secondary" onclick="window.clearGenerationImage()" style="width:auto; padding:8px 14px;"><i class="fi fi-ss-cross"></i> Quitar</button>
+            </div>
+        </div>
+        <button id="btn-save-generation" onclick="window.saveGeneration()" style="margin-top:10px;"><i class="fi fi-ss-disk"></i> Crear Generación</button>
+    </div>
+</div>
+
+<!-- CONTROL ESCOLAR: MODAL AGREGAR ALUMNO -->
+<div id="school-student-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 450px; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 id="school-student-modal-title" style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;"><i class="fi fi-ss-user"></i> Agregar Alumno</h2>
+            <button onclick="window.closeStudentModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;"><i class="fi fi-ss-cross"></i></button>
+        </div>
+        <div class="form-group"><label><i class="fi fi-ss-text"></i> Nombre Completo</label><input type="text" id="school-student-name" placeholder="Ej. Juan Pérez López"></div>
+        <div class="form-group"><label><i class="fi fi-ss-envelope"></i> Correo (Opcional)</label><input type="email" id="school-student-email" placeholder="alumno@correo.com"></div>
+        <button id="btn-save-student" onclick="window.saveStudent()" style="margin-top:10px;"><i class="fi fi-ss-add"></i> Agregar</button>
+    </div>
+</div>
+
+<!-- CONTROL ESCOLAR: MODAL AGREGAR ADEUDO -->
+<div id="school-debt-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 450px; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 id="school-debt-modal-title" style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;"><i class="fi fi-ss-money-bill-wave"></i> Agregar Adeudo</h2>
+            <button onclick="window.closeDebtModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;"><i class="fi fi-ss-cross"></i></button>
+        </div>
+        <p style="margin-top:0; color:var(--text-secondary); font-size:0.9rem;">Alumno: <strong id="school-debt-student-name"></strong></p>
+        <div class="form-group"><label><i class="fi fi-ss-text"></i> Concepto</label><input type="text" id="school-debt-concept" placeholder="Ej. Cuota de generación"></div>
+        <div class="form-group"><label><i class="fi fi-ss-money-bill-wave"></i> Monto (MXN)</label><input type="number" id="school-debt-amount" min="0" step="0.01" placeholder="0.00"></div>
+        <button id="btn-save-debt" onclick="window.saveDebt()" style="margin-top:10px;"><i class="fi fi-ss-add"></i> Registrar Adeudo</button>
+    </div>
+</div>
+
+<!-- CONTROL ESCOLAR: MODAL CALIFICAR TAREA -->
+<div id="school-grade-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 450px; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 id="school-grade-modal-title" style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;"><i class="fi fi-ss-clipboard-list-check"></i> Calificar Tarea</h2>
+            <button onclick="window.closeGradeModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;"><i class="fi fi-ss-cross"></i></button>
+        </div>
+        <p style="margin-top:0; color:var(--text-secondary); font-size:0.9rem;">Alumno: <strong id="school-grade-student-name"></strong></p>
+        <div class="form-group"><label><i class="fi fi-ss-text"></i> Nombre o Código de la Tarea</label><input type="text" id="school-grade-task" placeholder="Ej. Tarea 3 - Maqueta"></div>
+        <div class="form-group"><label><i class="fi fi-ss-bullseye"></i> Calificación</label><input type="number" id="school-grade-score" min="0" max="100" step="0.1" placeholder="Ej. 90"></div>
+        <button id="btn-save-grade" onclick="window.saveGrade()" style="margin-top:10px;"><i class="fi fi-ss-add"></i> Registrar Calificación</button>
+    </div>
+</div>
+
+<!-- CONTROL ESCOLAR: MODAL FALTA / JUSTIFICANTE -->
+<div id="school-absence-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 450px; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 id="school-absence-modal-title" style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;"><i class="fi fi-ss-ban"></i> Falta / Justificante</h2>
+            <button onclick="window.closeAbsenceModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;"><i class="fi fi-ss-cross"></i></button>
+        </div>
+        <p style="margin-top:0; color:var(--text-secondary); font-size:0.9rem;">Alumno: <strong id="school-absence-student-name"></strong></p>
+        <div class="form-group">
+            <label><i class="fi fi-ss-document-signed"></i> Tipo</label>
+            <select id="school-absence-type">
+                <option value="falta">Falta</option>
+                <option value="justificante">Justificante</option>
+            </select>
+        </div>
+        <div class="form-group"><label><i class="fi fi-ss-calendar-clock"></i> Fecha</label><input type="date" id="school-absence-date"></div>
+        <div class="form-group"><label><i class="fi fi-ss-text"></i> Nota (Opcional)</label><input type="text" id="school-absence-note" placeholder="Ej. Cita médica"></div>
+        <button id="btn-save-absence" onclick="window.saveAbsence()" style="margin-top:10px;"><i class="fi fi-ss-add"></i> Registrar</button>
+    </div>
+</div>
+
+<!-- CONTROL ESCOLAR: MODAL MENSAJE / NOTIFICACIÓN -->
+<div id="school-message-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 450px; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 id="school-message-modal-title" style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;"><i class="fi fi-ss-envelope"></i> Enviar Mensaje</h2>
+            <button onclick="window.closeMessageModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;"><i class="fi fi-ss-cross"></i></button>
+        </div>
+        <p style="margin-top:0; color:var(--text-secondary); font-size:0.9rem;">Para: <strong id="school-message-student-name"></strong></p>
+        <div class="form-group"><label><i class="fi fi-ss-text"></i> Mensaje</label><textarea id="school-message-text" rows="4" placeholder="Ej. Se te asignó un adeudo de $200 por cuota de generación."></textarea></div>
+        <small style="color: var(--text-secondary); display:block; margin: -10px 0 15px 0;">El alumno lo verá como notificación en su aula al iniciar sesión con su correo.</small>
+        <button id="btn-save-message" onclick="window.saveMessage()" style="margin-top:0;"><i class="fi fi-ss-add"></i> Enviar</button>
+    </div>
+</div>
+
 <div class="container">
     <div id="blocked-view" class="card status-container hidden" style="border: 2px solid var(--danger); background-color: var(--danger-light);">
         <i class="fi fi-ss-ban modal-icon" style="color: var(--danger);"></i>
@@ -553,6 +667,11 @@
                 <h3 style="margin: 0; font-size: 1.3rem;" id="portal-std-name">Alumno</h3>
                 <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;"><i class="fi fi-ss-key"></i> Clase: <strong id="portal-std-gen" style="color: var(--primary-dark);"></strong></p>
             </div>
+        </div>
+
+        <div id="std-notifications-section" class="hidden" style="margin-top:20px;">
+            <h3 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-envelope"></i> Notificaciones de Control Escolar</h3>
+            <div id="std-notifications-list"></div>
         </div>
 
         <div class="stats-grid">
@@ -753,6 +872,66 @@
         </div>
     </div>
 
+    <!-- CONTROL ESCOLAR: GALERÍA DE GENERACIONES -->
+    <div id="school-control-generations" class="card hidden">
+        <h2 style="margin:0 0 20px 0;"><i class="fi fi-ss-graduation-cap"></i> Control Escolar</h2>
+        <div id="sc-generations-grid" class="gen-gallery-grid">
+            <p style="text-align:center; grid-column: 1/-1;"><i class="fi fi-ss-spinner" style="animation: spin 1s linear infinite;"></i> Cargando generaciones...</p>
+        </div>
+    </div>
+
+    <!-- CONTROL ESCOLAR: LISTA DE ALUMNOS DE UNA GENERACIÓN -->
+    <div id="school-control-students" class="card hidden">
+        <button onclick="window.loadSchoolGenerations()" class="btn-secondary btn-sm" style="width:auto; margin-bottom: 15px;"><i class="fi fi-ss-arrow-left"></i> Generaciones</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom: 15px;">
+            <h2 id="sc-students-title" style="margin:0;"><i class="fi fi-ss-users-alt"></i> Alumnos</h2>
+            <button onclick="window.openStudentModal()" style="width:auto;"><i class="fi fi-ss-add"></i> Agregar Alumno</button>
+        </div>
+        <div id="sc-students-list">
+            <p style="text-align:center;"><i class="fi fi-ss-spinner" style="animation: spin 1s linear infinite;"></i> Cargando alumnos...</p>
+        </div>
+    </div>
+
+    <!-- CONTROL ESCOLAR: DETALLE DE UN ALUMNO -->
+    <div id="school-control-student-detail" class="card hidden">
+        <button onclick="window.reopenCurrentGeneration()" class="btn-secondary btn-sm" style="width:auto; margin-bottom: 15px;"><i class="fi fi-ss-arrow-left"></i> Alumnos</button>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom: 5px; flex-wrap: wrap;">
+            <div style="width:56px; height:56px; border-radius:50%; background:#ECEFF1; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi fi-ss-user" style="font-size:1.4rem; color:var(--primary);"></i></div>
+            <div>
+                <h2 id="sc-detail-name" style="margin:0;"></h2>
+                <p id="sc-detail-sub" style="margin:2px 0 0 0; color:var(--text-secondary); font-size:0.9rem;"></p>
+            </div>
+            <button onclick="window.editCurrentStudent()" class="btn-secondary btn-sm" title="Editar Alumno" style="width:auto; padding:8px 12px; margin-left:auto;"><i class="fi fi-ss-pencil"></i> Editar</button>
+        </div>
+
+        <div style="display:flex; gap:10px; margin: 20px 0; flex-wrap:wrap;">
+            <button onclick="window.openDebtModal()" style="width:auto;"><i class="fi fi-ss-money-bill-wave"></i> Agregar Adeudo</button>
+            <button onclick="window.openGradeModal()" class="btn-success" style="width:auto;"><i class="fi fi-ss-clipboard-list-check"></i> Calificar Tarea</button>
+            <button onclick="window.openAbsenceModal()" class="btn-danger" style="width:auto;"><i class="fi fi-ss-ban"></i> Falta/Justificante</button>
+            <button onclick="window.openMessageModal()" class="btn-secondary" style="width:auto;"><i class="fi fi-ss-envelope"></i> Enviar Mensaje</button>
+        </div>
+
+        <div class="sc-detail-section">
+            <h3 style="margin-top:0;"><i class="fi fi-ss-money-bill-wave"></i> Adeudos <span id="sc-debt-total" style="font-size:0.85rem; font-weight:normal; color:var(--text-secondary);"></span></h3>
+            <div id="sc-debt-list"><p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin adeudos registrados.</p></div>
+        </div>
+
+        <div class="sc-detail-section">
+            <h3 style="margin-top:0;"><i class="fi fi-ss-clipboard-list-check"></i> Calificaciones de Tareas</h3>
+            <div id="sc-grade-list"><p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin tareas calificadas.</p></div>
+        </div>
+
+        <div class="sc-detail-section">
+            <h3 style="margin-top:0;"><i class="fi fi-ss-ban"></i> Faltas y Justificantes</h3>
+            <div id="sc-absence-list"><p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin registros.</p></div>
+        </div>
+
+        <div class="sc-detail-section">
+            <h3 style="margin-top:0;"><i class="fi fi-ss-envelope"></i> Mensajes / Notificaciones</h3>
+            <div id="sc-message-list"><p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin mensajes enviados.</p></div>
+        </div>
+    </div>
+
     <div id="instructor-grades" class="card hidden">
         <h2 id="grades-exam-title"><i class="fi fi-ss-stats"></i> Resultados</h2>
         
@@ -766,13 +945,13 @@
         </div>
         
         <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-            <button onclick="window.loadGrades(window.currentExamId)" class="btn-sm" style="width: auto;"><i class="fi fi-ss-refresh"></i> Actualizar</button>
-            <button class="btn-primary btn-sm" onclick="window.exportToCSV()" style="width: auto; background-color: var(--text-secondary);"><i class="fi fi-ss-file-excel"></i> Exportar CSV</button>
-            <button class="btn-danger btn-sm" onclick="window.exportToPDF()" style="width: auto; background-color: var(--danger);"><i class="fi fi-ss-file-pdf"></i> Guardar PDF</button>
+            <button onclick="window.loadGrades(window.currentExamId)" class="btn-sm" style="width: auto;"><i class="fi fi-ss-refresh"></i> Recargar</button>
+            <button class="btn-primary btn-sm" onclick="window.exportToCSV()" style="width: auto; background-color: var(--text-secondary);"><i class="fi fi-ss-file-excel"></i>  CSV</button>
+            <button class="btn-danger btn-sm" onclick="window.exportToPDF()" style="width: auto; background-color: var(--danger);"><i class="fi fi-ss-file-pdf"></i> PDF</button>
         </div>
 
         <div class="form-group" style="margin-bottom: 15px;">
-            <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-secondary); margin-bottom: 5px; display: block;"><i class="fi fi-ss-search"></i> Buscar Alumno (Nombre y/o Correo)</label>
+            <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-secondary); margin-bottom: 5px; display: block;">Buscar Alumno (Nombre y/o Correo)</label>
             <input type="text" id="grades-search-input" placeholder="Ej. Juan Pérez o juan@correo.com" onkeyup="window.filterGrades()" style="padding: 10px; margin:0;">
         </div>
         
@@ -1246,7 +1425,7 @@
     }
 
     // IDs de todos los modal-overlay que pueden cerrarse con ESC o clic fuera del contenido.
-    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal'];
+    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal'];
 
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1284,7 +1463,8 @@
     function hideAll() {
         ['loading-screen', 'role-selector', 'login-view', 'student-login-view', 'student-portal', 
          'instructor-dashboard', 'instructor-upload', 'instructor-grades', 'exam-view', 'course-view',
-         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal'].forEach(id => {
+         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal',
+         'school-control-generations', 'school-control-students', 'school-control-student-detail', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal'].forEach(id => {
              const el = document.getElementById(id);
              if (el) el.classList.add('hidden');
          });
@@ -1334,15 +1514,18 @@
         if (currentUser) { 
             document.getElementById('nav-ingresar').classList.remove('hidden');
             document.getElementById('nav-settings').classList.remove('hidden');
+            document.getElementById('nav-school-control').classList.remove('hidden');
             window.backToDashboard(); 
         } else if (localStorage.getItem('tumb_student')) { 
             document.getElementById('nav-ingresar').classList.remove('hidden');
             document.getElementById('nav-settings').classList.add('hidden');
+            document.getElementById('nav-school-control').classList.add('hidden');
             window.loadStudentDashboard(); 
         } else {
             document.getElementById('role-selector').classList.remove('hidden');
             document.getElementById('nav-ingresar').classList.remove('hidden');
             document.getElementById('nav-settings').classList.add('hidden');
+            document.getElementById('nav-school-control').classList.add('hidden');
             document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-sign-in-alt"></i> Ingresar`;
             document.getElementById('nav-ingresar').onclick = () => window.showInstructorLogin();
         }
@@ -1473,6 +1656,7 @@
         document.getElementById('login-view').classList.remove('hidden'); 
         document.getElementById('nav-ingresar').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
+        document.getElementById('nav-school-control').classList.add('hidden');
         document.getElementById('nav-volver').classList.add('hidden');
         document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
         document.getElementById('nav-ingresar').onclick = window.goHome;
@@ -1484,6 +1668,7 @@
         document.getElementById('student-login-view').classList.remove('hidden'); 
         document.getElementById('nav-ingresar').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
+        document.getElementById('nav-school-control').classList.add('hidden');
         document.getElementById('nav-volver').classList.add('hidden');
         document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
         document.getElementById('nav-ingresar').onclick = window.goHome;
@@ -2003,6 +2188,7 @@
                     document.getElementById('login-view').classList.remove('hidden');
                     document.getElementById('nav-ingresar').classList.remove('hidden');
                     document.getElementById('nav-settings').classList.add('hidden');
+                    document.getElementById('nav-school-control').classList.add('hidden');
                     document.getElementById('nav-volver').classList.add('hidden');
                     document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
                     document.getElementById('nav-ingresar').onclick = () => window.location.href = window.location.pathname;
@@ -2091,10 +2277,11 @@
         hideAll(); document.getElementById('student-portal').classList.remove('hidden');
         document.getElementById('portal-std-name').innerText = student.name;
         document.getElementById('portal-std-gen').innerText = student.gen;
+        window.loadStudentNotifications(student.email);
         
         document.getElementById('nav-actions').classList.remove('hidden');
         document.getElementById('nav-ingresar').classList.remove('hidden');
-        document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-sign-out-alt"></i> Cerrar Sesión`;
+        document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-sign-out-alt"></i> Salir`;
         document.getElementById('nav-ingresar').onclick = window.logoutStudent;
         
         document.getElementById('pending-exams-list').innerHTML = `<div style="text-align:center; padding: 30px; color: var(--text-secondary);"><i class="fi fi-ss-spinner" style="animation: spin 1s linear infinite; font-size: 2rem; display:inline-block; margin-bottom:10px;"></i><br>Buscando actividades...</div>`;
@@ -2286,10 +2473,11 @@
     window.backToDashboard = async () => {
         window.currentExamId = null; 
         hideAll(); document.getElementById('instructor-dashboard').classList.remove('hidden');
-        document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-sign-out-alt"></i> Cerrar Sesión`;
+        document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-sign-out-alt"></i> Salir`;
         document.getElementById('nav-ingresar').onclick = window.logoutInstructor;
         document.getElementById('nav-volver').classList.add('hidden');
         document.getElementById('nav-settings').classList.remove('hidden');
+        document.getElementById('nav-school-control').classList.remove('hidden');
 
         document.getElementById('exams-list-container').innerHTML = "<p style='text-align:center;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando actividades...</p>";
 
@@ -2371,7 +2559,7 @@
                 : `<div style="width:56px; height:56px; border-radius:8px; background:#ECEFF1; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi ${iconMain}" style="font-size:1.4rem; color:var(--primary);"></i></div>`;
 
             container.innerHTML += `<div class="exam-item ${itemClass}">
-                <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                <div style="display:flex; align-items:center; gap:12px; min-width:0; flex:1;">
                     ${thumbHtml}
                     <div style="min-width:0;">
                         <h3 style="margin:0;">${iconHeader}${exam.config.name}${sharedBadge}</h3>
@@ -2379,8 +2567,8 @@
                     </div>
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button onclick="${actionCall}" style="width: auto;"><i class="fi ${iconMain}"></i> ${textMain}</button>
-                    <button onclick="window.openShareExamModal('${docId}', '${(exam.config.name || '').replace(/'/g, "\\'")}', ${isOwner})" class="btn-secondary" style="width: auto; padding: 14px;"><i class="fi fi-ss-share"></i></button>
+                    <button onclick="${actionCall}" style="width: auto;" title="Detalles"><i class="fi ${iconMain}"></i> ${textMain}</button>
+                    <button onclick="window.openShareExamModal('${docId}', '${(exam.config.name || '').replace(/'/g, "\\'")}', ${isOwner})" class="btn-secondary" style="width: auto; padding: 14px;" title="Compartir"><i class="fi fi-ss-share"></i></button>
                     ${deleteBtn}
                 </div>
             </div>`;
@@ -2394,6 +2582,7 @@
     window.showSettingsPanel = async () => {
         hideAll(); document.getElementById('admin-settings').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
+        document.getElementById('nav-school-control').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
 
         const activeProjectLabel = document.getElementById('config-active-firebase-project');
@@ -2466,6 +2655,7 @@
         window.uploadType = type;
         document.getElementById('instructor-upload').classList.remove('hidden'); 
         document.getElementById('nav-settings').classList.add('hidden');
+        document.getElementById('nav-school-control').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
         
         document.getElementById('exam-name').value = "";
@@ -2612,6 +2802,755 @@
             window.CustomDialog.alert("No fue posible quitar el acceso: " + e.message);
         }
     };
+
+    // ==================== CONTROL ESCOLAR ====================
+    // Colecciones nuevas en Firestore (creadas sobre la marcha, sin necesidad de backfill):
+    //   school_generations/{genId}                          -> { instructorId, name, code, image, createdAt }
+    //   school_students/{studentId}                         -> { instructorId, genId, name, email, createdAt }
+    //   school_students/{studentId}/debts/{id}               -> { concept, amount, paid, createdAt }
+    //   school_students/{studentId}/task_grades/{id}         -> { task, score, createdAt }
+    //   school_students/{studentId}/absences/{id}            -> { type: 'falta'|'justificante', date, note, createdAt }
+    //   school_students/{studentId}/messages/{id}            -> { text, createdAt }
+    let schoolState = {
+        generations: [],
+        students: [],
+        currentGenId: null,
+        currentGenName: "",
+        currentStudentId: null,
+        currentStudentName: "",
+        activeStudentId: null, // alumno objetivo del modal de adeudo/tarea/falta/mensaje que esté abierto
+        editingGenId: null,    // id de la generación en edición (null = modo "crear")
+        editingStudentId: null,// id del alumno en edición de datos básicos (null = modo "agregar")
+        editingRecordId: null, // id del registro (adeudo/tarea/falta/mensaje) en edición (null = modo "agregar")
+        editingRecordType: null // 'debts' | 'task_grades' | 'absences' | 'messages'
+    };
+    let schoolGenImageDataUrl = null;
+
+    function formatDate(iso) {
+        try { return new Date(iso).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return ''; }
+    }
+    function formatDateOnly(dateStr) {
+        try { return new Date(dateStr + 'T00:00:00').toLocaleDateString('es-MX', { dateStyle: 'medium' }); } catch (e) { return dateStr || ''; }
+    }
+    function findStudentName(id) {
+        const s = schoolState.students.find(st => st.id === id);
+        return s ? s.name : '';
+    }
+
+    window.showSchoolControlPanel = () => {
+        document.getElementById('nav-settings').classList.add('hidden');
+        document.getElementById('nav-school-control').classList.add('hidden');
+        document.getElementById('nav-volver').classList.remove('hidden');
+        window.loadSchoolGenerations();
+    };
+
+    // --- Generaciones ---
+    window.loadSchoolGenerations = async () => {
+        hideAll();
+        document.getElementById('school-control-generations').classList.remove('hidden');
+        document.getElementById('nav-volver').classList.remove('hidden');
+        const grid = document.getElementById('sc-generations-grid');
+        grid.innerHTML = "<p style='text-align:center; grid-column: 1/-1;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando generaciones...</p>";
+
+        try {
+            const gensQ = query(collection(db, "school_generations"), where("instructorId", "==", currentUser.uid));
+            const studentsQ = query(collection(db, "school_students"), where("instructorId", "==", currentUser.uid));
+            const [gensSnap, studentsSnap] = await Promise.all([getDocs(gensQ), getDocs(studentsQ)]);
+
+            schoolState.generations = [];
+            gensSnap.forEach(d => schoolState.generations.push({ id: d.id, ...d.data() }));
+            schoolState.generations.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+            schoolState.students = [];
+            studentsSnap.forEach(d => schoolState.students.push({ id: d.id, ...d.data() }));
+
+            renderGenerationsGrid();
+        } catch (e) {
+            console.error("Error cargando Control Escolar:", e);
+            const isPermission = e && (e.code === 'permission-denied' || /insufficient permissions/i.test(e.message || ''));
+            grid.innerHTML = `<div style="text-align:center; grid-column: 1/-1; color:var(--danger);">
+                <p style="margin-bottom:5px;"><i class="fi fi-ss-triangle-warning"></i> No se pudieron cargar las generaciones.</p>
+                <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px;">${isPermission
+                    ? 'Firestore rechazó la lectura por permisos. Las reglas de seguridad deben permitir acceso a las colecciones "school_generations" y "school_students".'
+                    : (e && e.message ? e.message : 'Ocurrió un error inesperado.')}</p>
+                <button onclick="window.loadSchoolGenerations()" class="btn-secondary" style="width:auto;"><i class="fi fi-ss-refresh"></i> Reintentar</button>
+            </div>`;
+        }
+    };
+
+    function renderGenerationsGrid() {
+        const grid = document.getElementById('sc-generations-grid');
+        let html = `<div class="gen-card gen-card-new" onclick="window.openGenerationModal()">
+            <i class="fi fi-ss-add" style="font-size:1.8rem; margin-bottom:8px;"></i>
+            <span>Nueva Generación</span>
+        </div>`;
+
+        schoolState.generations.forEach(gen => {
+            const count = schoolState.students.filter(s => s.genId === gen.id).length;
+            const imgHtml = gen.image
+                ? `<img src="${gen.image}" class="gen-card-img" alt="">`
+                : `<div class="gen-card-noimg"><i class="fi fi-ss-graduation-cap" style="font-size:2rem; color:#fff;"></i></div>`;
+            html += `<div class="gen-card" style="position:relative;">
+                <button onclick="event.stopPropagation(); window.openGenerationModal('${gen.id}')" title="Editar Generación" style="position:absolute; top:8px; right:8px; z-index:2; width:30px; height:30px; padding:0; border-radius:50%; background:rgba(255,255,255,0.9); border:none; color:var(--primary); display:flex; align-items:center; justify-content:center; box-shadow:0 1px 4px rgba(0,0,0,0.25);"><i class="fi fi-ss-pencil"></i></button>
+                <div onclick="window.openGeneration('${gen.id}')" style="cursor:pointer;">
+                    ${imgHtml}
+                    <div class="gen-card-body">
+                        <h3 style="margin:0; font-size:1rem;">${gen.name}</h3>
+                        <p style="margin:5px 0 0 0; color:var(--text-secondary); font-size:0.8rem;"><i class="fi fi-ss-users-alt"></i> ${count} alumno${count === 1 ? '' : 's'}</p>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        if (schoolState.generations.length === 0) {
+            html += `<p style="text-align:center; grid-column: 1/-1; color:var(--text-secondary); margin-top:10px;">Aún no tienes generaciones registradas. Crea la primera con el botón de arriba.</p>`;
+        }
+
+        grid.innerHTML = html;
+    }
+
+    window.openGenerationModal = (genId) => {
+        schoolState.editingGenId = genId || null;
+        const titleEl = document.getElementById('school-gen-modal-title');
+
+        if (genId) {
+            const gen = schoolState.generations.find(g => g.id === genId);
+            if (!gen) return;
+            titleEl.innerHTML = '<i class="fi fi-ss-graduation-cap"></i> Editar Generación';
+            document.getElementById('school-gen-name').value = gen.name || "";
+            document.getElementById('school-gen-code').value = gen.code || "";
+            if (gen.image) {
+                schoolGenImageDataUrl = gen.image;
+                document.getElementById('school-gen-image-preview').src = gen.image;
+                document.getElementById('school-gen-image-preview-wrap').classList.remove('hidden');
+                document.getElementById('school-gen-image-input').value = "";
+            } else {
+                window.clearGenerationImage();
+            }
+            window.setLoading('btn-save-generation', false, '<i class="fi fi-ss-disk"></i> Guardar Cambios');
+        } else {
+            titleEl.innerHTML = '<i class="fi fi-ss-graduation-cap"></i> Nueva Generación';
+            document.getElementById('school-gen-name').value = "";
+            document.getElementById('school-gen-code').value = "";
+            window.clearGenerationImage();
+            window.setLoading('btn-save-generation', false, '<i class="fi fi-ss-disk"></i> Crear Generación');
+        }
+        document.getElementById('school-gen-modal').classList.remove('hidden');
+    };
+    window.closeGenerationModal = () => {
+        schoolState.editingGenId = null;
+        document.getElementById('school-gen-modal').classList.add('hidden');
+    };
+
+    window.previewGenerationImage = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            event.target.value = "";
+            return window.CustomDialog.alert("Selecciona un archivo de imagen válido.");
+        }
+        try {
+            schoolGenImageDataUrl = await resizeImageToDataURL(file, 500, 0.75);
+            document.getElementById('school-gen-image-preview').src = schoolGenImageDataUrl;
+            document.getElementById('school-gen-image-preview-wrap').classList.remove('hidden');
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible procesar la imagen seleccionada.");
+        }
+    };
+    window.clearGenerationImage = () => {
+        schoolGenImageDataUrl = null;
+        const input = document.getElementById('school-gen-image-input');
+        if (input) input.value = "";
+        const wrap = document.getElementById('school-gen-image-preview-wrap');
+        if (wrap) wrap.classList.add('hidden');
+        const img = document.getElementById('school-gen-image-preview');
+        if (img) img.src = "";
+    };
+
+    window.saveGeneration = async () => {
+        const name = document.getElementById('school-gen-name').value.trim();
+        const code = document.getElementById('school-gen-code').value.trim().toUpperCase();
+        if (!name) return window.CustomDialog.alert("Ingresa un nombre para la generación.");
+
+        const isEditing = !!schoolState.editingGenId;
+        const defaultBtnHtml = isEditing ? '<i class="fi fi-ss-disk"></i> Guardar Cambios' : '<i class="fi fi-ss-disk"></i> Crear Generación';
+
+        window.setLoading('btn-save-generation', true);
+        try {
+            if (isEditing) {
+                await updateDoc(doc(db, "school_generations", schoolState.editingGenId), {
+                    name, code: code || null,
+                    image: schoolGenImageDataUrl || null,
+                    updatedAt: new Date().toISOString()
+                });
+            } else {
+                await addDoc(collection(db, "school_generations"), {
+                    instructorId: currentUser.uid,
+                    name, code: code || null,
+                    image: schoolGenImageDataUrl || null,
+                    createdAt: new Date().toISOString()
+                });
+            }
+            window.closeGenerationModal();
+            window.setLoading('btn-save-generation', false, defaultBtnHtml);
+            await window.loadSchoolGenerations();
+        } catch (e) {
+            window.setLoading('btn-save-generation', false, defaultBtnHtml);
+            window.CustomDialog.alert(`No fue posible ${isEditing ? 'guardar los cambios' : 'crear la generación'}: ` + e.message);
+        }
+    };
+
+    // --- Alumnos de una generación ---
+    window.openGeneration = (genId) => {
+        const gen = schoolState.generations.find(g => g.id === genId);
+        if (!gen) return;
+        schoolState.currentGenId = genId;
+        schoolState.currentGenName = gen.name;
+
+        hideAll();
+        document.getElementById('school-control-students').classList.remove('hidden');
+        document.getElementById('sc-students-title').innerHTML = `<i class="fi fi-ss-users-alt"></i> Alumnos: ${gen.name}`;
+        renderStudentsList();
+    };
+
+    window.reopenCurrentGeneration = () => {
+        if (schoolState.currentGenId) window.openGeneration(schoolState.currentGenId);
+        else window.loadSchoolGenerations();
+    };
+
+    function renderStudentsList() {
+        const container = document.getElementById('sc-students-list');
+        const students = schoolState.students
+            .filter(s => s.genId === schoolState.currentGenId)
+            .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        if (students.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:var(--text-secondary);">Aún no hay alumnos en esta generación. Agrega el primero con el botón de arriba.</p>`;
+            return;
+        }
+
+        container.innerHTML = students.map(s => `
+            <div class="student-row">
+                <div class="student-row-info" onclick="window.openStudentDetail('${s.id}')">
+                    <div style="width:42px; height:42px; border-radius:50%; background:#ECEFF1; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi fi-ss-user" style="color:var(--primary);"></i></div>
+                    <div style="min-width:0;">
+                        <p style="margin:0; font-weight:bold;">${s.name}</p>
+                        <p style="margin:2px 0 0 0; color:var(--text-secondary); font-size:0.82rem;">${s.email || 'Sin correo registrado'}</p>
+                    </div>
+                </div>
+                <div class="student-row-actions">
+                    <button onclick="window.openStudentModal('${s.id}')" title="Editar Alumno"><i class="fi fi-ss-pencil"></i></button>
+                    <button onclick="window.openDebtModal('${s.id}')" title="Agregar Adeudo"><i class="fi fi-ss-money-bill-wave"></i></button>
+                    <button onclick="window.openGradeModal('${s.id}')" class="btn-success" title="Calificar Tarea"><i class="fi fi-ss-clipboard-list-check"></i></button>
+                    <button onclick="window.openAbsenceModal('${s.id}')" class="btn-danger" title="Falta/Justificante"><i class="fi fi-ss-ban"></i></button>
+                    <button onclick="window.openMessageModal('${s.id}')" class="btn-secondary" title="Enviar Mensaje"><i class="fi fi-ss-envelope"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    window.editCurrentStudent = () => window.openStudentModal(schoolState.currentStudentId);
+
+    window.openStudentModal = (studentId) => {
+        schoolState.editingStudentId = studentId || null;
+        const titleEl = document.getElementById('school-student-modal-title');
+
+        if (studentId) {
+            const s = schoolState.students.find(st => st.id === studentId);
+            if (!s) return;
+            titleEl.innerHTML = '<i class="fi fi-ss-user"></i> Editar Alumno';
+            document.getElementById('school-student-name').value = s.name || "";
+            document.getElementById('school-student-email').value = s.email || "";
+            window.setLoading('btn-save-student', false, '<i class="fi fi-ss-disk"></i> Guardar Cambios');
+        } else {
+            titleEl.innerHTML = '<i class="fi fi-ss-user"></i> Agregar Alumno';
+            document.getElementById('school-student-name').value = "";
+            document.getElementById('school-student-email').value = "";
+            window.setLoading('btn-save-student', false, '<i class="fi fi-ss-add"></i> Agregar');
+        }
+        document.getElementById('school-student-modal').classList.remove('hidden');
+    };
+    window.closeStudentModal = () => {
+        schoolState.editingStudentId = null;
+        document.getElementById('school-student-modal').classList.add('hidden');
+    };
+
+    window.saveStudent = async () => {
+        const name = document.getElementById('school-student-name').value.trim();
+        const email = document.getElementById('school-student-email').value.trim().toLowerCase();
+        if (!name) return window.CustomDialog.alert("Ingresa el nombre del alumno.");
+
+        const isEditing = !!schoolState.editingStudentId;
+        const defaultBtnHtml = isEditing ? '<i class="fi fi-ss-disk"></i> Guardar Cambios' : '<i class="fi fi-ss-add"></i> Agregar';
+
+        window.setLoading('btn-save-student', true);
+        try {
+            if (isEditing) {
+                const sid = schoolState.editingStudentId;
+                await updateDoc(doc(db, "school_students", sid), {
+                    name, email: email || null, updatedAt: new Date().toISOString()
+                });
+                const local = schoolState.students.find(st => st.id === sid);
+                if (local) { local.name = name; local.email = email || null; }
+                if (schoolState.currentStudentId === sid) {
+                    schoolState.currentStudentName = name;
+                    document.getElementById('sc-detail-name').innerText = name;
+                    document.getElementById('sc-detail-sub').innerText = `${email || 'Sin correo registrado'} · ${schoolState.currentGenName}`;
+                }
+            } else {
+                if (!schoolState.currentGenId) return window.CustomDialog.alert("Selecciona una generación primero.");
+                const newRef = await addDoc(collection(db, "school_students"), {
+                    instructorId: currentUser.uid,
+                    genId: schoolState.currentGenId,
+                    name,
+                    email: email || null,
+                    createdAt: new Date().toISOString()
+                });
+                schoolState.students.push({ id: newRef.id, instructorId: currentUser.uid, genId: schoolState.currentGenId, name, email: email || null });
+            }
+            window.closeStudentModal();
+            window.setLoading('btn-save-student', false, defaultBtnHtml);
+            renderStudentsList();
+        } catch (e) {
+            window.setLoading('btn-save-student', false, defaultBtnHtml);
+            window.CustomDialog.alert(`No fue posible ${isEditing ? 'guardar los cambios' : 'agregar el alumno'}: ` + e.message);
+        }
+    };
+
+    // --- Detalle de alumno ---
+    window.openStudentDetail = async (studentId) => {
+        const student = schoolState.students.find(s => s.id === studentId);
+        if (!student) return;
+        schoolState.currentStudentId = studentId;
+        schoolState.currentStudentName = student.name;
+
+        hideAll();
+        document.getElementById('school-control-student-detail').classList.remove('hidden');
+        document.getElementById('sc-detail-name').innerText = student.name;
+        document.getElementById('sc-detail-sub').innerText = `${student.email || 'Sin correo registrado'} · ${schoolState.currentGenName}`;
+
+        ['sc-debt-list', 'sc-grade-list', 'sc-absence-list', 'sc-message-list'].forEach(id => {
+            document.getElementById(id).innerHTML = "<p style='text-align:center; color:var(--text-secondary); font-size:0.9rem;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando...</p>";
+        });
+
+        await window.refreshStudentDetail();
+    };
+
+    window.refreshStudentDetail = async () => {
+        const sid = schoolState.currentStudentId;
+        if (!sid) return;
+        try {
+            const [debtsSnap, gradesSnap, absencesSnap, messagesSnap] = await Promise.all([
+                getDocs(collection(db, "school_students", sid, "debts")),
+                getDocs(collection(db, "school_students", sid, "task_grades")),
+                getDocs(collection(db, "school_students", sid, "absences")),
+                getDocs(collection(db, "school_students", sid, "messages"))
+            ]);
+            renderDebtList(sid, debtsSnap);
+            renderGradeList(sid, gradesSnap);
+            renderAbsenceList(sid, absencesSnap);
+            renderMessageList(sid, messagesSnap);
+        } catch (e) {
+            console.error("Error cargando detalle del alumno:", e);
+            const isPermission = e && (e.code === 'permission-denied' || /insufficient permissions/i.test(e.message || ''));
+            window.CustomDialog.alert(isPermission
+                ? 'Firestore rechazó la lectura por permisos. Las reglas de seguridad deben permitir acceso a las subcolecciones de "school_students".'
+                : ("Error al cargar el detalle del alumno: " + (e && e.message ? e.message : 'error desconocido.')));
+        }
+    };
+
+    function renderDebtList(sid, snap) {
+        const container = document.getElementById('sc-debt-list');
+        const totalEl = document.getElementById('sc-debt-total');
+        let items = [];
+        snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+        items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        schoolState.currentDebts = items;
+
+        const pendingTotal = items.filter(i => !i.paid).reduce((sum, i) => sum + (i.amount || 0), 0);
+        totalEl.innerText = items.length ? `(Pendiente: $${pendingTotal.toFixed(2)})` : "";
+
+        if (items.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin adeudos registrados.</p>`;
+            return;
+        }
+        container.innerHTML = items.map(i => `
+            <div class="sc-detail-item">
+                <div style="min-width:0;">
+                    <p style="margin:0; font-weight:bold;">${i.concept} ${i.paid ? '<span style="color:var(--success); font-size:0.75rem; font-weight:normal;">(Pagado)</span>' : ''}</p>
+                    <p style="margin:2px 0 0 0; color:var(--text-secondary); font-size:0.8rem;">$${(i.amount || 0).toFixed(2)} · ${formatDate(i.createdAt)}</p>
+                </div>
+                <div style="display:flex; gap:6px; flex-shrink:0; align-items:center;">
+                    <button onclick="window.toggleDebtPaid('${sid}','${i.id}', ${!!i.paid})" class="${i.paid ? 'btn-secondary' : 'btn-success'}" style="width:auto; padding:6px 10px; font-size:0.78rem;">${i.paid ? 'Marcar Pendiente' : 'Marcar Pagado'}</button>
+                    <button onclick="window.openDebtModal('${sid}','${i.id}')" title="Editar Adeudo" style="background:none; border:none; color:var(--primary); cursor:pointer; width:auto; padding:4px;"><i class="fi fi-ss-pencil"></i></button>
+                    <button onclick="window.deleteSchoolRecord('debts','${sid}','${i.id}')" title="Eliminar" style="background:none; border:none; color:var(--danger); cursor:pointer; width:auto; padding:4px;"><i class="fi fi-ss-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderGradeList(sid, snap) {
+        const container = document.getElementById('sc-grade-list');
+        let items = [];
+        snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+        items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        schoolState.currentGrades = items;
+        if (items.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin tareas calificadas.</p>`;
+            return;
+        }
+        container.innerHTML = items.map(i => `
+            <div class="sc-detail-item">
+                <div style="min-width:0;">
+                    <p style="margin:0; font-weight:bold;">${i.task}</p>
+                    <p style="margin:2px 0 0 0; color:var(--text-secondary); font-size:0.8rem;">Calificación: ${i.score} · ${formatDate(i.createdAt)}</p>
+                </div>
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                    <button onclick="window.openGradeModal('${sid}','${i.id}')" title="Editar Calificación" style="background:none; border:none; color:var(--primary); cursor:pointer; width:auto; padding:4px;"><i class="fi fi-ss-pencil"></i></button>
+                    <button onclick="window.deleteSchoolRecord('task_grades','${sid}','${i.id}')" title="Eliminar" style="background:none; border:none; color:var(--danger); cursor:pointer; width:auto; padding:4px;"><i class="fi fi-ss-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderAbsenceList(sid, snap) {
+        const container = document.getElementById('sc-absence-list');
+        let items = [];
+        snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+        items.sort((a, b) => new Date(b.date) - new Date(a.date));
+        schoolState.currentAbsences = items;
+        if (items.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin registros.</p>`;
+            return;
+        }
+        container.innerHTML = items.map(i => `
+            <div class="sc-detail-item">
+                <div style="min-width:0;">
+                    <p style="margin:0; font-weight:bold; color:${i.type === 'falta' ? 'var(--danger)' : 'var(--success)'};">${i.type === 'falta' ? 'Falta' : 'Justificante'}</p>
+                    <p style="margin:2px 0 0 0; color:var(--text-secondary); font-size:0.8rem;">${formatDateOnly(i.date)}${i.note ? ' · ' + i.note : ''}</p>
+                </div>
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                    <button onclick="window.openAbsenceModal('${sid}','${i.id}')" title="Editar Registro" style="background:none; border:none; color:var(--primary); cursor:pointer; width:auto; padding:4px;"><i class="fi fi-ss-pencil"></i></button>
+                    <button onclick="window.deleteSchoolRecord('absences','${sid}','${i.id}')" title="Eliminar" style="background:none; border:none; color:var(--danger); cursor:pointer; width:auto; padding:4px;"><i class="fi fi-ss-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderMessageList(sid, snap) {
+        const container = document.getElementById('sc-message-list');
+        let items = [];
+        snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+        items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        schoolState.currentMessages = items;
+        if (items.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin mensajes enviados.</p>`;
+            return;
+        }
+        container.innerHTML = items.map(i => `
+            <div class="sc-detail-item">
+                <div style="min-width:0;">
+                    <p style="margin:0;">${i.text}</p>
+                    <p style="margin:4px 0 0 0; color:var(--text-secondary); font-size:0.8rem;">${formatDate(i.createdAt)}</p>
+                </div>
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                    <button onclick="window.openMessageModal('${sid}','${i.id}')" title="Editar Mensaje" style="background:none; border:none; color:var(--primary); cursor:pointer; width:auto; padding:4px;"><i class="fi fi-ss-pencil"></i></button>
+                    <button onclick="window.deleteSchoolRecord('messages','${sid}','${i.id}')" title="Eliminar" style="background:none; border:none; color:var(--danger); cursor:pointer; width:auto; padding:4px;"><i class="fi fi-ss-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    window.toggleDebtPaid = async (sid, debtId, currentPaid) => {
+        try {
+            await updateDoc(doc(db, "school_students", sid, "debts", debtId), { paid: !currentPaid });
+            await window.refreshStudentDetail();
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible actualizar el adeudo.");
+        }
+    };
+
+    window.deleteSchoolRecord = async (subcol, sid, recordId) => {
+        const confirmed = await window.CustomDialog.confirm("¿Eliminar este registro? Esta acción no se puede deshacer.", "Confirmar Eliminación");
+        if (!confirmed) return;
+        try {
+            await deleteDoc(doc(db, "school_students", sid, subcol, recordId));
+            await window.refreshStudentDetail();
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible eliminar el registro.");
+        }
+    };
+
+    // --- Modales de alta/edición: Adeudo / Tarea / Falta / Mensaje ---
+    // Cada uno puede abrirse desde la lista de alumnos (solo studentId → modo "agregar"), desde
+    // la pantalla de detalle del alumno sin argumentos (usa el alumno actualmente abierto, modo
+    // "agregar"), o con (studentId, recordId) desde el lápiz de un registro existente → modo
+    // "editar", precargando los datos guardados en schoolState.currentXxx.
+    window.openDebtModal = (studentId, recordId) => {
+        const sid = studentId || schoolState.currentStudentId;
+        if (!sid) return;
+        schoolState.activeStudentId = sid;
+        schoolState.editingRecordId = recordId || null;
+        document.getElementById('school-debt-student-name').innerText = findStudentName(sid);
+        const titleEl = document.getElementById('school-debt-modal-title');
+
+        if (recordId) {
+            const record = (schoolState.currentDebts || []).find(r => r.id === recordId);
+            titleEl.innerHTML = '<i class="fi fi-ss-money-bill-wave"></i> Editar Adeudo';
+            document.getElementById('school-debt-concept').value = record ? record.concept : "";
+            document.getElementById('school-debt-amount').value = record ? record.amount : "";
+            window.setLoading('btn-save-debt', false, '<i class="fi fi-ss-disk"></i> Guardar Cambios');
+        } else {
+            titleEl.innerHTML = '<i class="fi fi-ss-money-bill-wave"></i> Agregar Adeudo';
+            document.getElementById('school-debt-concept').value = "";
+            document.getElementById('school-debt-amount').value = "";
+            window.setLoading('btn-save-debt', false, '<i class="fi fi-ss-add"></i> Registrar Adeudo');
+        }
+        document.getElementById('school-debt-modal').classList.remove('hidden');
+    };
+    window.closeDebtModal = () => {
+        schoolState.editingRecordId = null;
+        document.getElementById('school-debt-modal').classList.add('hidden');
+    };
+
+    window.saveDebt = async () => {
+        const concept = document.getElementById('school-debt-concept').value.trim();
+        const amount = parseFloat(document.getElementById('school-debt-amount').value);
+        if (!concept) return window.CustomDialog.alert("Ingresa el concepto del adeudo.");
+        if (isNaN(amount) || amount <= 0) return window.CustomDialog.alert("Ingresa un monto válido mayor a 0.");
+
+        const isEditing = !!schoolState.editingRecordId;
+        const defaultBtnHtml = isEditing ? '<i class="fi fi-ss-disk"></i> Guardar Cambios' : '<i class="fi fi-ss-add"></i> Registrar Adeudo';
+
+        window.setLoading('btn-save-debt', true);
+        try {
+            if (isEditing) {
+                await updateDoc(doc(db, "school_students", schoolState.activeStudentId, "debts", schoolState.editingRecordId), {
+                    concept, amount, updatedAt: new Date().toISOString()
+                });
+            } else {
+                await addDoc(collection(db, "school_students", schoolState.activeStudentId, "debts"), {
+                    concept, amount, paid: false, createdAt: new Date().toISOString()
+                });
+            }
+            window.closeDebtModal();
+            window.setLoading('btn-save-debt', false, defaultBtnHtml);
+            if (schoolState.currentStudentId === schoolState.activeStudentId) await window.refreshStudentDetail();
+        } catch (e) {
+            window.setLoading('btn-save-debt', false, defaultBtnHtml);
+            window.CustomDialog.alert(`No fue posible ${isEditing ? 'guardar los cambios' : 'registrar el adeudo'}: ` + e.message);
+        }
+    };
+
+    window.openGradeModal = (studentId, recordId) => {
+        const sid = studentId || schoolState.currentStudentId;
+        if (!sid) return;
+        schoolState.activeStudentId = sid;
+        schoolState.editingRecordId = recordId || null;
+        document.getElementById('school-grade-student-name').innerText = findStudentName(sid);
+        const titleEl = document.getElementById('school-grade-modal-title');
+
+        if (recordId) {
+            const record = (schoolState.currentGrades || []).find(r => r.id === recordId);
+            titleEl.innerHTML = '<i class="fi fi-ss-clipboard-list-check"></i> Editar Calificación';
+            document.getElementById('school-grade-task').value = record ? record.task : "";
+            document.getElementById('school-grade-score').value = record ? record.score : "";
+            window.setLoading('btn-save-grade', false, '<i class="fi fi-ss-disk"></i> Guardar Cambios');
+        } else {
+            titleEl.innerHTML = '<i class="fi fi-ss-clipboard-list-check"></i> Calificar Tarea';
+            document.getElementById('school-grade-task').value = "";
+            document.getElementById('school-grade-score').value = "";
+            window.setLoading('btn-save-grade', false, '<i class="fi fi-ss-add"></i> Registrar Calificación');
+        }
+        document.getElementById('school-grade-modal').classList.remove('hidden');
+    };
+    window.closeGradeModal = () => {
+        schoolState.editingRecordId = null;
+        document.getElementById('school-grade-modal').classList.add('hidden');
+    };
+
+    window.saveGrade = async () => {
+        const task = document.getElementById('school-grade-task').value.trim();
+        const score = parseFloat(document.getElementById('school-grade-score').value);
+        if (!task) return window.CustomDialog.alert("Ingresa el nombre o código de la tarea.");
+        if (isNaN(score)) return window.CustomDialog.alert("Ingresa una calificación válida.");
+
+        const isEditing = !!schoolState.editingRecordId;
+        const defaultBtnHtml = isEditing ? '<i class="fi fi-ss-disk"></i> Guardar Cambios' : '<i class="fi fi-ss-add"></i> Registrar Calificación';
+
+        window.setLoading('btn-save-grade', true);
+        try {
+            if (isEditing) {
+                await updateDoc(doc(db, "school_students", schoolState.activeStudentId, "task_grades", schoolState.editingRecordId), {
+                    task, score, updatedAt: new Date().toISOString()
+                });
+            } else {
+                await addDoc(collection(db, "school_students", schoolState.activeStudentId, "task_grades"), {
+                    task, score, createdAt: new Date().toISOString()
+                });
+            }
+            window.closeGradeModal();
+            window.setLoading('btn-save-grade', false, defaultBtnHtml);
+            if (schoolState.currentStudentId === schoolState.activeStudentId) await window.refreshStudentDetail();
+        } catch (e) {
+            window.setLoading('btn-save-grade', false, defaultBtnHtml);
+            window.CustomDialog.alert(`No fue posible ${isEditing ? 'guardar los cambios' : 'registrar la calificación'}: ` + e.message);
+        }
+    };
+
+    window.openAbsenceModal = (studentId, recordId) => {
+        const sid = studentId || schoolState.currentStudentId;
+        if (!sid) return;
+        schoolState.activeStudentId = sid;
+        schoolState.editingRecordId = recordId || null;
+        document.getElementById('school-absence-student-name').innerText = findStudentName(sid);
+        const titleEl = document.getElementById('school-absence-modal-title');
+
+        if (recordId) {
+            const record = (schoolState.currentAbsences || []).find(r => r.id === recordId);
+            titleEl.innerHTML = '<i class="fi fi-ss-ban"></i> Editar Falta / Justificante';
+            document.getElementById('school-absence-type').value = record ? record.type : "falta";
+            document.getElementById('school-absence-date').value = record ? record.date : new Date().toISOString().slice(0, 10);
+            document.getElementById('school-absence-note').value = record && record.note ? record.note : "";
+            window.setLoading('btn-save-absence', false, '<i class="fi fi-ss-disk"></i> Guardar Cambios');
+        } else {
+            titleEl.innerHTML = '<i class="fi fi-ss-ban"></i> Falta / Justificante';
+            document.getElementById('school-absence-type').value = "falta";
+            document.getElementById('school-absence-date').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('school-absence-note').value = "";
+            window.setLoading('btn-save-absence', false, '<i class="fi fi-ss-add"></i> Registrar');
+        }
+        document.getElementById('school-absence-modal').classList.remove('hidden');
+    };
+    window.closeAbsenceModal = () => {
+        schoolState.editingRecordId = null;
+        document.getElementById('school-absence-modal').classList.add('hidden');
+    };
+
+    window.saveAbsence = async () => {
+        const type = document.getElementById('school-absence-type').value;
+        const date = document.getElementById('school-absence-date').value;
+        const note = document.getElementById('school-absence-note').value.trim();
+        if (!date) return window.CustomDialog.alert("Selecciona una fecha.");
+
+        const isEditing = !!schoolState.editingRecordId;
+        const defaultBtnHtml = isEditing ? '<i class="fi fi-ss-disk"></i> Guardar Cambios' : '<i class="fi fi-ss-add"></i> Registrar';
+
+        window.setLoading('btn-save-absence', true);
+        try {
+            if (isEditing) {
+                await updateDoc(doc(db, "school_students", schoolState.activeStudentId, "absences", schoolState.editingRecordId), {
+                    type, date, note: note || null, updatedAt: new Date().toISOString()
+                });
+            } else {
+                await addDoc(collection(db, "school_students", schoolState.activeStudentId, "absences"), {
+                    type, date, note: note || null, createdAt: new Date().toISOString()
+                });
+            }
+            window.closeAbsenceModal();
+            window.setLoading('btn-save-absence', false, defaultBtnHtml);
+            if (schoolState.currentStudentId === schoolState.activeStudentId) await window.refreshStudentDetail();
+        } catch (e) {
+            window.setLoading('btn-save-absence', false, defaultBtnHtml);
+            window.CustomDialog.alert(`No fue posible ${isEditing ? 'guardar los cambios' : 'registrar el movimiento'}: ` + e.message);
+        }
+    };
+
+    window.openMessageModal = (studentId, recordId) => {
+        const sid = studentId || schoolState.currentStudentId;
+        if (!sid) return;
+        schoolState.activeStudentId = sid;
+        schoolState.editingRecordId = recordId || null;
+        document.getElementById('school-message-student-name').innerText = findStudentName(sid);
+        const titleEl = document.getElementById('school-message-modal-title');
+
+        if (recordId) {
+            const record = (schoolState.currentMessages || []).find(r => r.id === recordId);
+            titleEl.innerHTML = '<i class="fi fi-ss-envelope"></i> Editar Mensaje';
+            document.getElementById('school-message-text').value = record ? record.text : "";
+            window.setLoading('btn-save-message', false, '<i class="fi fi-ss-disk"></i> Guardar Cambios');
+        } else {
+            titleEl.innerHTML = '<i class="fi fi-ss-envelope"></i> Enviar Mensaje';
+            document.getElementById('school-message-text').value = "";
+            window.setLoading('btn-save-message', false, '<i class="fi fi-ss-add"></i> Enviar');
+        }
+        document.getElementById('school-message-modal').classList.remove('hidden');
+    };
+    window.closeMessageModal = () => {
+        schoolState.editingRecordId = null;
+        document.getElementById('school-message-modal').classList.add('hidden');
+    };
+
+    window.saveMessage = async () => {
+        const text = document.getElementById('school-message-text').value.trim();
+        if (!text) return window.CustomDialog.alert("Escribe un mensaje.");
+
+        const isEditing = !!schoolState.editingRecordId;
+        const defaultBtnHtml = isEditing ? '<i class="fi fi-ss-disk"></i> Guardar Cambios' : '<i class="fi fi-ss-add"></i> Enviar';
+
+        window.setLoading('btn-save-message', true);
+        try {
+            if (isEditing) {
+                await updateDoc(doc(db, "school_students", schoolState.activeStudentId, "messages", schoolState.editingRecordId), {
+                    text, updatedAt: new Date().toISOString()
+                });
+            } else {
+                await addDoc(collection(db, "school_students", schoolState.activeStudentId, "messages"), {
+                    text, createdAt: new Date().toISOString()
+                });
+            }
+            window.closeMessageModal();
+            window.setLoading('btn-save-message', false, defaultBtnHtml);
+            if (schoolState.currentStudentId === schoolState.activeStudentId) await window.refreshStudentDetail();
+        } catch (e) {
+            window.setLoading('btn-save-message', false, defaultBtnHtml);
+            window.CustomDialog.alert(`No fue posible ${isEditing ? 'guardar los cambios' : 'enviar el mensaje'}: ` + e.message);
+        }
+    };
+
+    // --- Notificaciones visibles para el alumno en su portal ---
+    // Los alumnos no tienen cuenta de Firebase Auth en esta app (solo declaran nombre/correo/gen
+    // al entrar), así que se emparejan por correo, igual que ya hace loadStudentDashboard con
+    // "submissions". Si el correo no es único entre instructores, se combinan los mensajes de
+    // todas las coincidencias.
+    window.loadStudentNotifications = async (email) => {
+        const section = document.getElementById('std-notifications-section');
+        const list = document.getElementById('std-notifications-list');
+        if (!email) { section.classList.add('hidden'); return; }
+
+        try {
+            const q = query(collection(db, "school_students"), where("email", "==", email));
+            const snap = await getDocs(q);
+            if (snap.empty) { section.classList.add('hidden'); return; }
+
+            let allMessages = [];
+            const fetches = [];
+            snap.forEach(sDoc => {
+                fetches.push(
+                    getDocs(collection(db, "school_students", sDoc.id, "messages")).then(msgSnap => {
+                        msgSnap.forEach(m => allMessages.push({ id: m.id, ...m.data() }));
+                    })
+                );
+            });
+            await Promise.all(fetches);
+
+            if (allMessages.length === 0) { section.classList.add('hidden'); return; }
+
+            allMessages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            section.classList.remove('hidden');
+            list.innerHTML = allMessages.map(m => `
+                <div class="sc-detail-item" style="align-items:flex-start;">
+                    <div style="min-width:0;">
+                        <p style="margin:0;">${m.text}</p>
+                        <p style="margin:4px 0 0 0; color:var(--text-secondary); font-size:0.78rem;">${formatDate(m.createdAt)}</p>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            section.classList.add('hidden');
+        }
+    };
+    // ==================== FIN CONTROL ESCOLAR ====================
 
     window.executeDeleteExam = async () => {
         const input = document.getElementById('delete-confirm-input').value.trim().toLowerCase();
@@ -2971,7 +3910,7 @@
                 <td style="font-weight:bold;">${formattedPercentage}</td>
                 <td><span class="badge ${badgeClass}"><i class="fi ${iconEstatus}"></i> ${estatusTxt}</span></td>
                 <td><div class="table-actions">
-                    <button style="background-color: var(--text-secondary);" class="btn-sm" title="Detalles" onclick="window.showSubmissionDetails('${sub.docId}')"><i class="fi fi-ss-eye"></i></button>
+                    <button style="background-color: var(--text-secondary);" class="btn-sm" title="Ver Detalles" onclick="window.showSubmissionDetails('${sub.docId}')"><i class="fi fi-ss-eye"></i></button>
                     <button class="btn-warning btn-sm" title="Reiniciar" onclick="window.resetAttempt('${sub.docId}')"><i class="fi fi-ss-refresh"></i></button>
                 </div></td>
             </tr>`;
@@ -2983,6 +3922,7 @@
         hideAll(); 
         document.getElementById('instructor-survey-analytics').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
+        document.getElementById('nav-school-control').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
         document.querySelector('.container').classList.add('expanded');
         
@@ -3202,6 +4142,7 @@
         window.currentExamName = examName;
         hideAll(); document.getElementById('instructor-grades').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
+        document.getElementById('nav-school-control').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
         document.querySelector('.container').classList.add('expanded');
         document.getElementById('grades-exam-title').innerHTML = `<i class="fi fi-ss-stats"></i> Resultados: ` + examName;

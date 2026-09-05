@@ -2367,7 +2367,7 @@
                                 </div>`
                         });
                     } else if(sub.graded) {
-                        window.studentHistoryRows.push({ name: examName, statusText: "CALIFICADO", statusHTML: `<span class="badge badge-pass"><i class="fi fi-ss-check"></i> CALIFICADO</span>`, actionHTML: `<button class="btn-sm" onclick="window.viewStudentFeedback('${d.id}')">Ver Resultados</button>` });
+                        window.studentHistoryRows.push({ name: examName, statusText: "CALIFICADO", statusHTML: `<span class="badge badge-pass"><i class="fi fi-ss-check"></i> CALIFICADO</span>`, actionHTML: `<button class="btn-sm" onclick="window.viewStudentFeedback('${d.id}')">Resultados</button>` });
                         gradedExams++;
                         totalAvg += sub.percentage || 0;
                         if(sub.passed) passedCount++;

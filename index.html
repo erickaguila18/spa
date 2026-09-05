@@ -228,6 +228,7 @@
         <span id="nav-brand-text" class="brand-title">Plataforma EEMS</span>
     </div>
     <div class="nav-links" id="nav-actions">
+        <button id="nav-sc-back" class="hidden" onclick="window.schoolControlBackAction && window.schoolControlBackAction()"><i class="fi fi-ss-arrow-left"></i> <span id="nav-sc-back-label"></span></button>
         <button id="nav-volver" class="hidden" onclick="window.backToDashboard()"><i class="fi fi-ss-arrow-left"></i> Volver</button>
         <button id="nav-settings" class="icon-btn hidden" onclick="window.showSettingsPanel()" title="Ajustes de Plataforma">
             <i class="fi fi-ss-settings"></i>
@@ -544,7 +545,8 @@
             <button onclick="window.closeStudentModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;"><i class="fi fi-ss-cross"></i></button>
         </div>
         <div class="form-group"><label><i class="fi fi-ss-text"></i> Nombre Completo</label><input type="text" id="school-student-name" placeholder="Ej. Juan Pérez López"></div>
-        <div class="form-group"><label><i class="fi fi-ss-envelope"></i> Correo (Opcional)</label><input type="email" id="school-student-email" placeholder="alumno@correo.com"></div>
+        <div class="form-group"><label><i class="fi fi-ss-envelope"></i> Correo</label><input type="email" id="school-student-email" placeholder="alumno@correo.com" required></div>
+        <small style="color: var(--text-secondary); display:block; margin: -10px 0 15px 0;">Debe ser el mismo correo que el alumno usará para entrar a su portal — es lo único que lo identifica ahí (adeudos, tareas, faltas y mensajes).</small>
         <button id="btn-save-student" onclick="window.saveStudent()" style="margin-top:10px;"><i class="fi fi-ss-add"></i> Agregar</button>
     </div>
 </div>
@@ -669,9 +671,28 @@
             </div>
         </div>
 
-        <div id="std-notifications-section" class="hidden" style="margin-top:20px;">
-            <h3 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-envelope"></i> Notificaciones de Control Escolar</h3>
-            <div id="std-notifications-list"></div>
+        <div id="std-school-control-section" class="hidden" style="margin-top:20px;">
+            <h3 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-graduation-cap"></i> Control Escolar</h3>
+
+            <div class="sc-detail-section">
+                <h4 style="margin-top:0;"><i class="fi fi-ss-money-bill-wave"></i> Adeudos <span id="std-debt-total" style="font-size:0.85rem; font-weight:normal; color:var(--text-secondary);"></span></h4>
+                <div id="std-debt-list"><p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin adeudos registrados.</p></div>
+            </div>
+
+            <div class="sc-detail-section">
+                <h4 style="margin-top:0;"><i class="fi fi-ss-clipboard-list-check"></i> Tareas Calificadas</h4>
+                <div id="std-grade-list"><p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin tareas calificadas.</p></div>
+            </div>
+
+            <div class="sc-detail-section">
+                <h4 style="margin-top:0;"><i class="fi fi-ss-ban"></i> Faltas y Justificantes</h4>
+                <div id="std-absence-list"><p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin registros.</p></div>
+            </div>
+
+            <div class="sc-detail-section">
+                <h4 style="margin-top:0;"><i class="fi fi-ss-envelope"></i> Mensajes</h4>
+                <div id="std-message-list"><p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin mensajes.</p></div>
+            </div>
         </div>
 
         <div class="stats-grid">
@@ -882,7 +903,6 @@
 
     <!-- CONTROL ESCOLAR: LISTA DE ALUMNOS DE UNA GENERACIÓN -->
     <div id="school-control-students" class="card hidden">
-        <button onclick="window.loadSchoolGenerations()" class="btn-secondary btn-sm" style="width:auto; margin-bottom: 15px;"><i class="fi fi-ss-arrow-left"></i> Generaciones</button>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom: 15px;">
             <h2 id="sc-students-title" style="margin:0;"><i class="fi fi-ss-users-alt"></i> Alumnos</h2>
             <button onclick="window.openStudentModal()" style="width:auto;"><i class="fi fi-ss-add"></i> Agregar Alumno</button>
@@ -894,7 +914,6 @@
 
     <!-- CONTROL ESCOLAR: DETALLE DE UN ALUMNO -->
     <div id="school-control-student-detail" class="card hidden">
-        <button onclick="window.reopenCurrentGeneration()" class="btn-secondary btn-sm" style="width:auto; margin-bottom: 15px;"><i class="fi fi-ss-arrow-left"></i> Alumnos</button>
         <div style="display:flex; align-items:center; gap:12px; margin-bottom: 5px; flex-wrap: wrap;">
             <div style="width:56px; height:56px; border-radius:50%; background:#ECEFF1; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi fi-ss-user" style="font-size:1.4rem; color:var(--primary);"></i></div>
             <div>
@@ -905,10 +924,10 @@
         </div>
 
         <div style="display:flex; gap:10px; margin: 20px 0; flex-wrap:wrap;">
-            <button onclick="window.openDebtModal()" style="width:auto;"><i class="fi fi-ss-money-bill-wave"></i> Agregar Adeudo</button>
-            <button onclick="window.openGradeModal()" class="btn-success" style="width:auto;"><i class="fi fi-ss-clipboard-list-check"></i> Calificar Tarea</button>
-            <button onclick="window.openAbsenceModal()" class="btn-danger" style="width:auto;"><i class="fi fi-ss-ban"></i> Falta/Justificante</button>
-            <button onclick="window.openMessageModal()" class="btn-secondary" style="width:auto;"><i class="fi fi-ss-envelope"></i> Enviar Mensaje</button>
+            <button onclick="window.openDebtModal()" style="width:auto;" title="Agregar Adeudo"><i class="fi fi-ss-money-bill-wave"></i></button>
+            <button onclick="window.openGradeModal()" class="btn-success" style="width:auto;" title="Calificar Tarea"><i class="fi fi-ss-clipboard-list-check"></i></button>
+            <button onclick="window.openAbsenceModal()" class="btn-danger" style="width:auto;" title="Falta/Justificante"><i class="fi fi-ss-ban"></i></button>
+            <button onclick="window.openMessageModal()" class="btn-secondary" style="width:auto;" title="Enviar Mensaje"><i class="fi fi-ss-envelope"></i></button>
         </div>
 
         <div class="sc-detail-section">
@@ -1515,17 +1534,20 @@
             document.getElementById('nav-ingresar').classList.remove('hidden');
             document.getElementById('nav-settings').classList.remove('hidden');
             document.getElementById('nav-school-control').classList.remove('hidden');
+            document.getElementById('nav-sc-back').classList.add('hidden');
             window.backToDashboard(); 
         } else if (localStorage.getItem('tumb_student')) { 
             document.getElementById('nav-ingresar').classList.remove('hidden');
             document.getElementById('nav-settings').classList.add('hidden');
             document.getElementById('nav-school-control').classList.add('hidden');
+            document.getElementById('nav-sc-back').classList.add('hidden');
             window.loadStudentDashboard(); 
         } else {
             document.getElementById('role-selector').classList.remove('hidden');
             document.getElementById('nav-ingresar').classList.remove('hidden');
             document.getElementById('nav-settings').classList.add('hidden');
             document.getElementById('nav-school-control').classList.add('hidden');
+            document.getElementById('nav-sc-back').classList.add('hidden');
             document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-sign-in-alt"></i> Ingresar`;
             document.getElementById('nav-ingresar').onclick = () => window.showInstructorLogin();
         }
@@ -1657,6 +1679,7 @@
         document.getElementById('nav-ingresar').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-school-control').classList.add('hidden');
+        document.getElementById('nav-sc-back').classList.add('hidden');
         document.getElementById('nav-volver').classList.add('hidden');
         document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
         document.getElementById('nav-ingresar').onclick = window.goHome;
@@ -1669,6 +1692,7 @@
         document.getElementById('nav-ingresar').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-school-control').classList.add('hidden');
+        document.getElementById('nav-sc-back').classList.add('hidden');
         document.getElementById('nav-volver').classList.add('hidden');
         document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
         document.getElementById('nav-ingresar').onclick = window.goHome;
@@ -2189,6 +2213,7 @@
                     document.getElementById('nav-ingresar').classList.remove('hidden');
                     document.getElementById('nav-settings').classList.add('hidden');
                     document.getElementById('nav-school-control').classList.add('hidden');
+                    document.getElementById('nav-sc-back').classList.add('hidden');
                     document.getElementById('nav-volver').classList.add('hidden');
                     document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
                     document.getElementById('nav-ingresar').onclick = () => window.location.href = window.location.pathname;
@@ -2277,7 +2302,7 @@
         hideAll(); document.getElementById('student-portal').classList.remove('hidden');
         document.getElementById('portal-std-name').innerText = student.name;
         document.getElementById('portal-std-gen').innerText = student.gen;
-        window.loadStudentNotifications(student.email);
+        window.loadStudentSchoolControl(student.email);
         
         document.getElementById('nav-actions').classList.remove('hidden');
         document.getElementById('nav-ingresar').classList.remove('hidden');
@@ -2478,6 +2503,7 @@
         document.getElementById('nav-volver').classList.add('hidden');
         document.getElementById('nav-settings').classList.remove('hidden');
         document.getElementById('nav-school-control').classList.remove('hidden');
+        document.getElementById('nav-sc-back').classList.add('hidden');
 
         document.getElementById('exams-list-container').innerHTML = "<p style='text-align:center;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando actividades...</p>";
 
@@ -2583,6 +2609,7 @@
         hideAll(); document.getElementById('admin-settings').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-school-control').classList.add('hidden');
+        document.getElementById('nav-sc-back').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
 
         const activeProjectLabel = document.getElementById('config-active-firebase-project');
@@ -2656,6 +2683,7 @@
         document.getElementById('instructor-upload').classList.remove('hidden'); 
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-school-control').classList.add('hidden');
+        document.getElementById('nav-sc-back').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
         
         document.getElementById('exam-name').value = "";
@@ -2840,6 +2868,7 @@
     window.showSchoolControlPanel = () => {
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-school-control').classList.add('hidden');
+        document.getElementById('nav-sc-back').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
         window.loadSchoolGenerations();
     };
@@ -2849,6 +2878,7 @@
         hideAll();
         document.getElementById('school-control-generations').classList.remove('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
+        document.getElementById('nav-sc-back').classList.add('hidden');
         const grid = document.getElementById('sc-generations-grid');
         grid.innerHTML = "<p style='text-align:center; grid-column: 1/-1;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando generaciones...</p>";
 
@@ -3011,6 +3041,10 @@
         document.getElementById('school-control-students').classList.remove('hidden');
         document.getElementById('sc-students-title').innerHTML = `<i class="fi fi-ss-users-alt"></i> Alumnos: ${gen.name}`;
         renderStudentsList();
+
+        document.getElementById('nav-sc-back-label').innerText = "Generaciones";
+        window.schoolControlBackAction = window.loadSchoolGenerations;
+        document.getElementById('nav-sc-back').classList.remove('hidden');
     };
 
     window.reopenCurrentGeneration = () => {
@@ -3035,7 +3069,7 @@
                     <div style="width:42px; height:42px; border-radius:50%; background:#ECEFF1; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi fi-ss-user" style="color:var(--primary);"></i></div>
                     <div style="min-width:0;">
                         <p style="margin:0; font-weight:bold;">${s.name}</p>
-                        <p style="margin:2px 0 0 0; color:var(--text-secondary); font-size:0.82rem;">${s.email || 'Sin correo registrado'}</p>
+                        <p style="margin:2px 0 0 0; color:${s.email ? 'var(--text-secondary)' : 'var(--danger)'}; font-size:0.82rem;">${s.email || '<i class="fi fi-ss-triangle-warning"></i> Sin correo — no podrá ver su Control Escolar'}</p>
                     </div>
                 </div>
                 <div class="student-row-actions">
@@ -3078,7 +3112,12 @@
     window.saveStudent = async () => {
         const name = document.getElementById('school-student-name').value.trim();
         const email = document.getElementById('school-student-email').value.trim().toLowerCase();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!name) return window.CustomDialog.alert("Ingresa el nombre del alumno.");
+        // El correo es obligatorio: es lo único que permite emparejar al alumno con su portal
+        // cuando entra por su cuenta (nombre/correo/generación, sin cuenta de Firebase). Sin
+        // correo, nunca podría ver sus adeudos, tareas, faltas o mensajes.
+        if (!emailRegex.test(email)) return window.CustomDialog.alert("Ingresa un correo electrónico válido para el alumno. Es necesario para que pueda ver su información en su portal.");
 
         const isEditing = !!schoolState.editingStudentId;
         const defaultBtnHtml = isEditing ? '<i class="fi fi-ss-disk"></i> Guardar Cambios' : '<i class="fi fi-ss-add"></i> Agregar';
@@ -3088,14 +3127,14 @@
             if (isEditing) {
                 const sid = schoolState.editingStudentId;
                 await updateDoc(doc(db, "school_students", sid), {
-                    name, email: email || null, updatedAt: new Date().toISOString()
+                    name, email, updatedAt: new Date().toISOString()
                 });
                 const local = schoolState.students.find(st => st.id === sid);
-                if (local) { local.name = name; local.email = email || null; }
+                if (local) { local.name = name; local.email = email; }
                 if (schoolState.currentStudentId === sid) {
                     schoolState.currentStudentName = name;
                     document.getElementById('sc-detail-name').innerText = name;
-                    document.getElementById('sc-detail-sub').innerText = `${email || 'Sin correo registrado'} · ${schoolState.currentGenName}`;
+                    document.getElementById('sc-detail-sub').innerText = `${email} · ${schoolState.currentGenName}`;
                 }
             } else {
                 if (!schoolState.currentGenId) return window.CustomDialog.alert("Selecciona una generación primero.");
@@ -3103,10 +3142,10 @@
                     instructorId: currentUser.uid,
                     genId: schoolState.currentGenId,
                     name,
-                    email: email || null,
+                    email,
                     createdAt: new Date().toISOString()
                 });
-                schoolState.students.push({ id: newRef.id, instructorId: currentUser.uid, genId: schoolState.currentGenId, name, email: email || null });
+                schoolState.students.push({ id: newRef.id, instructorId: currentUser.uid, genId: schoolState.currentGenId, name, email });
             }
             window.closeStudentModal();
             window.setLoading('btn-save-student', false, defaultBtnHtml);
@@ -3127,7 +3166,13 @@
         hideAll();
         document.getElementById('school-control-student-detail').classList.remove('hidden');
         document.getElementById('sc-detail-name').innerText = student.name;
-        document.getElementById('sc-detail-sub').innerText = `${student.email || 'Sin correo registrado'} · ${schoolState.currentGenName}`;
+        document.getElementById('sc-detail-sub').innerHTML = student.email
+            ? `${student.email} · ${schoolState.currentGenName}`
+            : `<span style="color:var(--danger);"><i class="fi fi-ss-triangle-warning"></i> Sin correo registrado — no podrá ver su Control Escolar</span> · ${schoolState.currentGenName}`;
+
+        document.getElementById('nav-sc-back-label').innerText = "Alumnos";
+        window.schoolControlBackAction = window.reopenCurrentGeneration;
+        document.getElementById('nav-sc-back').classList.remove('hidden');
 
         ['sc-debt-list', 'sc-grade-list', 'sc-absence-list', 'sc-message-list'].forEach(id => {
             document.getElementById(id).innerHTML = "<p style='text-align:center; color:var(--text-secondary); font-size:0.9rem;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando...</p>";
@@ -3508,46 +3553,96 @@
         }
     };
 
-    // --- Notificaciones visibles para el alumno en su portal ---
+    // --- Control Escolar visible para el alumno en su portal ---
     // Los alumnos no tienen cuenta de Firebase Auth en esta app (solo declaran nombre/correo/gen
     // al entrar), así que se emparejan por correo, igual que ya hace loadStudentDashboard con
-    // "submissions". Si el correo no es único entre instructores, se combinan los mensajes de
+    // "submissions". Si el correo no es único entre instructores, se combinan los registros de
     // todas las coincidencias.
-    window.loadStudentNotifications = async (email) => {
-        const section = document.getElementById('std-notifications-section');
-        const list = document.getElementById('std-notifications-list');
+    window.loadStudentSchoolControl = async (email) => {
+        const section = document.getElementById('std-school-control-section');
         if (!email) { section.classList.add('hidden'); return; }
 
         try {
             const q = query(collection(db, "school_students"), where("email", "==", email));
             const snap = await getDocs(q);
-            if (snap.empty) { section.classList.add('hidden'); return; }
+            if (snap.empty) {
+                console.log("Control Escolar: no se encontró ningún alumno con el correo", email, "— revisa que el instructor haya capturado exactamente ese correo al darlo de alta.");
+                section.classList.add('hidden');
+                return;
+            }
 
-            let allMessages = [];
+            let allDebts = [], allGrades = [], allAbsences = [], allMessages = [];
             const fetches = [];
             snap.forEach(sDoc => {
-                fetches.push(
-                    getDocs(collection(db, "school_students", sDoc.id, "messages")).then(msgSnap => {
-                        msgSnap.forEach(m => allMessages.push({ id: m.id, ...m.data() }));
-                    })
-                );
+                fetches.push(getDocs(collection(db, "school_students", sDoc.id, "debts")).then(s => s.forEach(d => allDebts.push({ id: d.id, ...d.data() }))));
+                fetches.push(getDocs(collection(db, "school_students", sDoc.id, "task_grades")).then(s => s.forEach(d => allGrades.push({ id: d.id, ...d.data() }))));
+                fetches.push(getDocs(collection(db, "school_students", sDoc.id, "absences")).then(s => s.forEach(d => allAbsences.push({ id: d.id, ...d.data() }))));
+                fetches.push(getDocs(collection(db, "school_students", sDoc.id, "messages")).then(s => s.forEach(d => allMessages.push({ id: d.id, ...d.data() }))));
             });
             await Promise.all(fetches);
 
-            if (allMessages.length === 0) { section.classList.add('hidden'); return; }
-
-            allMessages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            // Se muestra la sección siempre que el alumno esté registrado en Control Escolar,
+            // aunque no tenga nada en ninguna categoría — así confirma "no debo nada" en vez
+            // de simplemente no aparecer.
             section.classList.remove('hidden');
-            list.innerHTML = allMessages.map(m => `
+
+            // Adeudos
+            allDebts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const pendingTotal = allDebts.filter(i => !i.paid).reduce((sum, i) => sum + (i.amount || 0), 0);
+            document.getElementById('std-debt-total').innerText = allDebts.length ? `(Pendiente: $${pendingTotal.toFixed(2)})` : "";
+            document.getElementById('std-debt-list').innerHTML = allDebts.length ? allDebts.map(i => `
+                <div class="sc-detail-item">
+                    <div style="min-width:0;">
+                        <p style="margin:0; font-weight:bold;">${i.concept} ${i.paid ? '<span style="color:var(--success); font-size:0.75rem; font-weight:normal;">(Pagado)</span>' : '<span style="color:var(--danger); font-size:0.75rem; font-weight:normal;">(Pendiente)</span>'}</p>
+                        <p style="margin:2px 0 0 0; color:var(--text-secondary); font-size:0.8rem;">$${(i.amount || 0).toFixed(2)} · ${formatDate(i.createdAt)}</p>
+                    </div>
+                </div>
+            `).join('') : `<p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin adeudos registrados.</p>`;
+
+            // Tareas calificadas
+            allGrades.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            document.getElementById('std-grade-list').innerHTML = allGrades.length ? allGrades.map(i => `
+                <div class="sc-detail-item">
+                    <div style="min-width:0;">
+                        <p style="margin:0; font-weight:bold;">${i.task}</p>
+                        <p style="margin:2px 0 0 0; color:var(--text-secondary); font-size:0.8rem;">Calificación: ${i.score} · ${formatDate(i.createdAt)}</p>
+                    </div>
+                </div>
+            `).join('') : `<p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin tareas calificadas.</p>`;
+
+            // Faltas y justificantes
+            allAbsences.sort((a, b) => new Date(b.date) - new Date(a.date));
+            document.getElementById('std-absence-list').innerHTML = allAbsences.length ? allAbsences.map(i => `
+                <div class="sc-detail-item">
+                    <div style="min-width:0;">
+                        <p style="margin:0; font-weight:bold; color:${i.type === 'falta' ? 'var(--danger)' : 'var(--success)'};">${i.type === 'falta' ? 'Falta' : 'Justificante'}</p>
+                        <p style="margin:2px 0 0 0; color:var(--text-secondary); font-size:0.8rem;">${formatDateOnly(i.date)}${i.note ? ' · ' + i.note : ''}</p>
+                    </div>
+                </div>
+            `).join('') : `<p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin registros.</p>`;
+
+            // Mensajes
+            allMessages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            document.getElementById('std-message-list').innerHTML = allMessages.length ? allMessages.map(m => `
                 <div class="sc-detail-item" style="align-items:flex-start;">
                     <div style="min-width:0;">
                         <p style="margin:0;">${m.text}</p>
                         <p style="margin:4px 0 0 0; color:var(--text-secondary); font-size:0.78rem;">${formatDate(m.createdAt)}</p>
                     </div>
                 </div>
-            `).join('');
+            `).join('') : `<p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin mensajes.</p>`;
         } catch (e) {
-            section.classList.add('hidden');
+            console.error("Error cargando Control Escolar del alumno:", e);
+            const isPermission = e && (e.code === 'permission-denied' || /insufficient permissions/i.test(e.message || ''));
+            section.classList.remove('hidden');
+            const errorMsg = isPermission
+                ? 'No se pudo cargar por permisos de Firestore. Pide al instructor que revise las reglas de seguridad para "school_students" y sus subcolecciones.'
+                : ('No se pudo cargar tu información: ' + (e && e.message ? e.message : 'error desconocido.'));
+            document.getElementById('std-debt-list').innerHTML = `<p style="text-align:center; color:var(--danger); font-size:0.9rem;">${errorMsg}</p>`;
+            document.getElementById('std-debt-total').innerText = "";
+            ['std-grade-list', 'std-absence-list', 'std-message-list'].forEach(id => {
+                document.getElementById(id).innerHTML = "";
+            });
         }
     };
     // ==================== FIN CONTROL ESCOLAR ====================
@@ -3923,6 +4018,7 @@
         document.getElementById('instructor-survey-analytics').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-school-control').classList.add('hidden');
+        document.getElementById('nav-sc-back').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
         document.querySelector('.container').classList.add('expanded');
         
@@ -4143,6 +4239,7 @@
         hideAll(); document.getElementById('instructor-grades').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-school-control').classList.add('hidden');
+        document.getElementById('nav-sc-back').classList.add('hidden');
         document.getElementById('nav-volver').classList.remove('hidden');
         document.querySelector('.container').classList.add('expanded');
         document.getElementById('grades-exam-title').innerHTML = `<i class="fi fi-ss-stats"></i> Resultados: ` + examName;

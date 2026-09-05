@@ -111,6 +111,10 @@
         #exams-list-container { display: flex; flex-direction: column; gap: 12px; width: 100%; }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
+        /* El diálogo de alerta/confirmación (CustomDialog) debe verse SIEMPRE por encima de
+           cualquier otro modal abierto (todos comparten z-index base), sin importar el orden
+           en el DOM ni si el modal que lo invocó sigue abierto detrás. */
+        #custom-dialog { z-index: 3000; }
         .modal-content { background: white; border-radius: 12px; padding: 30px 20px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center;}
         .modal-content h2, .modal-content p, #dialog-title { text-align: center; justify-content: center; width: 100%; margin-left: auto; margin-right: auto; display: block;}
         .modal-content.danger-top { border-top: 8px solid var(--danger); }
@@ -547,7 +551,10 @@
         <div class="form-group"><label><i class="fi fi-ss-text"></i> Nombre Completo</label><input type="text" id="school-student-name" placeholder="Ej. Juan Pérez López"></div>
         <div class="form-group"><label><i class="fi fi-ss-envelope"></i> Correo</label><input type="email" id="school-student-email" placeholder="alumno@correo.com" required></div>
         <small style="color: var(--text-secondary); display:block; margin: -10px 0 15px 0;">Debe ser el mismo correo que el alumno usará para entrar a su portal — es lo único que lo identifica ahí (adeudos, tareas, faltas y mensajes).</small>
-        <button id="btn-save-student" onclick="window.saveStudent()" style="margin-top:10px;"><i class="fi fi-ss-add"></i> Agregar</button>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="btn-save-student" onclick="window.saveStudent()" style="margin-top:10px; flex:1; min-width:140px;"><i class="fi fi-ss-add"></i> Agregar</button>
+            <button id="btn-toggle-student-active" onclick="window.toggleStudentActive()" class="btn-secondary hidden" style="margin-top:10px; flex:1; min-width:140px;"><i class="fi fi-ss-ban"></i> Dar de Baja</button>
+        </div>
     </div>
 </div>
 
@@ -922,9 +929,9 @@
     <!-- CONTROL ESCOLAR: DETALLE DE UN ALUMNO -->
     <div id="school-control-student-detail" class="card hidden">
         <div style="display:flex; align-items:center; gap:12px; margin-bottom: 5px; flex-wrap: wrap;">
-            <div style="width:56px; height:56px; border-radius:50%; background:#ECEFF1; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi fi-ss-user" style="font-size:1.4rem; color:var(--primary);"></i></div>
+            <div id="sc-detail-avatar" style="width:56px; height:56px; border-radius:50%; background:#ECEFF1; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi fi-ss-user" style="font-size:1.4rem; color:var(--primary);"></i></div>
             <div>
-                <h2 id="sc-detail-name" style="margin:0;"></h2>
+                <h2 style="margin:0;"><span id="sc-detail-name"></span> <span id="sc-detail-status-badge"></span></h2>
                 <p id="sc-detail-sub" style="margin:2px 0 0 0; color:var(--text-secondary); font-size:0.9rem;"></p>
             </div>
             <button onclick="window.editCurrentStudent()" class="btn-secondary btn-sm" title="Editar Alumno" style="width:auto; padding:8px 12px; margin-left:auto;"><i class="fi fi-ss-pencil"></i> Editar</button>
@@ -2367,7 +2374,7 @@
                                 </div>`
                         });
                     } else if(sub.graded) {
-                        window.studentHistoryRows.push({ name: examName, statusText: "CALIFICADO", statusHTML: `<span class="badge badge-pass"><i class="fi fi-ss-check"></i> CALIFICADO</span>`, actionHTML: `<button class="btn-sm" onclick="window.viewStudentFeedback('${d.id}')">Resultados</button>` });
+                        window.studentHistoryRows.push({ name: examName, statusText: "CALIFICADO", statusHTML: `<span class="badge badge-pass"><i class="fi fi-ss-check"></i> CALIFICADO</span>`, actionHTML: `<button class="btn-sm" onclick="window.viewStudentFeedback('${d.id}')">Ver Resultados</button>` });
                         gradedExams++;
                         totalAvg += sub.percentage || 0;
                         if(sub.passed) passedCount++;
@@ -3110,12 +3117,17 @@
             return;
         }
 
-        container.innerHTML = students.map(s => `
-            <div class="student-row">
+        container.innerHTML = students.map(s => {
+            const isActive = s.active !== false;
+            const rowStyle = isActive ? '' : ' style="background:#F0F0F0; opacity:0.75;"';
+            const bajaBadge = isActive ? '' : ' <span style="font-size:0.7rem; font-weight:normal; background:#E0E0E0; color:var(--text-secondary); padding:2px 8px; border-radius:10px; vertical-align:middle;"><i class="fi fi-ss-ban"></i> Baja</span>';
+            const avatarBg = isActive ? '#ECEFF1' : '#E0E0E0';
+            return `
+            <div class="student-row"${rowStyle}>
                 <div class="student-row-info" onclick="window.openStudentDetail('${s.id}')">
-                    <div style="width:42px; height:42px; border-radius:50%; background:#ECEFF1; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi fi-ss-user" style="color:var(--primary);"></i></div>
+                    <div style="width:42px; height:42px; border-radius:50%; background:${avatarBg}; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi fi-ss-user" style="color:var(--primary);"></i></div>
                     <div style="min-width:0;">
-                        <p style="margin:0; font-weight:bold;">${s.name}</p>
+                        <p style="margin:0; font-weight:bold; color:${isActive ? 'inherit' : 'var(--text-secondary)'};">${s.name}${bajaBadge}</p>
                         <p style="margin:2px 0 0 0; color:${s.email ? 'var(--text-secondary)' : 'var(--danger)'}; font-size:0.82rem;">${s.email || '<i class="fi fi-ss-triangle-warning"></i> Sin correo — no podrá ver su Control Escolar'}</p>
                     </div>
                 </div>
@@ -3127,7 +3139,8 @@
                     <button onclick="window.openMessageModal('${s.id}')" class="btn-secondary" title="Enviar Mensaje"><i class="fi fi-ss-envelope"></i></button>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     window.editCurrentStudent = () => window.openStudentModal(schoolState.currentStudentId);
@@ -3135,25 +3148,67 @@
     window.openStudentModal = (studentId) => {
         schoolState.editingStudentId = studentId || null;
         const titleEl = document.getElementById('school-student-modal-title');
+        const toggleBtn = document.getElementById('btn-toggle-student-active');
 
         if (studentId) {
             const s = schoolState.students.find(st => st.id === studentId);
             if (!s) return;
+            const isActive = s.active !== false;
             titleEl.innerHTML = '<i class="fi fi-ss-user"></i> Editar Alumno';
             document.getElementById('school-student-name').value = s.name || "";
             document.getElementById('school-student-email').value = s.email || "";
             window.setLoading('btn-save-student', false, '<i class="fi fi-ss-disk"></i> Guardar Cambios');
+
+            // El botón de baja solo aplica al editar un alumno existente; alterna su
+            // etiqueta según el estado actual, pero no bloquea el resto del formulario.
+            toggleBtn.classList.remove('hidden');
+            window.setLoading('btn-toggle-student-active', false, isActive
+                ? '<i class="fi fi-ss-ban"></i> Dar de Baja'
+                : '<i class="fi fi-ss-refresh"></i> Reactivar Alumno');
         } else {
             titleEl.innerHTML = '<i class="fi fi-ss-user"></i> Agregar Alumno';
             document.getElementById('school-student-name').value = "";
             document.getElementById('school-student-email').value = "";
             window.setLoading('btn-save-student', false, '<i class="fi fi-ss-add"></i> Agregar');
+            toggleBtn.classList.add('hidden');
         }
         document.getElementById('school-student-modal').classList.remove('hidden');
     };
     window.closeStudentModal = () => {
         schoolState.editingStudentId = null;
         document.getElementById('school-student-modal').classList.add('hidden');
+    };
+
+    // Da de baja (o reactiva) al alumno en edición: es un cambio de estatus, no un borrado —
+    // sus adeudos, tareas, faltas y mensajes se conservan y el instructor puede seguir
+    // editándolo con total normalidad; solo cambia su apariencia (en gris) en los listados.
+    window.toggleStudentActive = async () => {
+        const sid = schoolState.editingStudentId;
+        if (!sid) return;
+        const local = schoolState.students.find(st => st.id === sid);
+        const isActive = local ? local.active !== false : true;
+        const confirmMsg = isActive
+            ? "¿Dar de baja a este alumno? Seguirá viendo su historial y podrás editarlo o reactivarlo cuando quieras."
+            : "¿Reactivar a este alumno?";
+        const confirmed = await window.CustomDialog.confirm(confirmMsg, isActive ? "Confirmar Baja" : "Confirmar Reactivación");
+        if (!confirmed) return;
+
+        window.setLoading('btn-toggle-student-active', true);
+        try {
+            await updateDoc(doc(db, "school_students", sid), { active: !isActive, updatedAt: new Date().toISOString() });
+            if (local) local.active = !isActive;
+            if (schoolState.currentStudentId === sid) renderStudentDetailStatus(!isActive);
+
+            window.setLoading('btn-toggle-student-active', false, !isActive
+                ? '<i class="fi fi-ss-ban"></i> Dar de Baja'
+                : '<i class="fi fi-ss-refresh"></i> Reactivar Alumno');
+            renderStudentsList();
+        } catch (e) {
+            window.setLoading('btn-toggle-student-active', false, isActive
+                ? '<i class="fi fi-ss-ban"></i> Dar de Baja'
+                : '<i class="fi fi-ss-refresh"></i> Reactivar Alumno');
+            window.CustomDialog.alert("No fue posible actualizar el estatus del alumno: " + e.message);
+        }
     };
 
     window.saveStudent = async () => {
@@ -3190,9 +3245,10 @@
                     genId: schoolState.currentGenId,
                     name,
                     email,
+                    active: true,
                     createdAt: new Date().toISOString()
                 });
-                schoolState.students.push({ id: newRef.id, instructorId: currentUser.uid, genId: schoolState.currentGenId, name, email });
+                schoolState.students.push({ id: newRef.id, instructorId: currentUser.uid, genId: schoolState.currentGenId, name, email, active: true });
             }
             window.closeStudentModal();
             window.setLoading('btn-save-student', false, defaultBtnHtml);
@@ -3216,6 +3272,7 @@
         document.getElementById('sc-detail-sub').innerHTML = student.email
             ? `${student.email} · ${schoolState.currentGenName}`
             : `<span style="color:var(--danger);"><i class="fi fi-ss-triangle-warning"></i> Sin correo registrado — no podrá ver su Control Escolar</span> · ${schoolState.currentGenName}`;
+        renderStudentDetailStatus(student.active !== false);
 
         document.getElementById('nav-sc-back-label').innerText = "Alumnos";
         window.schoolControlBackAction = window.reopenCurrentGeneration;
@@ -3227,6 +3284,25 @@
 
         await window.refreshStudentDetail();
     };
+
+    // Refleja visualmente (en gris) si el alumno mostrado en el detalle está dado de baja,
+    // sin deshabilitar ninguno de los botones — sigue siendo editable con normalidad.
+    function renderStudentDetailStatus(isActive) {
+        const badge = document.getElementById('sc-detail-status-badge');
+        const avatar = document.getElementById('sc-detail-avatar');
+        const nameEl = document.getElementById('sc-detail-name');
+        if (isActive) {
+            badge.innerHTML = "";
+            avatar.style.background = "#ECEFF1";
+            avatar.style.opacity = "1";
+            nameEl.style.color = "";
+        } else {
+            badge.innerHTML = '<span style="font-size:0.7rem; font-weight:normal; background:#EEEEEE; color:var(--text-secondary); padding:2px 8px; border-radius:10px; vertical-align:middle;"><i class="fi fi-ss-ban"></i> Baja</span>';
+            avatar.style.background = "#E0E0E0";
+            avatar.style.opacity = "0.6";
+            nameEl.style.color = "var(--text-secondary)";
+        }
+    }
 
     window.refreshStudentDetail = async () => {
         const sid = schoolState.currentStudentId;

@@ -671,7 +671,36 @@
             </div>
         </div>
 
-        <div id="std-school-control-section" class="hidden" style="margin-top:20px;">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4><i class="fi fi-ss-check-circle"></i> Exámenes Aprobados</h4>
+                <span id="std-stats-passed">0</span>
+            </div>
+            <div class="stat-card">
+                <h4><i class="fi fi-ss-stats"></i> Promedio Global</h4>
+                <span id="std-stats-avg">0%</span>
+            </div>
+        </div>
+        
+        <h3 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-clipboard-list-check"></i> Actividades Pendientes</h3>
+        <div id="pending-exams-list"></div>
+
+        <h3 style="margin-top: 30px; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-folder-open"></i> Historial</h3>
+        <div class="form-group" style="margin-top:15px; margin-bottom:0;">
+            <input type="text" id="history-search-input" placeholder="Buscar actividad por nombre..." onkeyup="window.filterHistory()" style="padding: 10px; margin:0;">
+        </div>
+        <div class="table-responsive">
+            <table class="results-table">
+                <thead><tr>
+                    <th class="sortable" onclick="window.sortHistory('name')">Actividad <i class="fi fi-ss-sort-alpha-down"></i></th>
+                    <th class="sortable" onclick="window.sortHistory('status')">Estatus <i class="fi fi-ss-sort"></i></th>
+                    <th>Acción</th>
+                </tr></thead>
+                <tbody id="history-exams-list"></tbody>
+            </table>
+        </div>
+
+        <div id="std-school-control-section" class="hidden" style="margin-top:30px;">
             <h3 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-graduation-cap"></i> Control Escolar</h3>
 
             <div class="sc-detail-section">
@@ -693,28 +722,6 @@
                 <h4 style="margin-top:0;"><i class="fi fi-ss-envelope"></i> Mensajes</h4>
                 <div id="std-message-list"><p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin mensajes.</p></div>
             </div>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h4><i class="fi fi-ss-check-circle"></i> Exámenes Aprobados</h4>
-                <span id="std-stats-passed">0</span>
-            </div>
-            <div class="stat-card">
-                <h4><i class="fi fi-ss-stats"></i> Promedio Global</h4>
-                <span id="std-stats-avg">0%</span>
-            </div>
-        </div>
-        
-        <h3 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-clipboard-list-check"></i> Actividades Pendientes</h3>
-        <div id="pending-exams-list"></div>
-
-        <h3 style="margin-top: 30px; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-folder-open"></i> Historial</h3>
-        <div class="table-responsive">
-            <table class="results-table">
-                <thead><tr><th>Actividad</th><th>Estatus</th><th>Acción</th></tr></thead>
-                <tbody id="history-exams-list"></tbody>
-            </table>
         </div>
     </div>
 
@@ -1136,6 +1143,7 @@
 
     window.allInstructorActivities = []; 
     let currentUser = null;
+    let historySortState = { column: null, asc: true }; // orden activo de la tabla de Historial del alumno
     let originalPool = [], renderedQuestions = [], examConfig = {};
     let sessionData = { studentName: "", studentEmail: "", studentGen: "", startTime: null, docId: null };
     let isExamActive = false, isBlocked = false, isHandlingInfraction = false, isPermanentlyBlocked = false;
@@ -2316,10 +2324,10 @@
             const subQ = query(collection(db, "submissions"), where("student.email", "==", student.email));
             const subSnap = await getDocs(subQ);
             let completedExams = {};
-            let historyHTML = "";
             let passedCount = 0;
             let totalAvg = 0;
             let gradedExams = 0;
+            window.studentHistoryRows = [];
             
             window.studentSubmissions = {};
             window.inProgressCourses = {}; 
@@ -2334,43 +2342,45 @@
                 if (sub.status === "BLOCKED") {
                     completedExams[sub.examId] = sub;
                     window.studentSubmissions[d.id] = sub;
-                    historyHTML += `<tr><td style="white-space: normal; min-width: 200px;">${examName}</td><td><span class="badge badge-blocked" title="${sub.metrics?.detail || 'Infracción'}"><i class="fi fi-ss-ban"></i> ANULADO</span></td><td>--</td></tr>`;
+                    window.studentHistoryRows.push({ name: examName, statusText: "ANULADO", statusHTML: `<span class="badge badge-blocked" title="${sub.metrics?.detail || 'Infracción'}"><i class="fi fi-ss-ban"></i> ANULADO</span>`, actionHTML: "--" });
                 } else if (sub.status === "IN_PROGRESS") {
                     if (isCourse || isSurvey) {
                         window.inProgressCourses[sub.examId] = { docId: d.id, moduleIndex: sub.currentModuleIndex || 0, answers: sub.answers || [] };
                     } else {
                         completedExams[sub.examId] = sub;
                         window.studentSubmissions[d.id] = sub;
-                        historyHTML += `<tr><td style="white-space: normal; min-width: 200px;">${examName}</td><td><span class="badge badge-progress" title="Abandono"><i class="fi fi-ss-spinner"></i> EN CURSO</span></td><td>--</td></tr>`;
+                        window.studentHistoryRows.push({ name: examName, statusText: "EN CURSO", statusHTML: `<span class="badge badge-progress" title="Abandono"><i class="fi fi-ss-spinner"></i> EN CURSO</span>`, actionHTML: "--" });
                     }
                 } else {
                     completedExams[sub.examId] = sub;
                     window.studentSubmissions[d.id] = sub;
                     if(isSurvey) {
-                         historyHTML += `<tr><td style="white-space: normal; min-width: 200px;">${examName}</td><td><span class="badge" style="background:#E8F5E9; color:#2E7D32; border:1px solid #A5D6A7;"><i class="fi fi-ss-check"></i> ENVIADA</span></td><td>--</td></tr>`;
+                        window.studentHistoryRows.push({ name: examName, statusText: "ENVIADA", statusHTML: `<span class="badge" style="background:#E8F5E9; color:#2E7D32; border:1px solid #A5D6A7;"><i class="fi fi-ss-check"></i> ENVIADA</span>`, actionHTML: "--" });
                     } else if (isCourse) {
-                         historyHTML += `<tr>
-                            <td style="white-space: normal; min-width: 200px;">${examName}</td>
-                            <td><span class="badge" style="background:#E3F2FD; color:#1565C0; border:1px solid #90CAF9;"><i class="fi fi-ss-diploma"></i> COMPLETADO</span></td>
-                            <td>
-                                <div class="table-actions">
+                        window.studentHistoryRows.push({
+                            name: examName,
+                            statusText: "COMPLETADO",
+                            statusHTML: `<span class="badge" style="background:#E3F2FD; color:#1565C0; border:1px solid #90CAF9;"><i class="fi fi-ss-diploma"></i> COMPLETADO</span>`,
+                            actionHTML: `<div class="table-actions">
                                     <button class="btn-sm" style="background-color: var(--primary);" onclick="window.viewCertificate('${sub.examId}', '${d.id}')"><i class="fi fi-ss-diploma"></i> Certificado</button>
                                     <button class="btn-warning btn-sm" onclick="window.retakeCourse('${sub.examId}', '${d.id}')"><i class="fi fi-ss-refresh"></i> Volver a tomar</button>
-                                </div>
-                            </td>
-                        </tr>`;
+                                </div>`
+                        });
                     } else if(sub.graded) {
-                        historyHTML += `<tr><td style="white-space: normal; min-width: 200px;">${examName}</td><td><span class="badge badge-pass"><i class="fi fi-ss-check"></i> CALIFICADO</span></td><td><button class="btn-sm" onclick="window.viewStudentFeedback('${d.id}')">Ver Resultados</button></td></tr>`;
+                        window.studentHistoryRows.push({ name: examName, statusText: "CALIFICADO", statusHTML: `<span class="badge badge-pass"><i class="fi fi-ss-check"></i> CALIFICADO</span>`, actionHTML: `<button class="btn-sm" onclick="window.viewStudentFeedback('${d.id}')">Ver Resultados</button>` });
                         gradedExams++;
                         totalAvg += sub.percentage || 0;
                         if(sub.passed) passedCount++;
                     } else {
-                        historyHTML += `<tr><td style="white-space: normal; min-width: 200px;">${examName}</td><td><span class="badge badge-pending"><i class="fi fi-ss-spinner"></i> EN REVISIÓN</span></td><td>--</td></tr>`;
+                        window.studentHistoryRows.push({ name: examName, statusText: "EN REVISIÓN", statusHTML: `<span class="badge badge-pending"><i class="fi fi-ss-spinner"></i> EN REVISIÓN</span>`, actionHTML: "--" });
                     }
                 }
             });
             
-            document.getElementById('history-exams-list').innerHTML = historyHTML || "<tr><td colspan='3' style='text-align:center; padding: 20px; color: var(--text-secondary);'>No hay registros aún.</td></tr>";
+            const historySearch = document.getElementById('history-search-input');
+            if (historySearch) historySearch.value = '';
+            historySortState = { column: null, asc: true };
+            renderHistoryTable();
 
             const allExamsQ = query(collection(db, "exams"));
             const allExamsSnap = await getDocs(allExamsQ);
@@ -2435,6 +2445,43 @@
             document.getElementById('pending-exams-list').innerHTML = "Error al cargar datos. Comuníquese con soporte."; 
             document.getElementById('history-exams-list').innerHTML = "<tr><td colspan='3'>Error al cargar el historial.</td></tr>";
         }
+    };
+
+    // Vuelve a dibujar la tabla de Historial del alumno aplicando el buscador y el orden
+    // de columna activos, sin necesidad de volver a consultar Firestore.
+    function renderHistoryTable() {
+        const tbody = document.getElementById('history-exams-list');
+        const allRows = window.studentHistoryRows || [];
+        const term = (document.getElementById('history-search-input')?.value || '').toLowerCase().trim();
+
+        let rows = term ? allRows.filter(r => r.name.toLowerCase().includes(term)) : [...allRows];
+
+        if (historySortState.column) {
+            const { column, asc } = historySortState;
+            rows.sort((a, b) => {
+                const valA = (column === 'name' ? a.name : a.statusText).toLowerCase();
+                const valB = (column === 'name' ? b.name : b.statusText).toLowerCase();
+                if (valA < valB) return asc ? -1 : 1;
+                if (valA > valB) return asc ? 1 : -1;
+                return 0;
+            });
+        }
+
+        if (rows.length === 0) {
+            tbody.innerHTML = allRows.length === 0
+                ? "<tr><td colspan='3' style='text-align:center; padding: 20px; color: var(--text-secondary);'>No hay registros aún.</td></tr>"
+                : "<tr><td colspan='3' style='text-align:center; padding: 20px; color: var(--text-secondary);'>No se encontraron actividades con ese nombre.</td></tr>";
+            return;
+        }
+        tbody.innerHTML = rows.map(r => `<tr><td style="white-space: normal; min-width: 200px;">${r.name}</td><td>${r.statusHTML}</td><td>${r.actionHTML}</td></tr>`).join('');
+    }
+
+    window.filterHistory = () => renderHistoryTable();
+
+    window.sortHistory = (column) => {
+        if (historySortState.column === column) { historySortState.asc = !historySortState.asc; }
+        else { historySortState.column = column; historySortState.asc = true; }
+        renderHistoryTable();
     };
 
     window.viewStudentFeedback = (subId) => {

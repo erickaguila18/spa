@@ -1205,7 +1205,14 @@
             btn.style.cursor = "not-allowed";
         } else {
             btn.disabled = false;
-            btn.innerHTML = btn.dataset.origHtml || defaultHtml;
+            // Si quien llama especifica explícitamente el texto a mostrar (defaultHtml),
+            // este debe prevalecer sobre el HTML cacheado: hay botones (como el de
+            // Dar de Baja/Reactivar Alumno) cuyo texto cambia dinámicamente según el
+            // estado, y usar siempre el HTML cacheado los dejaba "congelados" con el
+            // primer texto que se guardó. Si no se especifica defaultHtml, se conserva
+            // el comportamiento previo de restaurar el HTML original cacheado.
+            btn.innerHTML = defaultHtml || btn.dataset.origHtml || "";
+            delete btn.dataset.origHtml;
             btn.style.opacity = "1";
             btn.style.cursor = "pointer";
         }
@@ -3203,6 +3210,7 @@
                 ? '<i class="fi fi-ss-ban"></i> Dar de Baja'
                 : '<i class="fi fi-ss-refresh"></i> Reactivar Alumno');
             renderStudentsList();
+            window.closeStudentModal();
         } catch (e) {
             window.setLoading('btn-toggle-student-active', false, isActive
                 ? '<i class="fi fi-ss-ban"></i> Dar de Baja'

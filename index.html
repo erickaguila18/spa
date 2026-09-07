@@ -155,7 +155,34 @@
         .student-row-actions button { width: auto; padding: 8px 10px; font-size: 0.85rem; }
         .sc-detail-section { background: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
         .sc-detail-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #ECECEC; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; gap: 10px; }
-        
+
+        /* --- Módulo: Práctica Clínica (Examen Práctico / Simulador) --- */
+        .practica-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+        .prac-monitor-box { background:#050c08; border-radius: 10px; overflow: hidden; border: 3px solid #1a1a1a; }
+        .prac-monitor-box canvas { display:block; width:100%; height: 220px; }
+        .prac-vitals-row { display:flex; flex-wrap:wrap; gap:10px; padding: 12px; background:#0a0a0a; }
+        .prac-vital { flex:1; min-width:80px; text-align:center; padding: 6px 4px; border-radius:6px; }
+        .prac-vital .val { font-family:'Courier New', monospace; font-size:1.5rem; font-weight:bold; display:block; }
+        .prac-vital .lbl { font-size:0.68rem; color:#9fb0ab; letter-spacing:0.05em; }
+        .prac-log-box { max-height: 220px; overflow-y:auto; background:#FAFAFA; border:1px solid #E0E0E0; border-radius:8px; padding:10px; font-size:0.85rem; }
+        .prac-log-box p { margin: 4px 0; }
+        .prac-intervention-btn { text-align:left; background:var(--surface); color: var(--text-main); border:1px solid #E0E0E0; margin-bottom:8px; text-transform:none; font-weight:500; }
+        .prac-intervention-btn:hover:not(:disabled) { background:#F0F4F8; }
+        .prac-intervention-btn.done { opacity:0.55; }
+        .prac-event-banner { background: var(--danger-light); color: var(--danger); border-left: 4px solid var(--danger); padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; font-weight:bold; display:none; }
+        .prac-config-item { display:flex; justify-content:space-between; align-items:center; background:#FAFAFA; border:1px solid #E0E0E0; border-radius:8px; padding:10px 12px; margin-bottom:8px; gap:10px; }
+        /* Acento de Práctica Clínica: usa el mismo color de marca que ya usan
+           examen/curso/encuesta (var(--primary)), pero en su tono oscuro
+           (var(--primary-dark)) para diferenciarse — sigue siendo 100% whitelabel. */
+        .prac-accent-bg { background: var(--primary-dark) !important; border: none; }
+        .prac-lung { width: 50px; height: 80px; background-color: #F1948A; border-radius: 50% 50% 30% 30%; transition: all 0.15s ease-in-out; }
+        @keyframes prac-breathe { 0% { transform: scale(0.85); background-color: #F5B7B1; } 100% { transform: scale(1.15); background-color: #E74C3C; } }
+        .prac-damage-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 20%, rgba(200,0,0,0.7) 100%); pointer-events: none; z-index: 4000; opacity: 0; transition: opacity 0.5s ease-out; }
+        .prac-damage-flash.active { opacity: 1; transition: none; }
+        .prac-damage-flash.persistent { animation: prac-damage-pulse 1.2s infinite alternate; }
+        @keyframes prac-damage-pulse { 0% { opacity: 0.12; } 100% { opacity: 0.65; } }
+        @media (max-width: 900px) { .practica-grid { grid-template-columns: 1fr; } }
+
         @media (max-width: 600px) {
             .navbar-brand .brand-title { display: none; }
             .grid-layout { grid-template-columns: 1fr; gap: 10px;}
@@ -520,6 +547,96 @@
     </div>
 </div>
 
+<!-- MÓDULO: PRÁCTICA CLÍNICA — CONSTRUCTOR DEL CASO (Instructor) -->
+<div id="practica-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 720px; max-height: 90vh; overflow-y: auto; text-align: left; padding: 30px 25px 35px 25px; align-items: stretch; justify-content: flex-start; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;"><i class="fi fi-ss-ambulance"></i> Nueva Práctica Clínica</h2>
+            <button onclick="window.closePracticaModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;"><i class="fi fi-ss-cross"></i></button>
+        </div>
+        <p style="font-size:0.9rem; color:var(--text-secondary); margin-top:0;">Configura un caso clínico simulado. Aparecerá en el panel de tus alumnos como cualquier otra actividad, y podrás monitorear cada intento en vivo.</p>
+
+        <div style="background:#FAFAFA; border:1px solid #E0E0E0; border-radius:8px; padding:15px; margin-bottom:20px;">
+            <label style="font-weight:bold; color:var(--primary-dark); display:flex; align-items:center; gap:8px; margin-bottom:10px;"><i class="fi fi-ss-folder-open"></i> Cargar Caso desde JSON (Opcional)</label>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin:0 0 10px 0;">Selecciona un archivo <code>.json</code> o pega el contenido para rellenar el formulario automáticamente. Podrás revisar y ajustar todo antes de crear la práctica.</p>
+            <input type="file" id="prac-json-file-input" accept=".json" style="margin-bottom: 10px; font-size: 0.85rem; width: 100%; border: 1px solid #E0E0E0; padding: 8px; border-radius: 8px; background: white; cursor: pointer; box-sizing: border-box;">
+            <textarea id="prac-json-textarea" rows="5" placeholder='Pega aquí tu JSON, ej: {"title": "...", "vitals": {...}, "interventions": [...] }' style="font-family: monospace; font-size: 0.8rem; width: 100%; resize: vertical; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+            <button type="button" class="btn-secondary" onclick="window.applyPracticaJson()" style="width:auto;"><i class="fi fi-ss-check"></i> Cargar JSON en el Formulario</button>
+        </div>
+
+        <div class="grid-layout" style="grid-template-columns: 2fr 1fr;">
+            <div class="form-group"><label><i class="fi fi-ss-text"></i> Título del Caso</label><input type="text" id="prac_title" placeholder="Ej. Caso Clínico: Politraumatizado"></div>
+            <div class="form-group"><label><i class="fi fi-ss-time-quarter-to"></i> Tiempo (min)</label><input type="number" id="prac_time_limit" value="15" min="1"></div>
+        </div>
+        <div class="grid-layout" style="grid-template-columns: 2fr 1fr;">
+            <div class="form-group"><label><i class="fi fi-ss-key"></i> Código de Clase (Generación)</label><input type="text" id="prac_gen" placeholder="Ej. G30, GLOBAL"></div>
+            <div class="form-group"><label><i class="fi fi-ss-bullseye"></i> Aprobar Mínimo (%)</label><input type="number" id="prac_min_score" value="80"></div>
+        </div>
+        <div class="form-group"><label><i class="fi fi-ss-siren-on"></i> Cinemática / Despacho</label><textarea id="prac_cinematica" rows="2">Paciente con alteración del estado de alerta.</textarea></div>
+
+        <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <label style="font-weight:bold; color:var(--primary-dark); display:block; margin-bottom:10px;"><i class="fi fi-ss-clipboard-list"></i> Historial SAMPLE</label>
+            <div class="grid-layout">
+                <div class="form-group" style="margin-bottom:0;"><label>Alergias (A)</label><input type="text" id="prac_sample_a" value="Ninguna"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>Medicamentos (M)</label><input type="text" id="prac_sample_m" value="Ninguno"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>Patologías (P)</label><input type="text" id="prac_sample_p" value="Ninguna"></div>
+            </div>
+        </div>
+
+        <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <label style="font-weight:bold; color:var(--primary-dark); display:block; margin-bottom:10px;"><i class="fi fi-ss-heart"></i> Signos Vitales y Ritmo Inicial</label>
+            <div class="grid-layout" style="grid-template-columns: repeat(5, 1fr);">
+                <div class="form-group" style="margin-bottom:0;"><label>FC</label><input type="number" id="prac_fc" value="80"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>FR</label><input type="number" id="prac_fr" value="16"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>SpO2</label><input type="number" id="prac_spo2" value="96"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>TAS</label><input type="number" id="prac_tas" value="120"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>TAD</label><input type="number" id="prac_tad" value="80"></div>
+            </div>
+            <div class="form-group" style="margin-top:10px; margin-bottom:0;">
+                <label>Ritmo ECG</label>
+                <select id="prac_rhythm"></select>
+            </div>
+        </div>
+
+        <div class="grid-layout" style="grid-template-columns: 1fr 1fr;">
+            <div class="form-group"><label><i class="fi fi-ss-lungs"></i> Auscultación Pulmonar</label><select id="prac_resp_sound"></select></div>
+            <div class="form-group"><label><i class="fi fi-ss-heart"></i> Auscultación Cardíaca</label><select id="prac_heart_sound"></select></div>
+        </div>
+
+        <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <label style="font-weight:bold; color:var(--primary-dark); display:block; margin-bottom:10px;"><i class="fi fi-ss-brain"></i> Escala de Glasgow (autoevaluación del alumno)</label>
+            <div class="form-group" style="margin-bottom:10px;"><label>Hallazgos</label><textarea id="prac_gcs_desc" rows="2">Ojos abiertos espontáneamente, obedece órdenes.</textarea></div>
+            <div class="grid-layout">
+                <div class="form-group" style="margin-bottom:0;"><label>E (1-4)</label><input type="number" id="prac_gcs_e" value="4" min="1" max="4"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>V (1-5)</label><input type="number" id="prac_gcs_v" value="5" min="1" max="5"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>M (1-6)</label><input type="number" id="prac_gcs_m" value="6" min="1" max="6"></div>
+            </div>
+        </div>
+
+        <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <label style="font-weight:bold; color:var(--primary-dark); display:block; margin-bottom:10px;"><i class="fi fi-ss-syringe"></i> Intervenciones / Tratamientos Disponibles</label>
+            <div class="grid-layout" style="grid-template-columns: 2fr 1fr;">
+                <div class="form-group" style="margin-bottom:10px;"><label>Nombre</label><input type="text" id="prac_new_int_name" placeholder="Ej. Oxígeno suplementario"></div>
+                <div class="form-group" style="margin-bottom:10px;"><label>Tipo</label><select id="prac_new_int_type"><option value="correct">Indicado</option><option value="incorrect">Contraindicado</option></select></div>
+            </div>
+            <label style="font-size:0.85rem; color:var(--text-secondary);">Efectos fisiológicos al aplicarlo (usa negativos para restar)</label>
+            <div class="grid-layout" style="grid-template-columns: repeat(5, 1fr); margin-top:5px;">
+                <div class="form-group" style="margin-bottom:10px;"><label>FC</label><input type="number" id="prac_new_int_fc" value="0"></div>
+                <div class="form-group" style="margin-bottom:10px;"><label>FR</label><input type="number" id="prac_new_int_fr" value="0"></div>
+                <div class="form-group" style="margin-bottom:10px;"><label>SpO2</label><input type="number" id="prac_new_int_spo2" value="0"></div>
+                <div class="form-group" style="margin-bottom:10px;"><label>TAS</label><input type="number" id="prac_new_int_tas" value="0"></div>
+                <div class="form-group" style="margin-bottom:10px;"><label>TAD</label><input type="number" id="prac_new_int_tad" value="0"></div>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;"><label>Mensaje si es contraindicado</label><input type="text" id="prac_new_int_err" placeholder="Ej. Empeora el broncoespasmo"></div>
+            <button type="button" class="btn-success" onclick="window.addPracticaIntervention()" style="width:auto;"><i class="fi fi-ss-plus"></i> Añadir a la Lista</button>
+
+            <div id="prac-int-list" style="margin-top:15px;"><p style="text-align:center; color:var(--text-secondary); font-size:0.85rem;">Aún no has agregado intervenciones.</p></div>
+        </div>
+
+        <button id="btn-save-practica" onclick="window.savePractica()"><i class="fi fi-ss-disk"></i> Crear Práctica Clínica</button>
+    </div>
+</div>
+
 <!-- CONTROL ESCOLAR: MODAL NUEVA GENERACIÓN -->
 <div id="school-gen-modal" class="modal-overlay hidden">
     <div class="modal-content primary-top" style="max-width: 480px; text-align: left; padding: 25px; align-items: stretch;">
@@ -749,6 +866,7 @@
             <button onclick="window.showUploadPanel('exam')" style="flex:1; min-width:150px;"><i class="fi fi-ss-add-document"></i> Examen</button>
             <button onclick="window.showUploadPanel('course')" style="flex:1; min-width:150px; background-color: var(--primary-dark);"><i class="fi fi-ss-e-learning"></i> Curso</button>
             <button onclick="window.showUploadPanel('survey')" class="btn-secondary" style="flex:1; min-width:150px;"><i class="fi fi-ss-comment-alt"></i> Encuesta</button>
+            <button onclick="window.openPracticaModal()" class="prac-accent-bg" style="flex:1; min-width:150px;"><i class="fi fi-ss-ambulance"></i> Práctica Clínica</button>
         </div>
         
         <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #FAFAFA; padding: 15px; border-radius: 8px; border: 1px solid #E0E0E0;">
@@ -759,6 +877,7 @@
                     <option value="exam">Evaluaciones</option>
                     <option value="course">Cursos</option>
                     <option value="survey">Encuestas</option>
+                    <option value="practica">Prácticas Clínicas</option>
                 </select>
             </div>
             <div style="flex: 2; min-width: 200px;">
@@ -1041,6 +1160,119 @@
         </div>
     </div>
 
+    <!-- MÓDULO: PRÁCTICA CLÍNICA — MONITOR EN VIVO (Instructor) -->
+    <div id="practica-monitor" class="card hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <h2 id="prac-mon-title" style="margin:0;"><i class="fi fi-ss-heart"></i> Monitor en Vivo</h2>
+        </div>
+        <p style="font-size:0.9rem; color:var(--text-secondary);">Selecciona un intento EN VIVO para ver su monitor y enviar cambios en tiempo real. Los intentos finalizados solo muestran su resultado.</p>
+
+        <div class="grid-layout" style="grid-template-columns: 1fr 1.3fr; align-items:start;">
+            <div>
+                <h3 style="margin-top:0;"><i class="fi fi-ss-users"></i> Intentos</h3>
+                <div id="prac-mon-list"><p style="text-align:center; color:var(--text-secondary);">Cargando...</p></div>
+            </div>
+            <div id="prac-mon-detail">
+                <p style="text-align:center; color:var(--text-secondary); padding:30px 0;">Selecciona un intento de la lista para controlarlo.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÓDULO: PRÁCTICA CLÍNICA — SIMULACIÓN (Alumno) -->
+    <div id="practica-view" class="card hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap:wrap; gap:10px;">
+            <h1 id="prac-display-name" style="margin: 0;"><i class="fi fi-ss-ambulance"></i> Práctica Clínica</h1>
+            <button id="prac-btn-exit" class="btn-secondary btn-sm" onclick="window.exitPractica()" style="width: auto; margin: 0;"><i class="fi fi-ss-sign-out-alt"></i> Salir</button>
+        </div>
+        <h3 id="prac-display-gen" style="color: var(--text-secondary); margin-top: 0;"></h3>
+
+        <div id="prac-intro">
+            <div class="form-group" style="background: #FAFAFA; padding: 20px; border-radius: 8px; border: 1px solid #E0E0E0;">
+                <div style="margin-bottom: 15px;"><label><i class="fi fi-ss-user"></i> Nombre Completo</label><input type="text" id="prac-student-name"></div>
+                <div style="margin-bottom: 15px;"><label><i class="fi fi-ss-envelope"></i> Correo</label><input type="email" id="prac-student-email"></div>
+            </div>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); text-align: center;">Tendrás <strong id="prac-intro-time">--</strong> minutos una vez que inicies. El cronómetro no se detiene.</p>
+            <button id="prac-btn-start" onclick="window.startPractica()"><i class="fi fi-ss-play"></i> Iniciar Simulación</button>
+        </div>
+
+        <div id="prac-main" class="hidden">
+            <div class="sticky-header">
+                <span style="font-weight:bold;"><i class="fi fi-ss-siren-on"></i> Caso en curso</span>
+                <span class="timer-display" id="prac-timer"><i class="fi fi-ss-hourglass"></i> --:--</span>
+            </div>
+
+            <div id="prac-event-banner" class="prac-event-banner"><i class="fi fi-ss-triangle-warning"></i> <span id="prac-event-text"></span></div>
+
+            <div class="practica-grid">
+                <div>
+                    <div class="card" style="box-shadow:none; border:1px solid #E0E0E0; padding:1.2rem;">
+                        <h3 style="margin-top:0;"><i class="fi fi-ss-siren-on"></i> Despacho</h3>
+                        <p id="prac-cinematica" style="margin:0;"></p>
+                    </div>
+                    <div class="card" style="box-shadow:none; border:1px solid #E0E0E0; padding:1.2rem;">
+                        <h3 style="margin-top:0;"><i class="fi fi-ss-clipboard-list"></i> Historial SAMPLE</h3>
+                        <p style="margin:4px 0;"><strong>A:</strong> <span id="prac-sample-a"></span></p>
+                        <p style="margin:4px 0;"><strong>M:</strong> <span id="prac-sample-m"></span></p>
+                        <p style="margin:4px 0;"><strong>P:</strong> <span id="prac-sample-p"></span></p>
+                    </div>
+                    <div class="card" style="box-shadow:none; border:1px solid #E0E0E0; padding:1.2rem;">
+                        <h3 style="margin-top:0;"><i class="fi fi-ss-stethoscope"></i> Auscultación</h3>
+                        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:12px;">
+                            <div class="prac-lung" id="prac-lung-left"></div>
+                            <div class="prac-lung" id="prac-lung-right"></div>
+                        </div>
+                        <p style="margin:4px 0;"><strong>Pulmonar:</strong> <span id="prac-resp-sound">--</span></p>
+                        <p style="margin:4px 0;"><strong>Cardíaca:</strong> <span id="prac-heart-sound">--</span></p>
+                        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+                            <button type="button" class="btn-sm" style="width:auto;" onclick="window.pracAuscultarPulmones()"><i class="fi fi-ss-lungs"></i> Auscultar Pulmones</button>
+                            <button type="button" class="btn-sm prac-accent-bg" style="width:auto;" onclick="window.pracAuscultarCorazon()"><i class="fi fi-ss-heart"></i> Auscultar Corazón</button>
+                        </div>
+                    </div>
+                    <div class="card" style="box-shadow:none; border:1px solid #E0E0E0; padding:1.2rem;">
+                        <h3 style="margin-top:0;"><i class="fi fi-ss-brain"></i> Escala de Glasgow</h3>
+                        <p id="prac-gcs-desc" style="margin:0 0 10px 0;"></p>
+                        <div id="prac-gcs-form" class="grid-layout">
+                            <div class="form-group" style="margin-bottom:0;"><label>E (1-4)</label><input type="number" id="prac-gcs-e" min="1" max="4"></div>
+                            <div class="form-group" style="margin-bottom:0;"><label>V (1-5)</label><input type="number" id="prac-gcs-v" min="1" max="5"></div>
+                            <div class="form-group" style="margin-bottom:0;"><label>M (1-6)</label><input type="number" id="prac-gcs-m" min="1" max="6"></div>
+                        </div>
+                        <button class="btn-sm" style="width:auto; margin-top:10px;" id="prac-btn-gcs" onclick="window.evaluatePracticaGCS()"><i class="fi fi-ss-check"></i> Evaluar Glasgow</button>
+                        <p id="prac-gcs-result" style="margin-top:10px; font-weight:bold;"></p>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="prac-monitor-box">
+                        <canvas id="prac-canvas"></canvas>
+                        <div class="prac-vitals-row">
+                            <div class="prac-vital"><span class="val" id="prac-v-fc" style="color:#2ECC71;">0</span><span class="lbl">FC (lpm)</span></div>
+                            <div class="prac-vital"><span class="val" id="prac-v-spo2" style="color:#00e5ff;">0</span><span class="lbl">SpO2 (%)</span></div>
+                            <div class="prac-vital"><span class="val" id="prac-v-ta" style="color:#E67E22;">0/0</span><span class="lbl">TA (mmHg)</span></div>
+                            <div class="prac-vital"><span class="val" id="prac-v-fr" style="color:#f1c40f;">0</span><span class="lbl">FR (rpm)</span></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+                        <button type="button" style="flex:1; min-width:180px;" id="prac-btn-medir" onclick="window.medirPracticaSignos()"><i class="fi fi-ss-heart"></i> Tomar Signos Vitales</button>
+                        <button type="button" class="btn-secondary" style="flex:1; min-width:150px;" id="prac-btn-audio" onclick="window.togglePracticaAudio()"><i class="fi fi-ss-volume"></i> Activar Sonido ECG</button>
+                    </div>
+
+                    <div class="card" style="box-shadow:none; border:1px solid #E0E0E0; padding:1.2rem; margin-top:15px;">
+                        <h3 style="margin-top:0;"><i class="fi fi-ss-syringe"></i> Intervenciones Disponibles</h3>
+                        <div id="prac-interventions-list"></div>
+                    </div>
+
+                    <div class="card" style="box-shadow:none; border:1px solid #E0E0E0; padding:1.2rem; margin-top:15px;">
+                        <h3 style="margin-top:0;"><i class="fi fi-ss-list-check"></i> Bitácora <span id="prac-live-score" style="float:right; font-size:0.95rem; color:var(--primary-dark);"></span></h3>
+                        <div class="prac-log-box" id="prac-log-box"><p style="color:var(--text-secondary);">Sin acciones registradas.</p></div>
+                    </div>
+
+                    <button class="btn-danger" id="prac-btn-finish" onclick="window.finishPractica()" style="margin-top:15px;"><i class="fi fi-ss-flag-checkered"></i> Finalizar Simulación</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="prac-damage-flash" id="prac-damage-flash"></div>
+
     <div id="exam-view" class="card hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h1 id="display-exam-name" style="margin: 0;"><i class="fi fi-ss-file-signature"></i> Evaluación</h1>
@@ -1109,7 +1341,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, deleteDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, deleteDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     // Configuración predeterminada (de fábrica) del proyecto Firebase.
@@ -1164,7 +1396,79 @@
     window.currentModuleIndex = 0;
     window.uploadType = 'exam';
     window.builderItems = []; 
-    
+
+    // ================= MÓDULO: PRÁCTICA CLÍNICA (Examen Práctico / Simulador) =================
+    // Reutiliza el ÚNICO proyecto Firebase de EEMS (colecciones "exams" y "submissions",
+    // con config.type = 'practica'), y hereda el branding/white-label ya existente
+    // (loadBranding, var(--primary), etc.) porque se apoya en los mismos contenedores y
+    // clases CSS que el resto de la plataforma. No usa isExamActive ni el sistema de
+    // bloqueo/anti-fraude de exámenes de opción múltiple: es una práctica formativa.
+    window.practicaBuilderInterventions = [];
+
+    const PRAC_RHYTHMS = {
+        sinusal: { name: "Ritmo sinusal", bpm: 80, generator: (t) => {
+            if (t < 0.1) return 12 * Math.sin((t / 0.1) * Math.PI);
+            if (t < 0.15) return 0;
+            if (t < 0.17) return -8 * Math.sin(((t - 0.15) / 0.02) * Math.PI);
+            if (t < 0.21) return 75 * Math.sin(((t - 0.17) / 0.04) * Math.PI);
+            if (t < 0.24) return -18 * Math.sin(((t - 0.21) / 0.03) * Math.PI);
+            if (t < 0.35) return 0;
+            if (t < 0.50) return 20 * Math.sin(((t - 0.35) / 0.15) * Math.PI);
+            return 0;
+        }},
+        bradicardia: { name: "Bradicardia sinusal", bpm: 45, generator: (t) => {
+            if (t < 0.07) return 12 * Math.sin((t / 0.07) * Math.PI);
+            if (t < 0.10) return 0;
+            if (t < 0.12) return -8 * Math.sin(((t - 0.10) / 0.02) * Math.PI);
+            if (t < 0.15) return 75 * Math.sin(((t - 0.12) / 0.03) * Math.PI);
+            if (t < 0.17) return -18 * Math.sin(((t - 0.15) / 0.02) * Math.PI);
+            if (t < 0.25) return 0;
+            if (t < 0.35) return 20 * Math.sin(((t - 0.25) / 0.10) * Math.PI);
+            return 0;
+        }},
+        taquicardia: { name: "Taquicardia sinusal", bpm: 130, generator: (t) => {
+            if (t < 0.15) return 11 * Math.sin((t / 0.15) * Math.PI);
+            if (t < 0.20) return 0;
+            if (t < 0.23) return -8 * Math.sin(((t - 0.20) / 0.03) * Math.PI);
+            if (t < 0.30) return 70 * Math.sin(((t - 0.23) / 0.07) * Math.PI);
+            if (t < 0.35) return -16 * Math.sin(((t - 0.30) / 0.05) * Math.PI);
+            if (t < 0.42) return 0;
+            if (t < 0.75) return 18 * Math.sin(((t - 0.42) / 0.33) * Math.PI);
+            return 0;
+        }},
+        fib_auricular: { name: "Fibrilación auricular", bpm: 110, generator: (t, totalTime, rand) => {
+            let baselineNoise = (Math.sin(totalTime * 0.3) * 2.5) + ((Math.random() - 0.5) * 4);
+            let qrs = 0; let trigger = 0.2 + (rand * 0.4);
+            if (t > trigger && t < trigger + 0.03) qrs = 70 * Math.sin(((t - trigger) / 0.03) * Math.PI);
+            else if (t >= trigger + 0.03 && t < trigger + 0.05) qrs = -14 * Math.sin(((t - (trigger + 0.03)) / 0.02) * Math.PI);
+            else if (t >= trigger + 0.1 && t < trigger + 0.25) qrs = 13 * Math.sin(((t - (trigger + 0.1)) / 0.15) * Math.PI);
+            return baselineNoise + qrs;
+        }},
+        taq_ventricular: { name: "Taquicardia ventricular", bpm: 165, generator: (t) => 55 * Math.sin(t * 2 * Math.PI) - 12 * Math.cos(t * 4 * Math.PI) },
+        fib_ventricular: { name: "Fibrilación ventricular", bpm: 0, generator: (t, totalTime) => (Math.sin(totalTime * 0.08) * 14) + (Math.sin(totalTime * 0.23) * 9) + (Math.random() - 0.5) * 10 },
+        asistolia: { name: "Asistolia", bpm: 0, generator: () => (Math.random() - 0.5) * 1.2 }
+    };
+
+    let pracState = {
+        active: false, examId: null, subId: null, config: null,
+        vitals: { fc: 80, fr: 16, spo2: 96, tas: 120, tad: 80 },
+        rhythmKey: 'sinusal',
+        score: 100, logs: [], appliedInterventions: [],
+        gcsAttempts: 3, gcsEvaluated: false,
+        vitalsRevealed: false,
+        timeLeft: 0, timerHandle: null,
+        unsubSelf: null, lastPushTs: 0, lastRhythmTs: 0, lastEventTs: 0, lastResetTs: 0
+    };
+    let pracMonitor = { examId: null, examName: null, subs: {}, selectedSubId: null, unsubList: null };
+
+    let pracCanvas = null, pracCtx = null, pracAnimHandle = null;
+    let pracEcgCenter = 55, pracEcgScale = 1, pracPletCenter = 130, pracPletScale = 1.2, pracCo2Center = 200, pracCo2Scale = 2.2;
+    let pracGlobalTime = 0, pracCycleProgress = 0, pracPletProgress = 0, pracCo2Progress = 0;
+    let pracSweepX = 0, pracSweepSpeed = 2.6, pracScanWidth = 22;
+    let pracEcgHistory = [], pracPletHistory = [], pracCo2History = [];
+    let pracRandomOffset = Math.random();
+    let pracAudioCtx = null, pracAudioEnabled = false;
+
     const urlParams = new URLSearchParams(window.location.search);
     window.currentExamId = urlParams.get('examId'); 
 
@@ -1466,7 +1770,7 @@
     }
 
     // IDs de todos los modal-overlay que pueden cerrarse con ESC o clic fuera del contenido.
-    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal'];
+    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal', 'practica-modal'];
 
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1505,7 +1809,8 @@
         ['loading-screen', 'role-selector', 'login-view', 'student-login-view', 'student-portal', 
          'instructor-dashboard', 'instructor-upload', 'instructor-grades', 'exam-view', 'course-view',
          'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal',
-         'school-control-generations', 'school-control-students', 'school-control-student-detail', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal'].forEach(id => {
+         'school-control-generations', 'school-control-students', 'school-control-student-detail', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal',
+         'practica-modal', 'practica-view', 'practica-monitor'].forEach(id => {
              const el = document.getElementById(id);
              if (el) el.classList.add('hidden');
          });
@@ -2414,13 +2719,19 @@
                 if(!eData.config) return;
                 const isExpired = eData.config.expiration && new Date() > new Date(eData.config.expiration);
                 const isCourse = eData.config.type === 'course';
+                const isPractica = eData.config.type === 'practica';
                 
                 let gensStr = eData.config.gen || eData.config.gens_string || "";
                 if(!gensStr.includes(student.gen) && !gensStr.includes("GLOBAL")) return;
 
                 if(!completedExams[examId] && !isExpired) {
                     let isResuming = window.inProgressCourses && window.inProgressCourses[examId];
-                    if (isCourse) {
+                    if (isPractica) {
+                        pendingHTML += `<div class="exam-item pending" style="border-left-color:var(--primary-dark);">
+                            <div><h3 style="margin:0;"><i class="fi fi-ss-ambulance" style="color:var(--primary); margin-right:5px;"></i>${eData.config.name}</h3><p style="margin:5px 0 0 0; color:var(--text-secondary); font-size:0.9rem;">Práctica Clínica Simulada</p></div>
+                            <button style="width:auto;" onclick="location.href='?examId=${examId}'"><i class="fi fi-ss-play"></i> Iniciar Práctica</button>
+                        </div>`;
+                    } else if (isCourse) {
                         let btnText = isResuming ? "Continuar Curso" : "Iniciar Curso";
                         let iconPlay = isResuming ? "fi-ss-refresh" : "fi-ss-play";
                         pendingHTML += `<div class="exam-item pending course">
@@ -2557,6 +2868,7 @@
     };
 
     window.backToDashboard = async () => {
+        if (pracMonitor.unsubList) { pracMonitor.unsubList(); pracMonitor.unsubList = null; }
         window.currentExamId = null; 
         hideAll(); document.getElementById('instructor-dashboard').classList.remove('hidden');
         document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-sign-out-alt"></i> Salir`;
@@ -2605,7 +2917,8 @@
             
             const isSurvey = exam.config.type === 'survey';
             const isCourse = exam.config.type === 'course';
-            const actType = isSurvey ? 'survey' : (isCourse ? 'course' : 'exam');
+            const isPractica = exam.config.type === 'practica';
+            const actType = isSurvey ? 'survey' : (isCourse ? 'course' : (isPractica ? 'practica' : 'exam'));
 
             let gensStr = (exam.config.gens_string || exam.config.gen || "").toLowerCase();
             let nameStr = (exam.config.name || "").toLowerCase();
@@ -2630,12 +2943,15 @@
             } else if (isCourse) {
                 iconMain = "fi-ss-users-alt"; textMain = ""; itemClass = "course";
                 actionCall = `window.viewExamGrades('${docId}', '${exam.config.name}')`;
+            } else if (isPractica) {
+                iconMain = "fi-ss-stats"; textMain = ""; itemClass = "";
+                actionCall = `window.viewPracticaMonitor('${docId}', '${(exam.config.name || '').replace(/'/g, "\\'")}')`;
             } else {
                 iconMain = "fi-ss-stats"; textMain = ""; itemClass = "";
                 actionCall = `window.viewExamGrades('${docId}', '${exam.config.name}')`;
             }
 
-            const iconHeader = isSurvey ? '<i class="fi fi-ss-comment-alt" style="color:var(--primary); margin-right:5px;"></i>' : (isCourse ? '<i class="fi fi-ss-e-learning" style="color:var(--primary); margin-right:5px;"></i>' : '<i class="fi fi-ss-file-signature" style="color:var(--primary); margin-right:5px;"></i>');
+            const iconHeader = isSurvey ? '<i class="fi fi-ss-comment-alt" style="color:var(--primary); margin-right:5px;"></i>' : (isCourse ? '<i class="fi fi-ss-e-learning" style="color:var(--primary); margin-right:5px;"></i>' : (isPractica ? '<i class="fi fi-ss-ambulance" style="color:var(--primary); margin-right:5px;"></i>' : '<i class="fi fi-ss-file-signature" style="color:var(--primary); margin-right:5px;"></i>'));
             const sharedBadge = isOwner ? "" : ' <span style="font-size:0.7rem; font-weight:normal; background:#E3F2FD; color:var(--primary); padding:2px 8px; border-radius:10px; vertical-align:middle;"><i class="fi fi-ss-share"></i> Compartido contigo</span>';
             const deleteBtn = isOwner ? `<button onclick="window.promptDeleteExam('${docId}', '${exam.config.name}')" class="btn-danger" style="width: auto; padding: 14px;"><i class="fi fi-ss-trash"></i></button>` : "";
 
@@ -4499,6 +4815,12 @@
             
             const data = docSnap.data();
             examConfig = data.config; 
+
+            if (examConfig.type === 'practica') {
+                document.getElementById('full-screen-loader').classList.add('hidden');
+                return window.loadPracticaView(window.currentExamId, data);
+            }
+
             const isSurvey = examConfig.type === 'survey';
             const isCourse = examConfig.type === 'course';
 
@@ -5292,6 +5614,1090 @@
         link.download = `Certificado_${studentName.replace(/\s+/g, '_')}.${format}`;
         link.href = dataUrl;
         link.click();
+    };
+
+    // ============================================================
+    // MÓDULO: PRÁCTICA CLÍNICA — Constructor del caso (Instructor)
+    // ============================================================
+    const PRAC_RESP_SOUNDS = ["Murmullo vesicular normal", "Sibilancias", "Estertores / Crepitantes", "Roncus", "Estridor", "Ruidos disminuidos", "Ausentes (unilateral)", "Ausentes (bilaterales)"];
+
+    const PRAC_HEART_SOUNDS = ["Rítmicos y de buen tono", "Taquicárdicos", "Bradicárdicos", "Arrítmicos", "Velados / Apagados", "Soplo audible", "Ausentes"];
+
+    function pracDefaultInterventions() {
+        return [
+            { name: 'Oxígeno suplementario (mascarilla)', type: 'correct', effect: { fc: -5, fr: 0, spo2: 10, tas: 0, tad: 0 }, err: '' },
+            { name: 'Vía IV con cristaloide (Hartmann)', type: 'correct', effect: { fc: -10, fr: 0, spo2: 0, tas: 15, tad: 10 }, err: '' },
+            { name: 'Restricción de movimiento espinal', type: 'correct', effect: { fc: 0, fr: 0, spo2: 0, tas: 0, tad: 0 }, err: '' },
+            { name: 'Bicarbonato sin indicación', type: 'incorrect', effect: { fc: 15, fr: 0, spo2: -10, tas: 0, tad: 0 }, err: 'No está indicado sin acidosis confirmada; puede empeorar arritmias.' },
+            { name: 'Hiperventilar al paciente', type: 'incorrect', effect: { fc: 0, fr: 10, spo2: -15, tas: 0, tad: 0 }, err: 'Provoca alcalosis respiratoria y vasoconstricción cerebral.' },
+            { name: 'Retrasar el traslado por procedimientos no esenciales', type: 'incorrect', effect: { fc: 10, fr: 0, spo2: 0, tas: -15, tad: -10 }, err: 'Retrasa la atención definitiva y empeora el choque.' }
+        ];
+    }
+
+    function pracFillSelect(selectEl, options, selectedValue) {
+        selectEl.innerHTML = options.map(o => `<option value="${o}">${o}</option>`).join('');
+        if (selectedValue && !options.includes(selectedValue)) {
+            selectEl.innerHTML += `<option value="${selectedValue}">${selectedValue}</option>`;
+        }
+        selectEl.value = selectedValue || options[0];
+    }
+
+    window.openPracticaModal = () => {
+        document.getElementById('prac_title').value = "";
+        document.getElementById('prac_time_limit').value = 15;
+        document.getElementById('prac_gen').value = "";
+        document.getElementById('prac_min_score').value = 80;
+        document.getElementById('prac_cinematica').value = "Paciente con alteración del estado de alerta.";
+        document.getElementById('prac_sample_a').value = "Ninguna";
+        document.getElementById('prac_sample_m').value = "Ninguno";
+        document.getElementById('prac_sample_p').value = "Ninguna";
+        document.getElementById('prac_fc').value = 80;
+        document.getElementById('prac_fr').value = 16;
+        document.getElementById('prac_spo2').value = 96;
+        document.getElementById('prac_tas').value = 120;
+        document.getElementById('prac_tad').value = 80;
+        pracFillSelect(document.getElementById('prac_resp_sound'), PRAC_RESP_SOUNDS, "Murmullo vesicular normal");
+        pracFillSelect(document.getElementById('prac_heart_sound'), PRAC_HEART_SOUNDS, "Rítmicos y de buen tono");
+        document.getElementById('prac_gcs_desc').value = "Ojos abiertos espontáneamente, obedece órdenes.";
+        document.getElementById('prac_gcs_e').value = 4;
+        document.getElementById('prac_gcs_v').value = 5;
+        document.getElementById('prac_gcs_m').value = 6;
+        document.getElementById('prac_new_int_name').value = "";
+        document.getElementById('prac_new_int_type').value = "correct";
+        document.getElementById('prac_new_int_fc').value = 0;
+        document.getElementById('prac_new_int_fr').value = 0;
+        document.getElementById('prac_new_int_spo2').value = 0;
+        document.getElementById('prac_new_int_tas').value = 0;
+        document.getElementById('prac_new_int_tad').value = 0;
+        document.getElementById('prac_new_int_err').value = "";
+        document.getElementById('prac-json-file-input').value = "";
+        document.getElementById('prac-json-textarea').value = "";
+
+        const sel = document.getElementById('prac_rhythm');
+        sel.innerHTML = Object.keys(PRAC_RHYTHMS).map(k => `<option value="${k}">${PRAC_RHYTHMS[k].name}</option>`).join('');
+
+        window.practicaBuilderInterventions = pracDefaultInterventions();
+        renderPracticaInterventionList();
+
+        document.getElementById('practica-modal').classList.remove('hidden');
+    };
+
+    window.closePracticaModal = () => {
+        document.getElementById('practica-modal').classList.add('hidden');
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const pracJsonFileEl = document.getElementById('prac-json-file-input');
+        if (pracJsonFileEl) {
+            pracJsonFileEl.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => { document.getElementById('prac-json-textarea').value = evt.target.result; };
+                reader.readAsText(file);
+            });
+        }
+    });
+
+    // Rellena el formulario del caso con un JSON pegado o cargado desde archivo. Formato esperado:
+    // { title, gen, timeLimit, minScore, cinematica, sample:{a,m,p}, vitals:{fc,fr,spo2,tas,tad},
+    //   rhythm, respSound, heartSound, gcs:{desc,e,v,m}, interventions:[{name,type,effect,err}] }
+    window.applyPracticaJson = () => {
+        const raw = document.getElementById('prac-json-textarea').value.trim();
+        if (!raw) return window.CustomDialog.alert("Pega o selecciona un archivo JSON primero.");
+
+        let data;
+        try {
+            data = JSON.parse(raw);
+        } catch (e) {
+            return window.CustomDialog.alert("El JSON no es válido: " + e.message);
+        }
+
+        try {
+            if (data.title) document.getElementById('prac_title').value = data.title;
+            if (data.gen !== undefined) document.getElementById('prac_gen').value = data.gen;
+            if (data.timeLimit) document.getElementById('prac_time_limit').value = data.timeLimit;
+            if (data.minScore) document.getElementById('prac_min_score').value = data.minScore;
+            if (data.cinematica) document.getElementById('prac_cinematica').value = data.cinematica;
+
+            if (data.sample) {
+                if (data.sample.a !== undefined) document.getElementById('prac_sample_a').value = data.sample.a;
+                if (data.sample.m !== undefined) document.getElementById('prac_sample_m').value = data.sample.m;
+                if (data.sample.p !== undefined) document.getElementById('prac_sample_p').value = data.sample.p;
+            }
+
+            if (data.vitals) {
+                if (data.vitals.fc !== undefined) document.getElementById('prac_fc').value = data.vitals.fc;
+                if (data.vitals.fr !== undefined) document.getElementById('prac_fr').value = data.vitals.fr;
+                if (data.vitals.spo2 !== undefined) document.getElementById('prac_spo2').value = data.vitals.spo2;
+                if (data.vitals.tas !== undefined) document.getElementById('prac_tas').value = data.vitals.tas;
+                if (data.vitals.tad !== undefined) document.getElementById('prac_tad').value = data.vitals.tad;
+            }
+
+            if (data.rhythm && PRAC_RHYTHMS[data.rhythm]) document.getElementById('prac_rhythm').value = data.rhythm;
+
+            if (data.respSound) pracFillSelect(document.getElementById('prac_resp_sound'), PRAC_RESP_SOUNDS, data.respSound);
+            if (data.heartSound) pracFillSelect(document.getElementById('prac_heart_sound'), PRAC_HEART_SOUNDS, data.heartSound);
+
+            if (data.gcs) {
+                if (data.gcs.desc !== undefined) document.getElementById('prac_gcs_desc').value = data.gcs.desc;
+                if (data.gcs.e) document.getElementById('prac_gcs_e').value = data.gcs.e;
+                if (data.gcs.v) document.getElementById('prac_gcs_v').value = data.gcs.v;
+                if (data.gcs.m) document.getElementById('prac_gcs_m').value = data.gcs.m;
+            }
+
+            if (Array.isArray(data.interventions) && data.interventions.length) {
+                window.practicaBuilderInterventions = data.interventions.map(it => ({
+                    name: it.name || "Intervención sin nombre",
+                    type: it.type === 'incorrect' ? 'incorrect' : 'correct',
+                    effect: {
+                        fc: parseFloat(it.effect?.fc) || 0,
+                        fr: parseFloat(it.effect?.fr) || 0,
+                        spo2: parseFloat(it.effect?.spo2) || 0,
+                        tas: parseFloat(it.effect?.tas) || 0,
+                        tad: parseFloat(it.effect?.tad) || 0
+                    },
+                    err: it.err || ""
+                }));
+                renderPracticaInterventionList();
+            }
+
+            window.CustomDialog.alert("Formulario rellenado desde el JSON. Revisa los datos antes de crear la práctica.", "Éxito");
+        } catch (e) {
+            window.CustomDialog.alert("El JSON se leyó pero tiene un formato inesperado: " + e.message);
+        }
+    };
+
+    window.addPracticaIntervention = () => {
+        const name = document.getElementById('prac_new_int_name').value.trim();
+        if (!name) return window.CustomDialog.alert("Escribe el nombre de la intervención.");
+        const type = document.getElementById('prac_new_int_type').value;
+        const effect = {
+            fc: parseFloat(document.getElementById('prac_new_int_fc').value) || 0,
+            fr: parseFloat(document.getElementById('prac_new_int_fr').value) || 0,
+            spo2: parseFloat(document.getElementById('prac_new_int_spo2').value) || 0,
+            tas: parseFloat(document.getElementById('prac_new_int_tas').value) || 0,
+            tad: parseFloat(document.getElementById('prac_new_int_tad').value) || 0
+        };
+        const err = document.getElementById('prac_new_int_err').value.trim();
+        window.practicaBuilderInterventions.push({ name, type, effect, err });
+
+        document.getElementById('prac_new_int_name').value = "";
+        document.getElementById('prac_new_int_fc').value = 0;
+        document.getElementById('prac_new_int_fr').value = 0;
+        document.getElementById('prac_new_int_spo2').value = 0;
+        document.getElementById('prac_new_int_tas').value = 0;
+        document.getElementById('prac_new_int_tad').value = 0;
+        document.getElementById('prac_new_int_err').value = "";
+        renderPracticaInterventionList();
+    };
+
+    window.removePracticaIntervention = (idx) => {
+        window.practicaBuilderInterventions.splice(idx, 1);
+        renderPracticaInterventionList();
+    };
+
+    function renderPracticaInterventionList() {
+        const box = document.getElementById('prac-int-list');
+        if (!window.practicaBuilderInterventions.length) {
+            box.innerHTML = `<p style="text-align:center; color:var(--text-secondary); font-size:0.85rem;">Aún no has agregado intervenciones.</p>`;
+            return;
+        }
+        box.innerHTML = window.practicaBuilderInterventions.map((it, idx) => {
+            const badge = it.type === 'correct'
+                ? `<span class="badge badge-pass" style="font-size:0.7rem;">Indicado</span>`
+                : `<span class="badge badge-blocked" style="font-size:0.7rem;">Contraindicado</span>`;
+            const fmt = (n) => (n >= 0 ? '+' : '') + n;
+            return `<div class="prac-config-item">
+                <div style="min-width:0;">
+                    <strong>${it.name}</strong> ${badge}
+                    <div style="font-size:0.8rem; color:var(--text-secondary);">FC ${fmt(it.effect.fc)} · FR ${fmt(it.effect.fr)} · SpO2 ${fmt(it.effect.spo2)} · TAS ${fmt(it.effect.tas)} · TAD ${fmt(it.effect.tad)}</div>
+                </div>
+                <button type="button" class="btn-danger btn-sm" style="width:auto;" onclick="window.removePracticaIntervention(${idx})"><i class="fi fi-ss-trash"></i></button>
+            </div>`;
+        }).join('');
+    }
+
+    window.savePractica = async () => {
+        const title = document.getElementById('prac_title').value.trim();
+        if (!title) return window.CustomDialog.alert("Ingresa un título para el caso clínico.");
+        if (!window.practicaBuilderInterventions.length) return window.CustomDialog.alert("Agrega al menos una intervención disponible para el caso.");
+
+        window.setLoading('btn-save-practica', true);
+        try {
+            const clinical = {
+                cinematica: document.getElementById('prac_cinematica').value.trim(),
+                sample: {
+                    a: document.getElementById('prac_sample_a').value.trim(),
+                    m: document.getElementById('prac_sample_m').value.trim(),
+                    p: document.getElementById('prac_sample_p').value.trim()
+                },
+                vitals: {
+                    fc: parseFloat(document.getElementById('prac_fc').value) || 80,
+                    fr: parseFloat(document.getElementById('prac_fr').value) || 16,
+                    spo2: parseFloat(document.getElementById('prac_spo2').value) || 96,
+                    tas: parseFloat(document.getElementById('prac_tas').value) || 120,
+                    tad: parseFloat(document.getElementById('prac_tad').value) || 80
+                },
+                rhythm: document.getElementById('prac_rhythm').value || 'sinusal',
+                respSound: document.getElementById('prac_resp_sound').value.trim(),
+                heartSound: document.getElementById('prac_heart_sound').value.trim(),
+                gcs: {
+                    desc: document.getElementById('prac_gcs_desc').value.trim(),
+                    e: parseInt(document.getElementById('prac_gcs_e').value) || 4,
+                    v: parseInt(document.getElementById('prac_gcs_v').value) || 5,
+                    m: parseInt(document.getElementById('prac_gcs_m').value) || 6
+                },
+                interventions: window.practicaBuilderInterventions
+            };
+
+            const dbStruct = {
+                instructorId: currentUser.uid,
+                sharedWith: [],
+                createdAt: new Date().toISOString(),
+                config: {
+                    type: 'practica',
+                    name: title,
+                    gen: document.getElementById('prac_gen').value.trim().toUpperCase() || "GLOBAL",
+                    gens_string: document.getElementById('prac_gen').value.trim().toUpperCase(),
+                    duration: parseInt(document.getElementById('prac_time_limit').value) || 15,
+                    minScore: parseInt(document.getElementById('prac_min_score').value) || 80,
+                    clinical: clinical
+                }
+            };
+
+            await addDoc(collection(db, "exams"), dbStruct);
+
+            window.setLoading('btn-save-practica', false, '<i class="fi fi-ss-disk"></i> Crear Práctica Clínica');
+            window.closePracticaModal();
+            await window.CustomDialog.alert("¡Práctica Clínica creada con éxito!", "Éxito");
+            window.backToDashboard();
+        } catch (e) {
+            window.setLoading('btn-save-practica', false, '<i class="fi fi-ss-disk"></i> Crear Práctica Clínica');
+            window.CustomDialog.alert("No fue posible crear la práctica: " + e.message);
+        }
+    };
+
+    // ============================================================
+    // MÓDULO: PRÁCTICA CLÍNICA — Toma de la simulación (Alumno)
+    // ============================================================
+    window.loadPracticaView = async (examId, examDoc) => {
+        hideAll();
+        document.getElementById('practica-view').classList.remove('hidden');
+        document.getElementById('nav-actions').classList.add('hidden');
+        document.getElementById('nav-ingresar').classList.add('hidden');
+        document.getElementById('nav-volver').classList.add('hidden');
+
+        const cfg = examDoc.config;
+        pracState.examId = examId;
+        pracState.subId = null;
+        pracState.config = cfg;
+        pracState.vitals = { ...cfg.clinical.vitals };
+        pracState.rhythmKey = cfg.clinical.rhythm || 'sinusal';
+        pracState.score = 100;
+        pracState.logs = [];
+        pracState.appliedInterventions = [];
+        pracState.gcsAttempts = 3;
+        pracState.gcsEvaluated = false;
+        pracState.vitalsRevealed = false;
+        pracState.lastPushTs = 0; pracState.lastRhythmTs = 0; pracState.lastEventTs = 0; pracState.lastResetTs = 0;
+
+        await loadBranding(examDoc.instructorId);
+
+        document.getElementById('prac-display-name').innerHTML = `<i class="fi fi-ss-ambulance"></i> ${cfg.name}`;
+        document.getElementById('prac-display-gen').innerText = "Clase(s): " + (cfg.gens_string || cfg.gen || "GLOBAL");
+        document.getElementById('prac-intro-time').innerText = cfg.duration || 15;
+        document.getElementById('prac-intro').classList.remove('hidden');
+        document.getElementById('prac-main').classList.add('hidden');
+        document.getElementById('prac-event-banner').style.display = 'none';
+
+        const studentStr = localStorage.getItem('tumb_student');
+        if (studentStr) {
+            const st = JSON.parse(studentStr);
+            document.getElementById('prac-student-name').value = st.name || "";
+            document.getElementById('prac-student-email').value = st.email || "";
+        }
+    };
+
+    window.startPractica = async () => {
+        const name = document.getElementById('prac-student-name').value.trim();
+        const email = document.getElementById('prac-student-email').value.trim().toLowerCase();
+        if (!name || !email) return window.CustomDialog.alert("Ingresa tu nombre y correo para iniciar.");
+
+        window.setLoading('prac-btn-start', true);
+        try {
+            const studentStr = localStorage.getItem('tumb_student');
+            const gen = studentStr ? (JSON.parse(studentStr).gen || "") : "";
+
+            const existingQ = query(collection(db, "submissions"), where("examId", "==", pracState.examId), where("student.email", "==", email), where("status", "==", "IN_PROGRESS"));
+            const existingSnap = await getDocs(existingQ);
+
+            if (!existingSnap.empty) {
+                const d = existingSnap.docs[0];
+                const eData = d.data();
+                pracState.subId = d.id;
+                pracState.vitals = eData.clinical_state?.vitals || pracState.vitals;
+                pracState.rhythmKey = eData.clinical_state?.rhythm || pracState.rhythmKey;
+                pracState.score = eData.score !== undefined ? eData.score : 100;
+                pracState.logs = eData.logs || [];
+                pracState.appliedInterventions = eData.appliedInterventions || [];
+                pracState.gcsAttempts = eData.gcsAttempts !== undefined ? eData.gcsAttempts : 3;
+                pracState.gcsEvaluated = !!eData.gcsEvaluated;
+                pracState.vitalsRevealed = !!eData.vitalsRevealed;
+                pracState.timeLeft = eData.timeLeftSeconds || (pracState.config.duration || 15) * 60;
+                pracState.lastResetTs = eData.live_reset?.ts || 0;
+            } else {
+                const initialPayload = {
+                    examId: pracState.examId,
+                    examInfo: { name: pracState.config.name, type: 'practica' },
+                    student: { name, email, gen },
+                    status: "IN_PROGRESS",
+                    score: 100,
+                    logs: [],
+                    appliedInterventions: [],
+                    gcsAttempts: 3,
+                    gcsEvaluated: false,
+                    vitalsRevealed: false,
+                    clinical_state: { vitals: pracState.vitals, rhythm: pracState.rhythmKey },
+                    metrics: { startTime: new Date().toISOString() }
+                };
+                const newRef = await addDoc(collection(db, "submissions"), initialPayload);
+                pracState.subId = newRef.id;
+                pracState.timeLeft = (pracState.config.duration || 15) * 60;
+            }
+
+            document.getElementById('prac-intro').classList.add('hidden');
+            document.getElementById('prac-main').classList.remove('hidden');
+
+            renderPracticaCaseInfo();
+            renderPracticaInterventionButtons();
+            renderPracticaLog();
+            pracStartTimer();
+            pracInitCanvas();
+            pracListenSelf();
+
+            window.setLoading('prac-btn-start', false, '<i class="fi fi-ss-play"></i> Iniciar Simulación');
+        } catch (e) {
+            window.setLoading('prac-btn-start', false, '<i class="fi fi-ss-play"></i> Iniciar Simulación');
+            window.CustomDialog.alert("No fue posible iniciar la práctica: " + e.message);
+        }
+    };
+
+    function renderPracticaCaseInfo() {
+        const cl = pracState.config.clinical;
+        document.getElementById('prac-cinematica').innerText = cl.cinematica || "";
+        document.getElementById('prac-sample-a').innerText = cl.sample?.a || "Sin datos";
+        document.getElementById('prac-sample-m').innerText = cl.sample?.m || "Sin datos";
+        document.getElementById('prac-sample-p').innerText = cl.sample?.p || "Sin datos";
+        document.getElementById('prac-resp-sound').innerText = "Sin auscultar";
+        document.getElementById('prac-heart-sound').innerText = "Sin auscultar";
+        document.getElementById('prac-gcs-desc').innerText = cl.gcs?.desc || "";
+        renderPracticaVitals();
+        pracUpdateLungAnimation();
+
+        if (pracState.gcsEvaluated) {
+            document.getElementById('prac-gcs-form').classList.add('hidden');
+            document.getElementById('prac-btn-gcs').classList.add('hidden');
+        }
+    }
+
+    window.pracAuscultarPulmones = () => {
+        const cl = pracState.config.clinical;
+        document.getElementById('prac-resp-sound').innerText = cl.respSound || "Sin datos";
+        pracAddLog(`🩺 Auscultó campos pulmonares: ${cl.respSound || 'sin datos'}`, "#0288D1");
+        pracInitAudio();
+        pracPlayLungs(cl.respSound || "");
+    };
+
+    window.pracAuscultarCorazon = () => {
+        const cl = pracState.config.clinical;
+        document.getElementById('prac-heart-sound').innerText = cl.heartSound || "Sin datos";
+        pracAddLog(`🩺 Auscultó ruidos cardíacos: ${cl.heartSound || 'sin datos'}`, "#0288D1");
+        pracInitAudio();
+        pracPlayHeart(cl.heartSound || "");
+    };
+
+    window.medirPracticaSignos = () => {
+        pracState.vitalsRevealed = true;
+        renderPracticaVitals();
+        pracUpdateLungAnimation();
+        pracSyncState();
+    };
+
+    function pracUpdateLungAnimation() {
+        const left = document.getElementById('prac-lung-left');
+        const right = document.getElementById('prac-lung-right');
+        if (!left || !right) return;
+        const fr = pracState.vitals.fr || 0;
+        if (!pracState.vitalsRevealed || fr <= 0) {
+            left.style.animation = 'none'; right.style.animation = 'none';
+            return;
+        }
+        const dur = (60 / Math.max(1, fr)) / 2;
+        left.style.animation = `prac-breathe ${dur}s infinite alternate ease-in-out`;
+        right.style.animation = `prac-breathe ${dur}s infinite alternate ease-in-out`;
+    }
+
+    function pracTriggerDamage() {
+        const flash = document.getElementById('prac-damage-flash');
+        if (!flash) return;
+        flash.classList.add('active');
+        setTimeout(() => flash.classList.remove('active'), 150);
+    }
+
+    function pracUpdateCriticalState() {
+        const flash = document.getElementById('prac-damage-flash');
+        if (!flash) return;
+        const v = pracState.vitals;
+        const pam = Math.round(((2 * (v.tad || 0)) + (v.tas || 0)) / 3);
+        const critical = (v.tas || 0) < 80 || pam < 55 || (v.spo2 || 0) < 85;
+        flash.classList.toggle('persistent', critical);
+    }
+
+    function renderPracticaInterventionButtons() {
+        const list = pracState.config.clinical.interventions || [];
+        const box = document.getElementById('prac-interventions-list');
+        box.innerHTML = list.map((it, idx) => {
+            const done = pracState.appliedInterventions.includes(idx);
+            return `<button type="button" class="prac-intervention-btn ${done ? 'done' : ''}" ${done ? 'disabled' : ''} onclick="window.applyPracticaIntervention(${idx})"><i class="fi fi-ss-syringe"></i> ${it.name}</button>`;
+        }).join('') || `<p style="color:var(--text-secondary);">Sin intervenciones configuradas.</p>`;
+    }
+
+    function renderPracticaLog() {
+        const box = document.getElementById('prac-log-box');
+        if (!pracState.logs.length) {
+            box.innerHTML = `<p style="color:var(--text-secondary);">Sin acciones registradas.</p>`;
+        } else {
+            box.innerHTML = pracState.logs.slice().reverse().map(l => `<p style="color:${l.color || 'inherit'};">${l.text}</p>`).join('');
+        }
+        const scoreEl = document.getElementById('prac-live-score');
+        if (scoreEl) scoreEl.innerText = `Calificación actual: ${Math.max(0, Math.min(100, Math.round(pracState.score)))}%`;
+    }
+
+    function pracAddLog(text, color) {
+        pracState.logs.push({ text, color, ts: Date.now() });
+        renderPracticaLog();
+        pracSyncState();
+    }
+
+    function pracSyncState() {
+        if (!pracState.subId) return;
+        const payload = {
+            score: Math.max(0, Math.min(100, pracState.score)),
+            logs: pracState.logs,
+            appliedInterventions: pracState.appliedInterventions,
+            gcsAttempts: pracState.gcsAttempts,
+            gcsEvaluated: pracState.gcsEvaluated,
+            vitalsRevealed: pracState.vitalsRevealed,
+            clinical_state: { vitals: pracState.vitals, rhythm: pracState.rhythmKey },
+            timeLeftSeconds: pracState.timeLeft
+        };
+        setDoc(doc(db, "submissions", pracState.subId), payload, { merge: true }).catch(() => {});
+    }
+
+    window.applyPracticaIntervention = (idx) => {
+        const it = pracState.config.clinical.interventions[idx];
+        if (!it || pracState.appliedInterventions.includes(idx)) return;
+        pracState.appliedInterventions.push(idx);
+
+        const isCorrect = it.type === 'correct';
+        if (isCorrect) {
+            pracAddLog(`✅ Aplicado: ${it.name}`, "#388E3C");
+        } else {
+            pracState.score -= 20;
+            pracAddLog(`❌ Contraindicado: ${it.name}${it.err ? ' — ' + it.err : ''}`, "#B73A3A");
+            pracTriggerDamage();
+        }
+
+        const eff = it.effect || {};
+        pracState.vitals.fc = Math.max(0, (pracState.vitals.fc || 0) + (eff.fc || 0));
+        pracState.vitals.fr = Math.max(0, (pracState.vitals.fr || 0) + (eff.fr || 0));
+        pracState.vitals.spo2 = Math.max(0, Math.min(100, (pracState.vitals.spo2 || 0) + (eff.spo2 || 0)));
+        pracState.vitals.tas = Math.max(0, (pracState.vitals.tas || 0) + (eff.tas || 0));
+        pracState.vitals.tad = Math.max(0, (pracState.vitals.tad || 0) + (eff.tad || 0));
+
+        pracState.vitalsRevealed = true;
+        renderPracticaInterventionButtons();
+        renderPracticaVitals();
+        pracUpdateLungAnimation();
+        pracUpdateCriticalState();
+        pracSyncState();
+    };
+
+    window.evaluatePracticaGCS = () => {
+        if (pracState.gcsEvaluated) return;
+        const e = parseInt(document.getElementById('prac-gcs-e').value);
+        const v = parseInt(document.getElementById('prac-gcs-v').value);
+        const m = parseInt(document.getElementById('prac-gcs-m').value);
+        if (!e || !v || !m) return window.CustomDialog.alert("Completa los tres valores de Glasgow.");
+
+        const real = pracState.config.clinical.gcs;
+        const total = e + v + m;
+        const realTotal = real.e + real.v + real.m;
+        const resultEl = document.getElementById('prac-gcs-result');
+
+        if (e === real.e && v === real.v && m === real.m) {
+            pracAddLog(`✅ Glasgow correcto: ${total}/15`, "#388E3C");
+            pracState.gcsEvaluated = true;
+            resultEl.innerText = `Glasgow registrado: ${total}/15`;
+            resultEl.style.color = "var(--success)";
+            document.getElementById('prac-gcs-form').classList.add('hidden');
+            document.getElementById('prac-btn-gcs').classList.add('hidden');
+        } else {
+            pracState.gcsAttempts--;
+            pracState.score -= 5;
+            pracAddLog(`❌ Glasgow incorrecto. Marcó ${total}, era ${realTotal}`, "#B73A3A");
+            pracTriggerDamage();
+            if (pracState.gcsAttempts > 0) {
+                resultEl.innerText = `Incorrecto. Te quedan ${pracState.gcsAttempts} intento(s).`;
+                resultEl.style.color = "var(--danger)";
+            } else {
+                pracState.score -= 10;
+                pracState.gcsEvaluated = true;
+                resultEl.innerText = `Intentos agotados. Glasgow real: ${realTotal}/15`;
+                resultEl.style.color = "var(--danger)";
+                document.getElementById('prac-gcs-form').classList.add('hidden');
+                document.getElementById('prac-btn-gcs').classList.add('hidden');
+            }
+        }
+        pracSyncState();
+    };
+
+    function renderPracticaVitals() {
+        const revealed = pracState.vitalsRevealed;
+        const v = pracState.vitals;
+        const pam = Math.round(((2 * (v.tad || 0)) + (v.tas || 0)) / 3);
+
+        document.getElementById('prac-v-fc').innerText = revealed ? Math.round(v.fc) : 0;
+        document.getElementById('prac-v-spo2').innerText = revealed ? Math.round(v.spo2) : 0;
+        document.getElementById('prac-v-ta').innerText = revealed ? `${Math.round(v.tas)}/${Math.round(v.tad)}` : "0/0";
+        document.getElementById('prac-v-fr').innerText = revealed ? Math.round(v.fr) : 0;
+
+        document.getElementById('prac-v-fc').style.color = (revealed && (v.fc > 120 || v.fc < 50)) ? '#E74C3C' : '#2ECC71';
+        document.getElementById('prac-v-spo2').style.color = (revealed && v.spo2 < 90) ? '#E74C3C' : '#00e5ff';
+        document.getElementById('prac-v-ta').style.color = (revealed && pam < 65) ? '#E74C3C' : '#E67E22';
+    }
+
+    function pracStartTimer() {
+        if (!pracState.timeLeft) pracState.timeLeft = (pracState.config.duration || 15) * 60;
+        clearInterval(pracState.timerHandle);
+        pracRenderTimer();
+        pracState.timerHandle = setInterval(() => {
+            pracState.timeLeft--;
+            pracRenderTimer();
+            if (pracState.timeLeft <= 0) {
+                clearInterval(pracState.timerHandle);
+                window.finishPractica(true);
+            }
+        }, 1000);
+    }
+
+    function pracRenderTimer() {
+        const m = Math.max(0, Math.floor(pracState.timeLeft / 60));
+        const s = Math.max(0, pracState.timeLeft % 60);
+        const el = document.getElementById('prac-timer');
+        el.innerHTML = `<i class="fi fi-ss-hourglass"></i> ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        el.classList.toggle('timer-danger', pracState.timeLeft <= 60);
+    }
+
+    function pracListenSelf() {
+        if (pracState.unsubSelf) pracState.unsubSelf();
+        pracState.unsubSelf = onSnapshot(doc(db, "submissions", pracState.subId), (snap) => {
+            if (!snap.exists()) return;
+            const data = snap.data();
+
+            if (data.status === 'BLOCKED') {
+                pracHandleRemoteBlock(data.metrics?.detail || "El instructor cerró esta práctica.");
+                return;
+            }
+
+            if (data.live_reset && data.live_reset.ts && data.live_reset.ts !== pracState.lastResetTs) {
+                pracState.lastResetTs = data.live_reset.ts;
+                pracApplyRemoteReset(data);
+                return;
+            }
+
+            if (data.live_push && data.live_push.ts && data.live_push.ts !== pracState.lastPushTs) {
+                pracState.lastPushTs = data.live_push.ts;
+                pracState.vitals = { ...data.live_push.vitals };
+                pracState.vitalsRevealed = true;
+                renderPracticaVitals();
+                pracUpdateLungAnimation();
+                pracUpdateCriticalState();
+                pracAddLog(`📡 El instructor actualizó los signos vitales.`, "#0288D1");
+                pracTriggerDamage();
+            }
+            if (data.live_rhythm && data.live_rhythm.ts && data.live_rhythm.ts !== pracState.lastRhythmTs) {
+                pracState.lastRhythmTs = data.live_rhythm.ts;
+                pracState.rhythmKey = data.live_rhythm.key;
+                pracAddLog(`📡 El instructor cambió el ritmo ECG a: ${PRAC_RHYTHMS[pracState.rhythmKey]?.name || pracState.rhythmKey}`, "#0288D1");
+            }
+            if (data.live_event && data.live_event.ts && data.live_event.ts !== pracState.lastEventTs) {
+                pracState.lastEventTs = data.live_event.ts;
+                document.getElementById('prac-event-text').innerText = data.live_event.text;
+                document.getElementById('prac-event-banner').style.display = 'block';
+                pracAddLog(`🚨 Evento del instructor: ${data.live_event.text}`, "#B73A3A");
+                pracTriggerDamage();
+            }
+        });
+    }
+
+    function pracApplyRemoteReset(data) {
+        pracState.vitals = { ...(data.clinical_state?.vitals || pracState.config.clinical.vitals) };
+        pracState.rhythmKey = data.clinical_state?.rhythm || pracState.config.clinical.rhythm || 'sinusal';
+        pracState.score = data.score !== undefined ? data.score : 100;
+        pracState.logs = data.logs || [];
+        pracState.appliedInterventions = data.appliedInterventions || [];
+        pracState.gcsAttempts = data.gcsAttempts !== undefined ? data.gcsAttempts : 3;
+        pracState.gcsEvaluated = !!data.gcsEvaluated;
+        pracState.vitalsRevealed = !!data.vitalsRevealed;
+
+        document.getElementById('prac-event-banner').style.display = 'none';
+        document.getElementById('prac-damage-flash').classList.remove('persistent', 'active');
+        document.getElementById('prac-resp-sound').innerText = "Sin auscultar";
+        document.getElementById('prac-heart-sound').innerText = "Sin auscultar";
+        document.getElementById('prac-gcs-e').value = '';
+        document.getElementById('prac-gcs-v').value = '';
+        document.getElementById('prac-gcs-m').value = '';
+        document.getElementById('prac-gcs-result').innerText = '';
+        document.getElementById('prac-gcs-form').classList.remove('hidden');
+        document.getElementById('prac-btn-gcs').classList.remove('hidden');
+
+        renderPracticaInterventionButtons();
+        renderPracticaLog();
+        renderPracticaVitals();
+        pracUpdateLungAnimation();
+        window.CustomDialog.alert("El instructor reinició esta práctica. Puedes volver a intentarlo desde cero.", "Práctica Reiniciada");
+    }
+
+    function pracHandleRemoteBlock(reason) {
+        clearInterval(pracState.timerHandle);
+        cancelAnimationFrame(pracAnimHandle);
+        if (pracState.unsubSelf) pracState.unsubSelf();
+        window.CustomDialog.alert(reason, "Práctica Cerrada por el Instructor").then(() => {
+            window.exitPractica();
+        });
+    }
+
+    window.finishPractica = async (auto = false) => {
+        if (!pracState.subId) return;
+        if (!auto && !await window.CustomDialog.confirm("¿Finalizar la simulación? No podrás seguir aplicando intervenciones.", "Finalizar Simulación")) return;
+
+        clearInterval(pracState.timerHandle);
+        cancelAnimationFrame(pracAnimHandle);
+        if (pracState.unsubSelf) pracState.unsubSelf();
+
+        const percentage = Math.max(0, Math.min(100, pracState.score));
+        const minScore = pracState.config.minScore || 80;
+        const passed = percentage >= minScore;
+
+        const wrongTopics = [];
+        (pracState.config.clinical.interventions || []).forEach((it, idx) => {
+            if (pracState.appliedInterventions.includes(idx) && it.type !== 'correct') wrongTopics.push(it.name);
+        });
+        if (pracState.gcsAttempts < 3 && !wrongTopics.includes("Escala de Glasgow")) wrongTopics.push("Escala de Glasgow");
+
+        try {
+            await setDoc(doc(db, "submissions", pracState.subId), {
+                status: "COMPLETED",
+                graded: true,
+                score: Math.round(percentage),
+                total: 100,
+                percentage: percentage,
+                passed: passed,
+                failedTopics: wrongTopics,
+                logs: pracState.logs,
+                appliedInterventions: pracState.appliedInterventions,
+                clinical_state: { vitals: pracState.vitals, rhythm: pracState.rhythmKey },
+                metrics: { endTime: new Date().toISOString() }
+            }, { merge: true });
+        } catch (e) { /* si falla el guardado final, igual dejamos salir al alumno */ }
+
+        await window.CustomDialog.alert(`Simulación finalizada. Calificación: ${Math.round(percentage)}%`, passed ? "¡Aprobado!" : "No Aprobado");
+        window.exitPractica();
+    };
+
+    window.exitPractica = () => {
+        clearInterval(pracState.timerHandle);
+        cancelAnimationFrame(pracAnimHandle);
+        if (pracState.unsubSelf) pracState.unsubSelf();
+        pracState = {
+            active: false, examId: null, subId: null, config: null,
+            vitals: { fc: 80, fr: 16, spo2: 96, tas: 120, tad: 80 }, rhythmKey: 'sinusal',
+            score: 100, logs: [], appliedInterventions: [], gcsAttempts: 3, gcsEvaluated: false,
+            vitalsRevealed: false,
+            timeLeft: 0, timerHandle: null, unsubSelf: null, lastPushTs: 0, lastRhythmTs: 0, lastEventTs: 0, lastResetTs: 0
+        };
+        window.currentExamId = null;
+        const banner = document.getElementById('prac-event-banner');
+        if (banner) banner.style.display = 'none';
+        const flash = document.getElementById('prac-damage-flash');
+        if (flash) flash.classList.remove('active', 'persistent');
+        history.pushState(null, null, location.href.split('?')[0]);
+        window.goHome();
+    };
+
+    // --- Audio: ECG (beep muteable) y auscultación (pulmones/corazón) ---
+    function pracInitAudio() {
+        if (!pracAudioCtx) {
+            pracAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (pracAudioCtx.state === 'suspended') pracAudioCtx.resume();
+    }
+
+    window.togglePracticaAudio = () => {
+        pracAudioEnabled = !pracAudioEnabled;
+        if (pracAudioEnabled) pracInitAudio();
+        const btn = document.getElementById('prac-btn-audio');
+        if (btn) btn.innerHTML = pracAudioEnabled ? '<i class="fi fi-ss-volume-slash"></i> Silenciar ECG' : '<i class="fi fi-ss-volume"></i> Activar Sonido ECG';
+    };
+
+    function pracPlayBeep(pitch) {
+        if (!pracAudioEnabled || !pracAudioCtx) return;
+        const osc = pracAudioCtx.createOscillator(); const gain = pracAudioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(pitch, pracAudioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, pracAudioCtx.currentTime); osc.connect(gain); gain.connect(pracAudioCtx.destination);
+        osc.start(); osc.stop(pracAudioCtx.currentTime + 0.1);
+    }
+
+    function pracPlayLungs(type) {
+        if (!pracAudioCtx) pracInitAudio();
+        if (type.includes('Ausentes')) return;
+        const dur = 1.6;
+        const gain = pracAudioCtx.createGain(); gain.connect(pracAudioCtx.destination);
+        const bufSize = pracAudioCtx.sampleRate * dur;
+        const buffer = pracAudioCtx.createBuffer(1, bufSize, pracAudioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = pracAudioCtx.createBufferSource(); noise.buffer = buffer;
+        const filter = pracAudioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400;
+        if (type.includes('Sibilancias')) filter.frequency.value = 900;
+        else if (type.includes('Estridor')) filter.frequency.value = 1200;
+        else if (type.includes('Estertores')) { filter.type = 'highpass'; filter.frequency.value = 800; }
+        gain.gain.setValueAtTime(0, pracAudioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.25, pracAudioCtx.currentTime + dur / 2);
+        gain.gain.linearRampToValueAtTime(0, pracAudioCtx.currentTime + dur);
+        noise.connect(filter).connect(gain); noise.start();
+    }
+
+    function pracPlayHeart(type) {
+        if (!pracAudioCtx) pracInitAudio();
+        if (type.includes('Ausentes')) return;
+        const playBeat = (delay) => {
+            const osc = pracAudioCtx.createOscillator(); const gain = pracAudioCtx.createGain(); const filter = pracAudioCtx.createBiquadFilter();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(60, pracAudioCtx.currentTime + delay);
+            filter.type = 'lowpass'; filter.frequency.value = type.includes('Velados') ? 80 : 300;
+            gain.gain.setValueAtTime(0, pracAudioCtx.currentTime + delay);
+            gain.gain.linearRampToValueAtTime(1, pracAudioCtx.currentTime + delay + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.01, pracAudioCtx.currentTime + delay + 0.3);
+            osc.connect(filter); filter.connect(gain); gain.connect(pracAudioCtx.destination);
+            osc.start(pracAudioCtx.currentTime + delay); osc.stop(pracAudioCtx.currentTime + delay + 0.4);
+        };
+        playBeat(0); playBeat(0.3);
+        if (type.includes('Arrítmicos')) { playBeat(0.8); playBeat(1.1); playBeat(1.3); } else { playBeat(1.0); playBeat(1.3); }
+    }
+
+    // --- Monitor ECG animado (canvas) del alumno ---
+    function pracInitCanvas() {
+        pracCanvas = document.getElementById('prac-canvas');
+        if (!pracCanvas) return;
+        pracCtx = pracCanvas.getContext('2d');
+        pracResizeCanvas();
+        cancelAnimationFrame(pracAnimHandle);
+        pracAnimHandle = requestAnimationFrame(pracDrawWaves);
+    }
+
+    function pracResizeCanvas() {
+        if (!pracCanvas) return;
+        const parent = pracCanvas.parentElement;
+        if (!parent) return;
+        pracCanvas.width = parent.clientWidth;
+        pracCanvas.height = 220;
+        pracEcgCenter = pracCanvas.height * 0.25; pracEcgScale = (pracCanvas.height * 0.18) / 75;
+        pracPletCenter = pracCanvas.height * 0.60; pracPletScale = (pracCanvas.height * 0.14) / 35;
+        pracCo2Center = pracCanvas.height * 0.88; pracCo2Scale = (pracCanvas.height * 0.10) / 35;
+        pracEcgHistory = new Array(pracCanvas.width).fill(pracEcgCenter);
+        pracPletHistory = new Array(pracCanvas.width).fill(pracPletCenter);
+        pracCo2History = new Array(pracCanvas.width).fill(pracCo2Center);
+    }
+    window.addEventListener('resize', () => { if (pracCanvas) pracResizeCanvas(); });
+
+    function pracDrawGrid() {
+        pracCtx.fillStyle = '#050c08'; pracCtx.fillRect(0, 0, pracCanvas.width, pracCanvas.height);
+        pracCtx.lineWidth = 0.4; pracCtx.strokeStyle = '#122c18';
+        pracCtx.beginPath();
+        for (let x = 0; x < pracCanvas.width; x += 10) { pracCtx.moveTo(x, 0); pracCtx.lineTo(x, pracCanvas.height); }
+        for (let y = 0; y < pracCanvas.height; y += 10) { pracCtx.moveTo(0, y); pracCtx.lineTo(pracCanvas.width, y); }
+        pracCtx.stroke();
+    }
+
+    function pracGetPletValue(t, isAsystole) {
+        if (isAsystole) return (Math.random() - 0.5) * 1.5;
+        if (t < 0.25) return 35 * Math.sin((t / 0.25) * (Math.PI / 2));
+        if (t < 0.35) return 35 - 10 * Math.sin(((t - 0.25) / 0.10) * Math.PI);
+        if (t < 0.90) return 25 * Math.cos(((t - 0.35) / 0.55) * (Math.PI / 2));
+        return 0;
+    }
+    function pracGetCO2Value(t, isAsystole) {
+        if (isAsystole) return (Math.random() - 0.5) * 1.0;
+        if (t < 0.15) return 0;
+        if (t < 0.25) return 30 * ((t - 0.15) / 0.10);
+        if (t < 0.70) return 30 + 5 * Math.sin(((t - 0.25) / 0.45) * Math.PI);
+        if (t < 0.80) return 35 * (1 - (t - 0.70) / 0.10);
+        return 0;
+    }
+
+    function pracDrawWaves() {
+        pracAnimHandle = requestAnimationFrame(pracDrawWaves);
+        const mainEl = document.getElementById('prac-main');
+        if (!pracCtx || !mainEl || mainEl.classList.contains('hidden')) return;
+
+        const r = PRAC_RHYTHMS[pracState.rhythmKey] || PRAC_RHYTHMS.sinusal;
+        const isFlat = r.bpm === 0 || (pracState.vitals.spo2 || 0) <= 0;
+        pracGlobalTime += pracSweepSpeed;
+        let bpmClock = r.bpm > 0 ? (r.bpm / 60) * 0.012 : 0.015;
+
+        pracCycleProgress += bpmClock * (pracSweepSpeed * 0.4);
+        let playBeepThisFrame = false;
+        if (pracCycleProgress >= 1) { pracCycleProgress = 0; if (r.bpm > 0 && (pracState.vitals.spo2 || 0) > 0) playBeepThisFrame = true; }
+        pracPletProgress += bpmClock * (pracSweepSpeed * 0.4);
+        if (pracPletProgress >= 1) pracPletProgress = 0;
+        pracCo2Progress += 0.003 * (pracSweepSpeed * 0.4);
+        if (pracCo2Progress >= 1) pracCo2Progress = 0;
+
+        if (playBeepThisFrame) pracPlayBeep(800 - (Math.max(0, 100 - (pracState.vitals.spo2 || 0)) * 15));
+
+        let ecgVal = r.generator(pracCycleProgress, pracGlobalTime, pracRandomOffset);
+        let pletVal = pracGetPletValue(pracPletProgress, isFlat);
+        let co2Val = pracGetCO2Value(pracCo2Progress, isFlat);
+
+        let ecgY = pracEcgCenter - (ecgVal * pracEcgScale);
+        let pletY = pracPletCenter - (pletVal * pracPletScale);
+        let co2Y = pracCo2Center - (co2Val * pracCo2Scale);
+
+        for (let i = 0; i < pracSweepSpeed; i++) {
+            let targetX = Math.floor(pracSweepX + i) % pracCanvas.width;
+            pracEcgHistory[targetX] = ecgY; pracPletHistory[targetX] = pletY; pracCo2History[targetX] = co2Y;
+        }
+
+        pracDrawGrid();
+        pracCtx.lineWidth = 2; pracCtx.lineJoin = 'round'; pracCtx.lineCap = 'round';
+
+        const drawTrace = (hist, color) => {
+            pracCtx.strokeStyle = color; pracCtx.shadowColor = color; pracCtx.shadowBlur = 3;
+            pracCtx.beginPath();
+            let first = true;
+            for (let x = 0; x < pracCanvas.width; x++) {
+                let dist = x - pracSweepX; if (dist < 0) dist += pracCanvas.width;
+                if (dist > pracScanWidth) {
+                    if (first) { pracCtx.moveTo(x, hist[x]); first = false; } else { pracCtx.lineTo(x, hist[x]); }
+                } else { first = true; }
+            }
+            pracCtx.stroke();
+        };
+        drawTrace(pracEcgHistory, '#2ECC71');
+        drawTrace(pracPletHistory, '#00e5ff');
+        drawTrace(pracCo2History, '#f1c40f');
+        pracCtx.shadowBlur = 0;
+
+        pracSweepX = (pracSweepX + pracSweepSpeed) % pracCanvas.width;
+    }
+
+    // ============================================================
+    // MÓDULO: PRÁCTICA CLÍNICA — Monitor en vivo (Instructor)
+    // ============================================================
+    window.viewPracticaMonitor = (examId, examName) => {
+        pracMonitor.examId = examId;
+        pracMonitor.examName = examName;
+        pracMonitor.selectedSubId = null;
+
+        hideAll();
+        document.getElementById('practica-monitor').classList.remove('hidden');
+        document.getElementById('nav-settings').classList.add('hidden');
+        document.getElementById('nav-school-control').classList.add('hidden');
+        document.getElementById('nav-sc-back').classList.add('hidden');
+        document.getElementById('nav-volver').classList.remove('hidden');
+        document.querySelector('.container').classList.add('expanded');
+
+        document.getElementById('prac-mon-title').innerHTML = `<i class="fi fi-ss-heart"></i> Monitor en Vivo: ${examName}`;
+        document.getElementById('prac-mon-detail').innerHTML = `<p style="text-align:center; color:var(--text-secondary); padding:30px 0;">Selecciona un intento de la lista para controlarlo.</p>`;
+
+        if (pracMonitor.unsubList) pracMonitor.unsubList();
+        const q = query(collection(db, "submissions"), where("examId", "==", examId));
+        pracMonitor.unsubList = onSnapshot(q, (snap) => {
+            pracMonitor.subs = {};
+            snap.forEach(d => { pracMonitor.subs[d.id] = d.data(); });
+            renderPracticaMonitorList();
+            if (pracMonitor.selectedSubId && pracMonitor.subs[pracMonitor.selectedSubId]) {
+                renderPracticaMonitorDetail(pracMonitor.selectedSubId);
+            }
+        }, () => {
+            document.getElementById('prac-mon-list').innerHTML = `<p style="color:var(--danger); text-align:center;">Error al cargar los intentos.</p>`;
+        });
+    };
+
+    function renderPracticaMonitorList() {
+        const box = document.getElementById('prac-mon-list');
+        const entries = Object.entries(pracMonitor.subs);
+        if (!entries.length) {
+            box.innerHTML = `<p style="text-align:center; color:var(--text-secondary);">Aún no hay intentos registrados.</p>`;
+            return;
+        }
+        box.innerHTML = entries.map(([subId, sub]) => {
+            let statusHTML;
+            if (sub.status === 'IN_PROGRESS') {
+                statusHTML = `<span class="badge badge-progress"><i class="fi fi-ss-spinner"></i> EN VIVO · ${Math.round(sub.score ?? 100)}%</span>`;
+            } else if (sub.status === 'BLOCKED') {
+                statusHTML = `<span class="badge badge-blocked"><i class="fi fi-ss-ban"></i> CERRADO</span>`;
+            } else {
+                statusHTML = sub.passed
+                    ? `<span class="badge badge-pass"><i class="fi fi-ss-check"></i> ${Math.round(sub.percentage || 0)}%</span>`
+                    : `<span class="badge badge-blocked"><i class="fi fi-ss-cross"></i> ${Math.round(sub.percentage || 0)}%</span>`;
+            }
+            const selected = pracMonitor.selectedSubId === subId;
+            return `<div class="prac-config-item" style="cursor:pointer; ${selected ? 'border-color:var(--primary); background:#E3F2FD;' : ''}" onclick="window.selectPracticaSubmission('${subId}')">
+                <div style="min-width:0;"><strong>${sub.student?.name || 'Alumno'}</strong><div style="font-size:0.8rem; color:var(--text-secondary);">${sub.student?.email || ''}</div></div>
+                ${statusHTML}
+            </div>`;
+        }).join('');
+    }
+
+    window.selectPracticaSubmission = (subId) => {
+        pracMonitor.selectedSubId = subId;
+        renderPracticaMonitorList();
+        renderPracticaMonitorDetail(subId);
+    };
+
+    function renderPracticaMonitorDetail(subId) {
+        const sub = pracMonitor.subs[subId];
+        const box = document.getElementById('prac-mon-detail');
+        if (!sub) { box.innerHTML = `<p style="text-align:center; color:var(--text-secondary);">Este intento ya no existe.</p>`; return; }
+
+        const isLive = sub.status === 'IN_PROGRESS';
+        const isBlocked = sub.status === 'BLOCKED';
+        const v = sub.clinical_state?.vitals || {};
+        const logsHTML = (sub.logs || []).slice().reverse().map(l => `<p style="color:${l.color || 'inherit'}; margin:4px 0;">${l.text}</p>`).join('') || `<p style="color:var(--text-secondary);">Sin acciones aún.</p>`;
+
+        let controlsHTML = "";
+        if (isLive) {
+            const rhythmOptions = Object.keys(PRAC_RHYTHMS).map(k => `<option value="${k}" ${k === sub.clinical_state?.rhythm ? 'selected' : ''}>${PRAC_RHYTHMS[k].name}</option>`).join('');
+            controlsHTML = `
+                <div style="background:#FFF3E0; border:1px solid var(--warning); padding:12px 15px; border-radius:8px; margin-bottom:15px;">
+                    <p style="margin:0; font-weight:bold; color:#6B4E00;"><i class="fi fi-ss-chart-histogram"></i> Calificación en vivo: ${Math.round(sub.score ?? 100)}%</p>
+                </div>
+                <div style="background: var(--bg-color); padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <label style="font-weight:bold; color:var(--primary-dark); display:block; margin-bottom:10px;"><i class="fi fi-ss-heart"></i> Forzar Signos Vitales</label>
+                    <div class="grid-layout" style="grid-template-columns: repeat(5,1fr);">
+                        <div class="form-group" style="margin-bottom:8px;"><label>FC</label><input type="number" id="promon-fc" value="${Math.round(v.fc || 0)}"></div>
+                        <div class="form-group" style="margin-bottom:8px;"><label>FR</label><input type="number" id="promon-fr" value="${Math.round(v.fr || 0)}"></div>
+                        <div class="form-group" style="margin-bottom:8px;"><label>SpO2</label><input type="number" id="promon-spo2" value="${Math.round(v.spo2 || 0)}"></div>
+                        <div class="form-group" style="margin-bottom:8px;"><label>TAS</label><input type="number" id="promon-tas" value="${Math.round(v.tas || 0)}"></div>
+                        <div class="form-group" style="margin-bottom:8px;"><label>TAD</label><input type="number" id="promon-tad" value="${Math.round(v.tad || 0)}"></div>
+                    </div>
+                    <button class="btn-sm" style="width:auto;" onclick="window.pushPracticaVitals('${subId}')"><i class="fi fi-ss-wifi"></i> Enviar Signos</button>
+                </div>
+                <div style="background: var(--bg-color); padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <label style="font-weight:bold; color:var(--primary-dark); display:block; margin-bottom:10px;"><i class="fi fi-ss-heart"></i> Cambiar Ritmo ECG</label>
+                    <div style="display:flex; gap:10px;">
+                        <select id="promon-rhythm" style="flex:1; margin:0;">${rhythmOptions}</select>
+                        <button class="btn-sm" style="width:auto;" onclick="window.pushPracticaRhythm('${subId}')"><i class="fi fi-ss-wifi"></i> Enviar</button>
+                    </div>
+                </div>
+                <div style="background: var(--bg-color); padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <label style="font-weight:bold; color:var(--primary-dark); display:block; margin-bottom:10px;"><i class="fi fi-ss-triangle-warning"></i> Enviar Evento / Nota</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="promon-event" placeholder="Ej. El paciente pierde el estado de alerta" style="flex:1; margin:0;">
+                        <button class="btn-danger btn-sm" style="width:auto;" onclick="window.triggerPracticaEvent('${subId}')"><i class="fi fi-ss-wifi"></i> Enviar</button>
+                    </div>
+                </div>
+            `;
+        } else if (isBlocked) {
+            controlsHTML = `<div style="background:#FAFAFA; border:1px solid #E0E0E0; padding:15px; border-radius:8px; margin-bottom:15px;">
+                <p style="margin:0;"><strong>Este intento fue cerrado por un instructor</strong>${sub.metrics?.detail ? ': ' + sub.metrics.detail : '.'}</p>
+            </div>`;
+        } else {
+            controlsHTML = `<div style="background:#FAFAFA; border:1px solid #E0E0E0; padding:15px; border-radius:8px; margin-bottom:15px;">
+                <p style="margin:0;"><strong>Resultado final:</strong> ${Math.round(sub.percentage || 0)}% — ${sub.passed ? '<span style="color:var(--success);">Aprobado</span>' : '<span style="color:var(--danger);">No aprobado</span>'}</p>
+            </div>`;
+        }
+
+        box.innerHTML = `
+            <h3 style="margin-top:0;"><i class="fi fi-ss-user"></i> ${sub.student?.name || 'Alumno'}</h3>
+            <p style="color:var(--text-secondary); margin-top:-10px;">${sub.student?.email || ''}</p>
+            <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                <button type="button" class="btn-secondary btn-sm" style="width:auto;" onclick="window.resetPracticaAttempt('${subId}')"><i class="fi fi-ss-refresh"></i> Reiniciar Intento</button>
+                ${!isBlocked ? `<button type="button" class="btn-danger btn-sm" style="width:auto;" onclick="window.blockPracticaAttempt('${subId}')"><i class="fi fi-ss-lock"></i> Cerrar / Corregir</button>` : ''}
+            </div>
+            ${controlsHTML}
+            <div class="card" style="box-shadow:none; border:1px solid #E0E0E0; padding:1rem;">
+                <h4 style="margin-top:0;"><i class="fi fi-ss-list-check"></i> Bitácora del Alumno</h4>
+                <div class="prac-log-box">${logsHTML}</div>
+            </div>
+        `;
+    }
+
+    window.resetPracticaAttempt = async (subId) => {
+        if (!await window.CustomDialog.confirm("¿Reiniciar este intento? El alumno volverá a empezar la práctica desde cero (mismos signos vitales iniciales del caso).", "Reiniciar Intento")) return;
+        try {
+            const examSnap = await getDoc(doc(db, "exams", pracMonitor.examId));
+            const clinical = examSnap.exists() ? examSnap.data().config.clinical : null;
+            await updateDoc(doc(db, "submissions", subId), {
+                status: "IN_PROGRESS",
+                score: 100,
+                logs: [],
+                appliedInterventions: [],
+                gcsAttempts: 3,
+                gcsEvaluated: false,
+                vitalsRevealed: false,
+                graded: false,
+                percentage: 0,
+                passed: false,
+                failedTopics: [],
+                clinical_state: { vitals: clinical ? { ...clinical.vitals } : {}, rhythm: clinical?.rhythm || 'sinusal' },
+                live_reset: { ts: Date.now() }
+            });
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible reiniciar el intento: " + e.message);
+        }
+    };
+
+    window.blockPracticaAttempt = async (subId) => {
+        if (!await window.CustomDialog.confirm("¿Cerrar este intento? El alumno será desconectado de inmediato y no podrá seguir hasta que reinicies o elimines el intento.", "Cerrar Práctica")) return;
+        try {
+            await updateDoc(doc(db, "submissions", subId), {
+                status: "BLOCKED",
+                metrics: { detail: "Cerrado manualmente por el instructor para corrección." }
+            });
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible cerrar el intento: " + e.message);
+        }
+    };
+
+    window.pushPracticaVitals = (subId) => {
+        const vitals = {
+            fc: parseFloat(document.getElementById('promon-fc').value) || 0,
+            fr: parseFloat(document.getElementById('promon-fr').value) || 0,
+            spo2: parseFloat(document.getElementById('promon-spo2').value) || 0,
+            tas: parseFloat(document.getElementById('promon-tas').value) || 0,
+            tad: parseFloat(document.getElementById('promon-tad').value) || 0
+        };
+        updateDoc(doc(db, "submissions", subId), { live_push: { vitals, ts: Date.now() } })
+            .catch(e => window.CustomDialog.alert("Error al enviar: " + e.message));
+    };
+
+    window.pushPracticaRhythm = (subId) => {
+        const key = document.getElementById('promon-rhythm').value;
+        updateDoc(doc(db, "submissions", subId), { live_rhythm: { key, ts: Date.now() }, "clinical_state.rhythm": key })
+            .catch(e => window.CustomDialog.alert("Error al enviar: " + e.message));
+    };
+
+    window.triggerPracticaEvent = (subId) => {
+        const input = document.getElementById('promon-event');
+        const text = input.value.trim();
+        if (!text) return window.CustomDialog.alert("Escribe el evento o nota a enviar.");
+        updateDoc(doc(db, "submissions", subId), { live_event: { text, ts: Date.now() } })
+            .then(() => { input.value = ""; })
+            .catch(e => window.CustomDialog.alert("Error al enviar: " + e.message));
     };
 </script>
 </body>

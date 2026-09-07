@@ -170,7 +170,37 @@
         .prac-intervention-btn:hover:not(:disabled) { background:#F0F4F8; }
         .prac-intervention-btn.done { opacity:0.55; }
         .prac-event-banner { background: var(--danger-light); color: var(--danger); border-left: 4px solid var(--danger); padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; font-weight:bold; display:none; }
-        .prac-config-item { display:flex; justify-content:space-between; align-items:center; background:#FAFAFA; border:1px solid #E0E0E0; border-radius:8px; padding:10px 12px; margin-bottom:8px; gap:10px; }
+        .prac-config-item { display:flex; justify-content:space-between; align-items:center; background:#FAFAFA; border:1px solid #E0E0E0; border-radius:8px; padding:10px 12px; margin-bottom:8px; gap:10px; flex-wrap:wrap; }
+        /* Fila de botones "Crear Actividad": grid en vez de flex para que los 4 botones
+           siempre midan lo mismo entre sí sin importar cuántos quepan por fila — evita que
+           uno quede solo en su fila y se estire a todo el ancho. */
+        .activity-btn-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .activity-btn-row button { width: 100%; margin: 0; }
+        .prac-config-item > div:first-child { min-width: 0; flex: 1 1 180px; overflow-wrap: anywhere; }
+        /* El contenedor blanco de cada sección crece con el contenido en vez de recortarlo;
+           en pantallas chicas los textos largos se cortan con "..." y el texto completo
+           queda disponible como tooltip nativo (title) al mantener el dedo/mouse encima. */
+        #practica-view, #practica-monitor, #practica-modal .modal-content { overflow-wrap: break-word; }
+        .prac-log-box p, .prac-config-item strong, .prac-intervention-btn { overflow-wrap: anywhere; }
+        @media (max-width: 600px) {
+            .prac-config-item strong, #prac-mon-list .prac-config-item > div:first-child > strong,
+            .prac-intervention-btn {
+                display: block;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+            .prac-title-text {
+                display: inline-block;
+                min-width: 0;
+                flex: 1 1 auto;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                vertical-align: bottom;
+            }
+        }
         /* Acento de Práctica Clínica: usa el mismo color de marca que ya usan
            examen/curso/encuesta (var(--primary)), pero en su tono oscuro
            (var(--primary-dark)) para diferenciarse — sigue siendo 100% whitelabel. */
@@ -195,6 +225,15 @@
             .card { padding: 1.2rem; }
             .sticky-header { flex-direction: column; gap: 10px; position: relative; top: 0;}
             .exam-item button { width: 100%; }
+        }
+        @media (max-width: 480px) {
+            /* El contenedor blanco aprovecha casi todo el ancho de la pantalla, dejando
+               solo un margen pequeño, para que el listado de actividades tenga más
+               espacio horizontal y el texto no se amontone junto a la miniatura/botones. */
+            .container { padding: 6px; }
+            .card { padding: 0.9rem; border-radius: 10px; margin-bottom: 1rem; }
+            .exam-item { flex-direction: column; align-items: stretch; padding: 12px; }
+            .exam-item > div:first-child { width: 100%; }
         }
         @media (min-width: 600px) { button, .btn-upload { width: auto; padding: 12px 24px; } #submit-btn, #start-btn, #login-btn, #std-login-btn { width: 100%; } }
 
@@ -859,14 +898,14 @@
             </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0 4px 15px 4px;">
             <h2 style="margin: 0;"><i class="fi fi-ss-folder-tree"></i> Mis Actividades</h2>
         </div>
-        <div style="display:flex; gap:10px; margin-bottom: 20px; flex-wrap: wrap;">
-            <button onclick="window.showUploadPanel('exam')" style="flex:1; min-width:150px;"><i class="fi fi-ss-add-document"></i> Examen</button>
-            <button onclick="window.showUploadPanel('course')" style="flex:1; min-width:150px; background-color: var(--primary-dark);"><i class="fi fi-ss-e-learning"></i> Curso</button>
-            <button onclick="window.showUploadPanel('survey')" class="btn-secondary" style="flex:1; min-width:150px;"><i class="fi fi-ss-comment-alt"></i> Encuesta</button>
-            <button onclick="window.openPracticaModal()" class="prac-accent-bg" style="flex:1; min-width:150px;"><i class="fi fi-ss-ambulance"></i> Práctica Clínica</button>
+        <div class="activity-btn-row">
+            <button onclick="window.showUploadPanel('exam')"><i class="fi fi-ss-add-document"></i> Examen</button>
+            <button onclick="window.showUploadPanel('course')" style="background-color: var(--primary-dark);"><i class="fi fi-ss-e-learning"></i> Curso</button>
+            <button onclick="window.showUploadPanel('survey')" class="btn-secondary"><i class="fi fi-ss-comment-alt"></i> Encuesta</button>
+            <button onclick="window.openPracticaModal()" class="prac-accent-bg"><i class="fi fi-ss-ambulance"></i> Práctica</button>
         </div>
         
         <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #FAFAFA; padding: 15px; border-radius: 8px; border: 1px solid #E0E0E0;">
@@ -2682,7 +2721,7 @@
                             statusHTML: `<span class="badge" style="background:#E3F2FD; color:#1565C0; border:1px solid #90CAF9;"><i class="fi fi-ss-diploma"></i> COMPLETADO</span>`,
                             actionHTML: `<div class="table-actions">
                                     <button class="btn-sm" style="background-color: var(--primary);" onclick="window.viewCertificate('${sub.examId}', '${d.id}')"><i class="fi fi-ss-diploma"></i> Certificado</button>
-                                    <button class="btn-warning btn-sm" onclick="window.retakeCourse('${sub.examId}', '${d.id}')"><i class="fi fi-ss-refresh"></i> Volver a tomar</button>
+                                    <button class="btn-warning btn-sm" onclick="window.retakeCourse('${sub.examId}', '${d.id}')"><i class="fi fi-ss-refresh"></i> Reiniciar</button>
                                 </div>`
                         });
                     } else if(sub.graded) {
@@ -2742,7 +2781,7 @@
                         const qToShow = eData.config.questionsToShow || eData.config.totalQuestions || "Todas";
                         const classSurvey = isSurvey ? "survey" : "";
                         const iconPlay = isSurvey ? (isResuming ? "fi-ss-refresh" : "fi-ss-comment-alt") : "fi-ss-play";
-                        const btnText = isSurvey ? (isResuming ? "Continuar Encuesta" : "Responder Encuesta") : "Presentar Ahora";
+                        const btnText = isSurvey ? (isResuming ? "Continuar Encuesta" : "Responder Encuesta") : "Iniciar";
                         const subText = isSurvey ? "Encuesta de Opinión" : `Preguntas Evaluadas: ${qToShow}`;
 
                         const iconHeader = isSurvey ? '<i class="fi fi-ss-comment-alt" style="color:var(--primary); margin-right:5px;"></i>' : '<i class="fi fi-ss-file-signature" style="color:var(--primary); margin-right:5px;"></i>';
@@ -5808,10 +5847,11 @@
                 ? `<span class="badge badge-pass" style="font-size:0.7rem;">Indicado</span>`
                 : `<span class="badge badge-blocked" style="font-size:0.7rem;">Contraindicado</span>`;
             const fmt = (n) => (n >= 0 ? '+' : '') + n;
+            const safeName = (it.name || '').replace(/"/g, '&quot;');
             return `<div class="prac-config-item">
                 <div style="min-width:0;">
-                    <strong>${it.name}</strong> ${badge}
-                    <div style="font-size:0.8rem; color:var(--text-secondary);">FC ${fmt(it.effect.fc)} · FR ${fmt(it.effect.fr)} · SpO2 ${fmt(it.effect.spo2)} · TAS ${fmt(it.effect.tas)} · TAD ${fmt(it.effect.tad)}</div>
+                    <strong title="${safeName}">${it.name}</strong> ${badge}
+                    <div style="font-size:0.8rem; color:var(--text-secondary); overflow-wrap:anywhere;">FC ${fmt(it.effect.fc)} · FR ${fmt(it.effect.fr)} · SpO2 ${fmt(it.effect.spo2)} · TAS ${fmt(it.effect.tas)} · TAD ${fmt(it.effect.tad)}</div>
                 </div>
                 <button type="button" class="btn-danger btn-sm" style="width:auto;" onclick="window.removePracticaIntervention(${idx})"><i class="fi fi-ss-trash"></i></button>
             </div>`;
@@ -5904,7 +5944,7 @@
 
         await loadBranding(examDoc.instructorId);
 
-        document.getElementById('prac-display-name').innerHTML = `<i class="fi fi-ss-ambulance"></i> ${cfg.name}`;
+        document.getElementById('prac-display-name').innerHTML = `<i class="fi fi-ss-ambulance"></i> <span class="prac-title-text" title="${(cfg.name || '').replace(/"/g, '&quot;')}">${cfg.name}</span>`;
         document.getElementById('prac-display-gen').innerText = "Clase(s): " + (cfg.gens_string || cfg.gen || "GLOBAL");
         document.getElementById('prac-intro-time').innerText = cfg.duration || 15;
         document.getElementById('prac-intro').classList.remove('hidden');
@@ -6059,7 +6099,8 @@
         const box = document.getElementById('prac-interventions-list');
         box.innerHTML = list.map((it, idx) => {
             const done = pracState.appliedInterventions.includes(idx);
-            return `<button type="button" class="prac-intervention-btn ${done ? 'done' : ''}" ${done ? 'disabled' : ''} onclick="window.applyPracticaIntervention(${idx})"><i class="fi fi-ss-syringe"></i> ${it.name}</button>`;
+            const safeName = (it.name || '').replace(/"/g, '&quot;');
+            return `<button type="button" class="prac-intervention-btn ${done ? 'done' : ''}" ${done ? 'disabled' : ''} title="${safeName}" onclick="window.applyPracticaIntervention(${idx})"><i class="fi fi-ss-syringe"></i> ${it.name}</button>`;
         }).join('') || `<p style="color:var(--text-secondary);">Sin intervenciones configuradas.</p>`;
     }
 
@@ -6519,7 +6560,7 @@
         document.getElementById('nav-volver').classList.remove('hidden');
         document.querySelector('.container').classList.add('expanded');
 
-        document.getElementById('prac-mon-title').innerHTML = `<i class="fi fi-ss-heart"></i> Monitor en Vivo: ${examName}`;
+        document.getElementById('prac-mon-title').innerHTML = `<i class="fi fi-ss-heart"></i> <span class="prac-title-text" title="Monitor en Vivo: ${(examName || '').replace(/"/g, '&quot;')}">Monitor en Vivo: ${examName}</span>`;
         document.getElementById('prac-mon-detail').innerHTML = `<p style="text-align:center; color:var(--text-secondary); padding:30px 0;">Selecciona un intento de la lista para controlarlo.</p>`;
 
         if (pracMonitor.unsubList) pracMonitor.unsubList();
@@ -6555,8 +6596,10 @@
                     : `<span class="badge badge-blocked"><i class="fi fi-ss-cross"></i> ${Math.round(sub.percentage || 0)}%</span>`;
             }
             const selected = pracMonitor.selectedSubId === subId;
+            const name = sub.student?.name || 'Alumno';
+            const email = sub.student?.email || '';
             return `<div class="prac-config-item" style="cursor:pointer; ${selected ? 'border-color:var(--primary); background:#E3F2FD;' : ''}" onclick="window.selectPracticaSubmission('${subId}')">
-                <div style="min-width:0;"><strong>${sub.student?.name || 'Alumno'}</strong><div style="font-size:0.8rem; color:var(--text-secondary);">${sub.student?.email || ''}</div></div>
+                <div style="min-width:0;"><strong title="${name.replace(/"/g, '&quot;')}">${name}</strong><div style="font-size:0.8rem; color:var(--text-secondary); overflow-wrap:anywhere;" title="${email.replace(/"/g, '&quot;')}">${email}</div></div>
                 ${statusHTML}
             </div>`;
         }).join('');

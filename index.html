@@ -56,6 +56,10 @@
         .btn-secondary { background-color: var(--text-secondary); }
         .btn-warning { background-color: var(--warning); padding: 8px 15px; font-size: 0.85rem; color: white; }
         .btn-success { background-color: var(--success); padding: 8px 15px; font-size: 0.85rem; }
+        /* Acciones de creación/agregar: deben adaptarse al color de marca (whitelabel) en
+           vez de quedar fijas en verde — a diferencia de los indicadores de estado real
+           (aprobado, pagado, enviado) que sí deben seguir siendo verdes siempre. */
+        .btn-brand-action { background-color: var(--primary-dark) !important; padding: 8px 15px; font-size: 0.85rem; }
         .btn-danger { background-color: var(--danger); padding: 8px 15px; font-size: 0.85rem;}
         
         .table-actions { display: flex; flex-direction: row; gap: 8px; justify-content: flex-start; align-items: center; white-space: nowrap; }
@@ -472,7 +476,7 @@
         <div id="builder-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;">
         </div>
 
-        <button id="btn-finish-build" class="btn-success" onclick="window.finishBuilding()" style="width: 100%;"><i class="fi fi-ss-check-circle"></i> Finalizar y Crear Actividad</button>
+        <button id="btn-finish-build" class="btn-brand-action" onclick="window.finishBuilding()" style="width: 100%;"><i class="fi fi-ss-check-circle"></i> Finalizar y Crear Actividad</button>
     </div>
 </div>
 
@@ -493,7 +497,7 @@
         
         <div style="display: flex; gap: 10px; width: 100%;">
             <button class="btn-secondary" onclick="window.closeQRModal()" style="flex: 1;"><i class="fi fi-ss-cross"></i> Cerrar</button>
-            <button class="btn-success" onclick="window.downloadQR()" style="flex: 1;"><i class="fi fi-ss-download"></i> Descargar</button>
+            <button class="btn-brand-action" onclick="window.downloadQR()" style="flex: 1;"><i class="fi fi-ss-download"></i> Descargar</button>
         </div>
     </div>
 </div>
@@ -667,7 +671,7 @@
                 <div class="form-group" style="margin-bottom:10px;"><label>TAD</label><input type="number" id="prac_new_int_tad" value="0"></div>
             </div>
             <div class="form-group" style="margin-bottom:10px;"><label>Mensaje si es contraindicado</label><input type="text" id="prac_new_int_err" placeholder="Ej. Empeora el broncoespasmo"></div>
-            <button type="button" class="btn-success" onclick="window.addPracticaIntervention()" style="width:auto;"><i class="fi fi-ss-plus"></i> Añadir a la Lista</button>
+            <button type="button" class="btn-brand-action" onclick="window.addPracticaIntervention()" style="width:auto;"><i class="fi fi-ss-plus"></i> Añadir a la Lista</button>
 
             <div id="prac-int-list" style="margin-top:15px;"><p style="text-align:center; color:var(--text-secondary); font-size:0.85rem;">Aún no has agregado intervenciones.</p></div>
         </div>
@@ -1061,7 +1065,7 @@
 
         <div style="display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap;">
             <button class="btn-upload" id="upload-trigger" style="flex: 1;"><i class="fi fi-ss-upload"></i> Cargar JSON</button>
-            <button class="btn-success" id="builder-trigger" onclick="window.openBuilderModal()" style="flex: 1; background-color: var(--success);"><i class="fi fi-ss-magic-wand"></i> Crear Manualmente</button>
+            <button class="btn-brand-action" id="builder-trigger" onclick="window.openBuilderModal()" style="flex: 1;"><i class="fi fi-ss-magic-wand"></i> Crear Manualmente</button>
         </div>
     </div>
 
@@ -1097,7 +1101,7 @@
 
         <div style="display:flex; gap:10px; margin: 20px 0; flex-wrap:wrap;">
             <button onclick="window.openDebtModal()" style="width:auto;" title="Agregar Adeudo"><i class="fi fi-ss-money-bill-wave"></i></button>
-            <button onclick="window.openGradeModal()" class="btn-success" style="width:auto;" title="Calificar Tarea"><i class="fi fi-ss-clipboard-list-check"></i></button>
+            <button onclick="window.openGradeModal()" class="btn-brand-action" style="width:auto;" title="Calificar Tarea"><i class="fi fi-ss-clipboard-list-check"></i></button>
             <button onclick="window.openAbsenceModal()" class="btn-danger" style="width:auto;" title="Falta/Justificante"><i class="fi fi-ss-ban"></i></button>
             <button onclick="window.openMessageModal()" class="btn-secondary" style="width:auto;" title="Enviar Mensaje"><i class="fi fi-ss-envelope"></i></button>
         </div>
@@ -2721,7 +2725,7 @@
                             statusHTML: `<span class="badge" style="background:#E3F2FD; color:#1565C0; border:1px solid #90CAF9;"><i class="fi fi-ss-diploma"></i> COMPLETADO</span>`,
                             actionHTML: `<div class="table-actions">
                                     <button class="btn-sm" style="background-color: var(--primary);" onclick="window.viewCertificate('${sub.examId}', '${d.id}')"><i class="fi fi-ss-diploma"></i> Certificado</button>
-                                    <button class="btn-warning btn-sm" onclick="window.retakeCourse('${sub.examId}', '${d.id}')"><i class="fi fi-ss-refresh"></i> Reiniciar</button>
+                                    <button class="btn-warning btn-sm" onclick="window.retakeCourse('${sub.examId}', '${d.id}')"><i class="fi fi-ss-refresh"></i> Volver a tomar</button>
                                 </div>`
                         });
                     } else if(sub.graded) {
@@ -2781,7 +2785,7 @@
                         const qToShow = eData.config.questionsToShow || eData.config.totalQuestions || "Todas";
                         const classSurvey = isSurvey ? "survey" : "";
                         const iconPlay = isSurvey ? (isResuming ? "fi-ss-refresh" : "fi-ss-comment-alt") : "fi-ss-play";
-                        const btnText = isSurvey ? (isResuming ? "Continuar Encuesta" : "Responder Encuesta") : "Iniciar";
+                        const btnText = isSurvey ? (isResuming ? "Continuar Encuesta" : "Responder Encuesta") : "Presentar Ahora";
                         const subText = isSurvey ? "Encuesta de Opinión" : `Preguntas Evaluadas: ${qToShow}`;
 
                         const iconHeader = isSurvey ? '<i class="fi fi-ss-comment-alt" style="color:var(--primary); margin-right:5px;"></i>' : '<i class="fi fi-ss-file-signature" style="color:var(--primary); margin-right:5px;"></i>';
@@ -3496,7 +3500,7 @@
                 <div class="student-row-actions">
                     <button onclick="window.openStudentModal('${s.id}')" title="Editar Alumno"><i class="fi fi-ss-pencil"></i></button>
                     <button onclick="window.openDebtModal('${s.id}')" title="Agregar Adeudo"><i class="fi fi-ss-money-bill-wave"></i></button>
-                    <button onclick="window.openGradeModal('${s.id}')" class="btn-success" title="Calificar Tarea"><i class="fi fi-ss-clipboard-list-check"></i></button>
+                    <button onclick="window.openGradeModal('${s.id}')" class="btn-brand-action" title="Calificar Tarea"><i class="fi fi-ss-clipboard-list-check"></i></button>
                     <button onclick="window.openAbsenceModal('${s.id}')" class="btn-danger" title="Falta/Justificante"><i class="fi fi-ss-ban"></i></button>
                     <button onclick="window.openMessageModal('${s.id}')" class="btn-secondary" title="Enviar Mensaje"><i class="fi fi-ss-envelope"></i></button>
                 </div>

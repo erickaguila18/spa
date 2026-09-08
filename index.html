@@ -180,6 +180,16 @@
            uno quede solo en su fila y se estire a todo el ancho. */
         .activity-btn-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .activity-btn-row button { width: 100%; margin: 0; }
+        /* Pestañas Activas / Cerradas o Caducadas del listado de "Mis Actividades" */
+        .activity-tabs { display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 2px solid #E0E0E0; overflow-x: auto; }
+        .activity-tab {
+            background: none !important; box-shadow: none !important; color: var(--text-secondary) !important;
+            padding: 10px 16px !important; font-weight: 600; text-transform: none; border: none;
+            border-bottom: 3px solid transparent; border-radius: 0; width: auto; margin: 0 0 -2px 0;
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .activity-tab:hover:not(:disabled) { background: #FAFAFA !important; color: var(--primary-dark) !important; }
+        .activity-tab.active { color: var(--primary-dark) !important; border-bottom-color: var(--primary-dark); }
         .prac-config-item > div:first-child { min-width: 0; flex: 1 1 180px; overflow-wrap: anywhere; }
         /* El contenedor blanco de cada sección crece con el contenido en vez de recortarlo;
            en pantallas chicas los textos largos se cortan con "..." y el texto completo
@@ -912,6 +922,11 @@
             <button onclick="window.openPracticaModal()" class="prac-accent-bg"><i class="fi fi-ss-ambulance"></i> Práctica</button>
         </div>
         
+        <div class="activity-tabs" id="activity-tabs">
+            <button type="button" class="activity-tab active" data-status="active" onclick="window.setActivityStatusFilter('active')"><i class="fi fi-ss-play-circle"></i> Activas</button>
+            <button type="button" class="activity-tab" data-status="closed" onclick="window.setActivityStatusFilter('closed')"><i class="fi fi-ss-lock"></i> Cerradas o Caducadas</button>
+        </div>
+
         <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #FAFAFA; padding: 15px; border-radius: 8px; border: 1px solid #E0E0E0;">
             <div style="flex: 1; min-width: 150px;">
                 <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-secondary); margin-bottom: 5px; display: block;">Filtrar por Tipo</label>
@@ -1424,6 +1439,7 @@
     const auth = getAuth(app);
 
     window.allInstructorActivities = []; 
+    window.activityStatusFilter = 'active';
     let currentUser = null;
     let historySortState = { column: null, asc: true }; // orden activo de la tabla de Historial del alumno
     let originalPool = [], renderedQuestions = [], examConfig = {};
@@ -2945,6 +2961,14 @@
         window.filterActivities();
     };
 
+    window.setActivityStatusFilter = (status) => {
+        window.activityStatusFilter = status;
+        document.querySelectorAll('#activity-tabs .activity-tab').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.status === status);
+        });
+        window.filterActivities();
+    };
+
     window.filterActivities = () => {
         const container = document.getElementById('exams-list-container');
         const typeFilter = document.getElementById('filter-act-type').value;
@@ -2965,6 +2989,10 @@
 
             let gensStr = (exam.config.gens_string || exam.config.gen || "").toLowerCase();
             let nameStr = (exam.config.name || "").toLowerCase();
+
+            const isClosed = !!(exam.config.expiration && new Date() > new Date(exam.config.expiration));
+            if (window.activityStatusFilter === 'active' && isClosed) return;
+            if (window.activityStatusFilter === 'closed' && !isClosed) return;
 
             if (typeFilter !== 'all' && typeFilter !== actType) return;
             if (searchFilter && !gensStr.includes(searchFilter) && !nameStr.includes(searchFilter)) return;
@@ -3021,7 +3049,10 @@
         });
 
         if (count === 0) {
-            container.innerHTML = "<p style='text-align:center; color: var(--text-secondary); padding: 20px;'>No se encontraron actividades con estos filtros.</p>";
+            const emptyMsg = window.activityStatusFilter === 'closed'
+                ? "No tienes actividades cerradas o caducadas con estos filtros."
+                : "No tienes actividades activas con estos filtros.";
+            container.innerHTML = `<p style='text-align:center; color: var(--text-secondary); padding: 20px;'>${emptyMsg}</p>`;
         }
     };
 

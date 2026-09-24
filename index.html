@@ -63,7 +63,7 @@
         .btn-outline-brand { background: #fff !important; color: var(--primary-dark) !important; border: 2px solid var(--primary-dark) !important; box-shadow: none !important; }
         .btn-outline-brand:hover:not(:disabled) { background: var(--primary-dark) !important; color: #fff !important; }
 
-        /* --- Módulo: Evaluación Práctica (Rúbrica del instructor) --- */
+        /* --- Módulo: Evaluación (Rúbrica del instructor) --- */
         .rubrica-hud { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.95); backdrop-filter: blur(6px); border: 1px solid #E0E0E0; border-radius: 10px; padding: 12px 15px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
         .rubrica-pill { background: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 10px; padding: 6px 12px; text-align: center; min-width: 80px; }
         .rubrica-pill .val { font-size: 1.3rem; font-weight: 800; display: block; line-height: 1.1; }
@@ -337,6 +337,7 @@
     <div class="nav-links" id="nav-actions">
         <button id="nav-sc-back" class="hidden" onclick="window.schoolControlBackAction && window.schoolControlBackAction()"><i class="fi fi-ss-arrow-left"></i> <span id="nav-sc-back-label"></span></button>
         <button id="nav-volver" class="hidden" onclick="window.backToDashboard()"><i class="fi fi-ss-arrow-left"></i> Volver</button>
+        <button id="nav-rubrica-historial" class="hidden" onclick="window.cancelRubricaForm()">Historial</button>
         <button id="nav-settings" class="icon-btn hidden" onclick="window.showSettingsPanel()" title="Ajustes de Plataforma">
             <i class="fi fi-ss-settings"></i>
         </button>
@@ -717,7 +718,7 @@
 <div id="rubrica-modal" class="modal-overlay hidden">
     <div class="modal-content primary-top" style="max-width: 780px; max-height: 90vh; overflow-y: auto; text-align: left; padding: 30px 25px 35px 25px; align-items: stretch; justify-content: flex-start; display: flex; flex-direction: column;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
-            <h2 style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;"><i class="fi fi-ss-clipboard-list-check"></i> Nueva Evaluación Práctica</h2>
+            <h2 style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;"><i class="fi fi-ss-clipboard-list-check"></i> Nueva Evaluación</h2>
             <button onclick="window.closeRubricaModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;"><i class="fi fi-ss-cross"></i></button>
         </div>
         <p style="font-size:0.9rem; color:var(--text-secondary); margin-top:0;">Esta actividad NO la toman los alumnos: es una rúbrica que tú llenas mientras observas a cada alumno realizar una habilidad práctica, y calcula su calificación automáticamente. Solo tú puedes verla y usarla.</p>
@@ -733,11 +734,9 @@
             <p style="font-size:0.85rem; color:var(--text-secondary); margin:0 0 10px 0;">Define aquí todas las secciones, reactivos, puntos y criterios críticos. Ya viene precargado un ejemplo completo y funcional (Evaluación de Paciente de Trauma) que puedes usar tal cual o editar/reemplazar por tu propia rúbrica.</p>
             <input type="file" id="rubrica-json-file-input" accept=".json" style="margin-bottom: 10px; font-size: 0.85rem; width: 100%; border: 1px solid #E0E0E0; padding: 8px; border-radius: 8px; background: white; cursor: pointer; box-sizing: border-box;">
             <textarea id="rubrica-json-textarea" rows="12" style="font-family: monospace; font-size: 0.78rem; width: 100%; resize: vertical; margin-bottom: 10px; box-sizing: border-box;"></textarea>
-            <button type="button" class="btn-secondary" onclick="window.previewRubricaJson()" style="width:auto;"><i class="fi fi-ss-eye"></i> Validar y Ver Resumen</button>
-            <p id="rubrica-json-summary" style="margin-top:10px; font-size:0.85rem; color:var(--text-secondary);"></p>
         </div>
 
-        <button id="btn-save-rubrica" onclick="window.saveRubrica()"><i class="fi fi-ss-disk"></i> Crear Evaluación Práctica</button>
+        <button id="btn-save-rubrica" onclick="window.saveRubrica()"><i class="fi fi-ss-disk"></i> Crear Evaluación</button>
     </div>
 </div>
 
@@ -971,7 +970,7 @@
             <button onclick="window.showUploadPanel('course')" style="background-color: var(--primary-dark);"><i class="fi fi-ss-e-learning"></i> Curso</button>
             <button onclick="window.showUploadPanel('survey')" class="btn-secondary"><i class="fi fi-ss-comment-alt"></i> Encuesta</button>
             <button onclick="window.openPracticaModal()" class="prac-accent-bg"><i class="fi fi-ss-ambulance"></i> Práctica</button>
-            <button onclick="window.openRubricaModal()" class="btn-outline-brand"><i class="fi fi-ss-clipboard-list-check"></i> Evaluación Práctica</button>
+            <button onclick="window.openRubricaModal()" class="btn-outline-brand"><i class="fi fi-ss-clipboard-list-check"></i> Evaluación</button>
         </div>
         
         <div class="activity-tabs" id="activity-tabs">
@@ -988,7 +987,7 @@
                     <option value="course">Cursos</option>
                     <option value="survey">Encuestas</option>
                     <option value="practica">Prácticas Clínicas</option>
-                    <option value="rubrica">Evaluación Práctica</option>
+                    <option value="rubrica">Evaluación</option>
                 </select>
             </div>
             <div style="flex: 2; min-width: 200px;">
@@ -1292,7 +1291,7 @@
     <!-- MÓDULO: EVALUACIÓN PRÁCTICA (Rúbrica) — El instructor la conduce y califica -->
     <div id="rubrica-run" class="card hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <h2 id="rubrica-run-title" style="margin:0;"><i class="fi fi-ss-clipboard-list-check"></i> Evaluación Práctica</h2>
+            <h2 id="rubrica-run-title" style="margin:0;"><i class="fi fi-ss-clipboard-list-check"></i> Evaluación</h2>
         </div>
 
         <!-- LISTA de evaluaciones ya realizadas con esta rúbrica -->
@@ -1306,8 +1305,6 @@
 
         <!-- FORMULARIO de evaluación en curso -->
         <div id="rubrica-form-view" class="hidden">
-            <button onclick="window.cancelRubricaForm()" class="btn-secondary btn-sm" style="width:auto; margin-bottom:15px;"><i class="fi fi-ss-arrow-left"></i> Volver al Historial</button>
-
             <div class="grid-layout" style="grid-template-columns: 2fr 2fr 1fr;">
                 <div class="form-group" style="margin-bottom:10px;"><label><i class="fi fi-ss-graduation-cap"></i> Alumno Evaluado</label><input type="text" id="rubrica-student-name" placeholder="Nombre completo del aspirante"></div>
                 <div class="form-group" style="margin-bottom:10px;"><label><i class="fi fi-ss-envelope"></i> Correo (opcional)</label><input type="email" id="rubrica-student-email" placeholder="correo@ejemplo.com"></div>
@@ -1321,10 +1318,6 @@
                     <div class="rubrica-pill" style="border-color:var(--danger);"><span class="val" id="rubrica-v-scale" style="color:var(--danger);">1.0</span><span class="lbl" style="color:var(--danger);">Calif. (1-10)</span></div>
                 </div>
                 <span id="rubrica-v-dictamen" class="badge" style="font-size:0.85rem; padding:8px 14px;">PENDIENTE</span>
-            </div>
-
-            <div id="rubrica-critical-banner" class="hidden" style="background:#FEF2F2; border:1px solid var(--danger); color:var(--danger); padding:10px 15px; border-radius:8px; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:8px;">
-                <i class="fi fi-ss-triangle-warning"></i> Fallo crítico activado: el dictamen es NO APROBADO sin importar el puntaje.
             </div>
 
             <div id="rubrica-sections-container"></div>
@@ -2879,7 +2872,7 @@
             const renderPendingItem = (d, isSurvey) => {
                 const examId = d.id; const eData = d.data();
                 if(!eData.config) return;
-                if(eData.config.type === 'rubrica') return; // Evaluación Práctica: solo la ve/usa el instructor, nunca aparece para el alumno.
+                if(eData.config.type === 'rubrica') return; // Evaluación: solo la ve/usa el instructor, nunca aparece para el alumno.
                 const isExpired = eData.config.expiration && new Date() > new Date(eData.config.expiration);
                 const isCourse = eData.config.type === 'course';
                 const isPractica = eData.config.type === 'practica';
@@ -3040,6 +3033,7 @@
         document.getElementById('nav-settings').classList.remove('hidden');
         document.getElementById('nav-school-control').classList.remove('hidden');
         document.getElementById('nav-sc-back').classList.add('hidden');
+        document.getElementById('nav-rubrica-historial').classList.add('hidden');
 
         document.getElementById('exams-list-container').innerHTML = "<p style='text-align:center;'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando actividades...</p>";
 
@@ -5005,7 +4999,7 @@
 
             if (examConfig.type === 'rubrica') {
                 document.getElementById('full-screen-loader').classList.add('hidden');
-                await window.CustomDialog.alert("Esta actividad es una Evaluación Práctica que tu instructor llena directamente mientras te observa. No es necesario ni posible abrirla aquí.", "Aviso");
+                await window.CustomDialog.alert("Esta actividad es una Evaluación que tu instructor llena directamente mientras te observa. No es necesario ni posible abrirla aquí.", "Aviso");
                 window.currentExamId = null;
                 history.pushState(null, null, location.href.split('?')[0]);
                 return window.goHome();
@@ -7006,7 +7000,6 @@
         document.getElementById('rubrica_min_scale').value = 8.0;
         document.getElementById('rubrica-json-file-input').value = "";
         document.getElementById('rubrica-json-textarea').value = JSON.stringify(RUBRICA_DEFAULT_CONFIG, null, 2);
-        document.getElementById('rubrica-json-summary').innerText = "";
         document.getElementById('rubrica-modal').classList.remove('hidden');
     };
 
@@ -7041,21 +7034,6 @@
         return { sections: data.sections, criticalItems: data.criticalItems || [] };
     }
 
-    window.previewRubricaJson = () => {
-        const summaryEl = document.getElementById('rubrica-json-summary');
-        try {
-            const { sections, criticalItems } = parseRubricaJson();
-            let itemCount = 0;
-            sections.forEach(sec => sec.items.forEach(it => { if (!it.subheader) itemCount++; }));
-            const maxPoints = rubricaComputeMaxPoints(sections);
-            summaryEl.style.color = "var(--success)";
-            summaryEl.innerHTML = `<i class="fi fi-ss-check"></i> JSON válido: ${sections.length} secciones, ${itemCount} reactivos, ${maxPoints} puntos totales, ${criticalItems.length} criterio(s) crítico(s).`;
-        } catch (e) {
-            summaryEl.style.color = "var(--danger)";
-            summaryEl.innerHTML = `<i class="fi fi-ss-cross"></i> ${e.message}`;
-        }
-    };
-
     window.saveRubrica = async () => {
         const title = document.getElementById('rubrica_title').value.trim();
         if (!title) return window.CustomDialog.alert("Ingresa un título para la evaluación.");
@@ -7083,12 +7061,12 @@
                 }
             };
             await addDoc(collection(db, "exams"), dbStruct);
-            window.setLoading('btn-save-rubrica', false, '<i class="fi fi-ss-disk"></i> Crear Evaluación Práctica');
+            window.setLoading('btn-save-rubrica', false, '<i class="fi fi-ss-disk"></i> Crear Evaluación');
             window.closeRubricaModal();
-            await window.CustomDialog.alert("¡Evaluación Práctica creada con éxito!", "Éxito");
+            await window.CustomDialog.alert("¡Evaluación creada con éxito!", "Éxito");
             window.backToDashboard();
         } catch (e) {
-            window.setLoading('btn-save-rubrica', false, '<i class="fi fi-ss-disk"></i> Crear Evaluación Práctica');
+            window.setLoading('btn-save-rubrica', false, '<i class="fi fi-ss-disk"></i> Crear Evaluación');
             window.CustomDialog.alert("No fue posible crear la evaluación: " + e.message);
         }
     };
@@ -7106,6 +7084,7 @@
         document.getElementById('rubrica-history-list').innerHTML = `<p style="text-align:center; color:var(--text-secondary);">Cargando...</p>`;
         document.getElementById('rubrica-list-view').classList.remove('hidden');
         document.getElementById('rubrica-form-view').classList.add('hidden');
+        document.getElementById('nav-rubrica-historial').classList.add('hidden');
 
         rubricaState.examId = examId;
         rubricaState.examName = examName;
@@ -7161,11 +7140,13 @@
         computeRubricaScore();
         document.getElementById('rubrica-list-view').classList.add('hidden');
         document.getElementById('rubrica-form-view').classList.remove('hidden');
+        document.getElementById('nav-rubrica-historial').classList.remove('hidden');
     };
 
     window.cancelRubricaForm = () => {
         document.getElementById('rubrica-form-view').classList.add('hidden');
         document.getElementById('rubrica-list-view').classList.remove('hidden');
+        document.getElementById('nav-rubrica-historial').classList.add('hidden');
         renderRubricaHistoryList();
     };
 
@@ -7202,7 +7183,7 @@
         const critBox = document.getElementById('rubrica-critical-container');
         if (cfg.criticalItems && cfg.criticalItems.length) {
             critBox.innerHTML = `<div class="rubrica-critical-box">
-                <p style="margin:0 0 10px 0; font-weight:bold; color:var(--danger);"><i class="fi fi-ss-triangle-warning"></i> Criterios Críticos (Fallo Inmediato)</p>
+                <p style="margin:0 0 10px 0; font-weight:bold; color:var(--danger);"><i class="fi fi-ss-triangle-warning"></i> Errores Importantes (quedan registrados como nota, no afectan el dictamen automáticamente)</p>
                 ${cfg.criticalItems.map((text, cIdx) => {
                     const checked = !!rubricaState.checkedCritical[cIdx];
                     return `<div class="rubrica-critical-row" onclick="window.toggleRubricaCritical(${cIdx})">
@@ -7244,7 +7225,7 @@
         let calificacion = 1.0 + ((suma / maxPoints) * 9.0);
         calificacion = Math.round(calificacion * 10) / 10;
 
-        const hayFalloCritico = Object.values(rubricaState.checkedCritical).some(v => v);
+        const criticalCount = Object.values(rubricaState.checkedCritical).filter(v => v).length;
         const minScale = rubricaState.config.minScale || 8.0;
 
         document.getElementById('rubrica-v-points').innerText = suma;
@@ -7253,31 +7234,22 @@
         document.getElementById('rubrica-v-scale').innerText = calificacion.toFixed(1);
 
         const dictamenEl = document.getElementById('rubrica-v-dictamen');
-        const bannerEl = document.getElementById('rubrica-critical-banner');
 
-        if (hayFalloCritico) {
-            bannerEl.classList.remove('hidden');
-            dictamenEl.className = 'badge badge-blocked';
-            dictamenEl.style.fontSize = '0.85rem'; dictamenEl.style.padding = '8px 14px';
-            dictamenEl.innerHTML = '<i class="fi fi-ss-cross"></i> REPROBADO POR CRITERIO CRÍTICO';
+        if (suma === 0) {
+            dictamenEl.className = 'badge';
+            dictamenEl.style.background = '#E0E0E0'; dictamenEl.style.color = '#555';
+            dictamenEl.innerHTML = 'PENDIENTE';
+        } else if (calificacion >= minScale) {
+            dictamenEl.className = 'badge badge-pass';
+            dictamenEl.style.background = ''; dictamenEl.style.color = '';
+            dictamenEl.innerHTML = '<i class="fi fi-ss-check"></i> APROBADO / COMPETENTE';
         } else {
-            bannerEl.classList.add('hidden');
-            if (suma === 0) {
-                dictamenEl.className = 'badge';
-                dictamenEl.style.background = '#E0E0E0'; dictamenEl.style.color = '#555';
-                dictamenEl.innerHTML = 'PENDIENTE';
-            } else if (calificacion >= minScale) {
-                dictamenEl.className = 'badge badge-pass';
-                dictamenEl.style.background = ''; dictamenEl.style.color = '';
-                dictamenEl.innerHTML = '<i class="fi fi-ss-check"></i> APROBADO / COMPETENTE';
-            } else {
-                dictamenEl.className = 'badge badge-blocked';
-                dictamenEl.style.background = ''; dictamenEl.style.color = '';
-                dictamenEl.innerHTML = `<i class="fi fi-ss-cross"></i> NO APROBADO (&lt; ${minScale})`;
-            }
+            dictamenEl.className = 'badge badge-blocked';
+            dictamenEl.style.background = ''; dictamenEl.style.color = '';
+            dictamenEl.innerHTML = `<i class="fi fi-ss-cross"></i> NO APROBADO (&lt; ${minScale})`;
         }
 
-        return { suma, maxPoints, porcentaje, calificacion, hayFalloCritico, minScale };
+        return { suma, maxPoints, porcentaje, calificacion, criticalCount, minScale };
     }
 
     window.saveRubricaEvaluation = async () => {
@@ -7285,9 +7257,9 @@
         if (!name) return window.CustomDialog.alert("Ingresa el nombre del alumno evaluado.");
 
         const result = computeRubricaScore();
-        const passed = !result.hayFalloCritico && result.calificacion >= result.minScale;
+        const passed = result.calificacion >= result.minScale;
 
-        const criticalFailedTexts = Object.keys(rubricaState.checkedCritical)
+        const criticalNoteTexts = Object.keys(rubricaState.checkedCritical)
             .filter(k => rubricaState.checkedCritical[k])
             .map(k => rubricaState.config.rubric.criticalItems[k]);
 
@@ -7303,12 +7275,12 @@
                 score: Math.round(result.porcentaje),
                 total: 100,
                 passed: passed,
-                failedTopics: criticalFailedTexts,
+                failedTopics: criticalNoteTexts,
                 rubricResult: {
                     puntos: result.suma,
                     maxPoints: result.maxPoints,
                     calificacion10: result.calificacion,
-                    criticalFail: result.hayFalloCritico
+                    criticalNotes: criticalNoteTexts
                 },
                 evaluator: { name: currentUser.displayName || currentUser.email, email: currentUser.email },
                 observaciones: document.getElementById('rubrica-observaciones').value.trim(),

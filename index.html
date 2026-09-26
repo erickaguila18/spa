@@ -1210,6 +1210,7 @@
             <button onclick="window.loadGrades(window.currentExamId)" class="btn-sm" style="width: auto;"><i class="fi fi-ss-refresh"></i> Recargar</button>
             <button class="btn-primary btn-sm" onclick="window.exportToCSV()" style="width: auto; background-color: var(--text-secondary);"><i class="fi fi-ss-file-excel"></i>  CSV</button>
             <button class="btn-danger btn-sm" onclick="window.exportToPDF()" style="width: auto; background-color: var(--danger);"><i class="fi fi-ss-file-pdf"></i> PDF</button>
+            <button id="btn-rubrica-new-eval" class="hidden btn-outline-brand btn-sm" style="width: auto;" onclick="window.startNewRubricaEvaluation()"><i class="fi fi-ss-plus"></i> Nueva Evaluación</button>
         </div>
 
         <div class="form-group" style="margin-bottom: 15px;">
@@ -1294,17 +1295,8 @@
             <h2 id="rubrica-run-title" style="margin:0;"><i class="fi fi-ss-clipboard-list-check"></i> Evaluación</h2>
         </div>
 
-        <!-- LISTA de evaluaciones ya realizadas con esta rúbrica -->
-        <div id="rubrica-list-view">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-                <p style="font-size:0.9rem; color:var(--text-secondary); margin:0;">Historial de alumnos evaluados con esta rúbrica.</p>
-                <button onclick="window.startNewRubricaEvaluation()" style="width:auto;"><i class="fi fi-ss-plus"></i> Nueva Evaluación</button>
-            </div>
-            <div id="rubrica-history-list"><p style="text-align:center; color:var(--text-secondary);">Cargando...</p></div>
-        </div>
-
         <!-- FORMULARIO de evaluación en curso -->
-        <div id="rubrica-form-view" class="hidden">
+        <div id="rubrica-form-view">
             <div class="grid-layout" style="grid-template-columns: 2fr 2fr 1fr;">
                 <div class="form-group" style="margin-bottom:10px;"><label><i class="fi fi-ss-graduation-cap"></i> Alumno Evaluado</label><input type="text" id="rubrica-student-name" placeholder="Nombre completo del aspirante"></div>
                 <div class="form-group" style="margin-bottom:10px;"><label><i class="fi fi-ss-envelope"></i> Correo (opcional)</label><input type="email" id="rubrica-student-email" placeholder="correo@ejemplo.com"></div>
@@ -3118,7 +3110,7 @@
                 actionCall = `window.viewPracticaMonitor('${docId}', '${(exam.config.name || '').replace(/'/g, "\\'")}')`;
             } else if (isRubrica) {
                 iconMain = "fi-ss-stats"; textMain = ""; itemClass = "";
-                actionCall = `window.viewRubricaRunner('${docId}', '${(exam.config.name || '').replace(/'/g, "\\'")}')`;
+                actionCall = `window.viewExamGrades('${docId}', '${(exam.config.name || '').replace(/'/g, "\\'")}')`;
             } else {
                 iconMain = "fi-ss-stats"; textMain = ""; itemClass = "";
                 actionCall = `window.viewExamGrades('${docId}', '${exam.config.name}')`;
@@ -4806,13 +4798,49 @@
                 return window.CustomDialog.alert("Este examen aún no ha sido calificado.");
             }
 
+            document.getElementById('details-student-name').innerText = sub.student.name;
+
+            // Evaluación (rúbrica del instructor): no tiene banco de preguntas ni exam_keys,
+            // así que mostramos su propio desglose (puntos, observaciones, notas registradas).
+            if (sub.examInfo?.type === 'rubrica') {
+                const r = sub.rubricResult || {};
+                document.getElementById('details-score').innerText = `Calificación: ${r.calificacion10 ?? '-'} (${r.puntos ?? 0}/${r.maxPoints ?? 0} pts)`;
+
+                let html = "";
+                if (sub.observaciones) {
+                    html += `<h4 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px; margin-top: 20px;">Observaciones del Evaluador:</h4>
+                        <p style="background:#FAFAFA; padding:10px; border-radius:6px; white-space:pre-wrap;">${sub.observaciones}</p>`;
+                }
+                if (sub.failedTopics && sub.failedTopics.length) {
+                    html += `<h4 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px; margin-top: 20px; color:var(--danger);">Errores Importantes Registrados:</h4>`;
+                    sub.failedTopics.forEach(t => {
+                        html += `<div style="background: #FAFAFA; border-left: 4px solid var(--danger); padding: 10px; margin-bottom: 10px; border-radius: 4px;"><p style="margin:0; font-size:0.9rem;">${t}</p></div>`;
+                    });
+                }
+                if (!html) html = `<p style="color: var(--success); text-align: center; font-weight: bold; margin-top:20px;">Sin observaciones ni errores registrados.</p>`;
+
+                document.getElementById('details-questions').innerHTML = html;
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('details-modal').classList.remove('hidden');
+                return;
+            }
+
+            // Cualquier otra actividad sin desglose por pregunta (p. ej. Prácticas Clínicas).
+            if (!sub.answers) {
+                const pct = typeof sub.percentage === 'number' ? sub.percentage.toFixed(1) : sub.percentage;
+                document.getElementById('details-score').innerText = `Calificación: ${pct}% (${sub.score}/${sub.total})`;
+                document.getElementById('details-questions').innerHTML = `<p style="text-align:center; color:var(--text-secondary); margin-top:20px;">Esta actividad no tiene desglose por pregunta.</p>`;
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('details-modal').classList.remove('hidden');
+                return;
+            }
+
             const keySnap = await getDoc(doc(db, "exam_keys", window.currentExamId));
             const examSnap = await getDoc(doc(db, "exams", window.currentExamId));
             
             const correctAnswers = keySnap.data().answers;
             const originalQuestions = examSnap.data().questions || [];
 
-            document.getElementById('details-student-name').innerText = sub.student.name;
             document.getElementById('details-score').innerText = `Calificación: ${sub.percentage.toFixed(1)}% (${sub.score}/${sub.total}) - Tiempo: ${Math.floor((sub.metrics?.timeUsedSeconds || 0)/60)}m`;
 
             let failedQuestions = [];
@@ -4886,6 +4914,9 @@
             const examSnap = await getDoc(doc(db, "exams", examId));
             
             const isCourse = examSnap.exists() && examSnap.data().config?.type === 'course';
+            const isRubrica = examSnap.exists() && examSnap.data().config?.type === 'rubrica';
+            document.getElementById('btn-rubrica-new-eval').classList.toggle('hidden', !isRubrica);
+            document.getElementById('share-container').classList.toggle('hidden', isRubrica);
             const correctAnswers = keySnap.exists() ? keySnap.data().answers : [];
             const originalQuestions = examSnap.exists() ? (examSnap.data().questions || []) : [];
 
@@ -7071,83 +7102,45 @@
         }
     };
 
-    // --- Conducir la evaluación (instructor) ---
-    window.viewRubricaRunner = async (examId, examName) => {
+    // --- Conducir la evaluación (instructor): se inicia desde la pantalla estándar de Resultados ---
+    window.startNewRubricaEvaluation = async () => {
+        document.getElementById('loading-screen').classList.remove('hidden');
+        document.getElementById('loading-text').innerText = "Cargando rúbrica...";
+        try {
+            const examSnap = await getDoc(doc(db, "exams", window.currentExamId));
+            if (!examSnap.exists()) throw new Error("La evaluación ya no existe.");
+            rubricaState.examId = window.currentExamId;
+            rubricaState.examName = window.currentExamName;
+            rubricaState.config = examSnap.data().config;
+            rubricaState.checkedItems = {};
+            rubricaState.checkedCritical = {};
+        } catch (e) {
+            document.getElementById('loading-screen').classList.add('hidden');
+            return window.CustomDialog.alert(e.message);
+        }
+        document.getElementById('loading-screen').classList.add('hidden');
+
         hideAll();
         document.getElementById('rubrica-run').classList.remove('hidden');
         document.getElementById('nav-settings').classList.add('hidden');
         document.getElementById('nav-school-control').classList.add('hidden');
         document.getElementById('nav-sc-back').classList.add('hidden');
-        document.getElementById('nav-volver').classList.remove('hidden');
+        document.getElementById('nav-volver').classList.add('hidden');
+        document.getElementById('nav-rubrica-historial').classList.remove('hidden');
         document.querySelector('.container').classList.add('expanded');
-        document.getElementById('rubrica-run-title').innerHTML = `<i class="fi fi-ss-clipboard-list-check"></i> ${examName}`;
-        document.getElementById('rubrica-history-list').innerHTML = `<p style="text-align:center; color:var(--text-secondary);">Cargando...</p>`;
-        document.getElementById('rubrica-list-view').classList.remove('hidden');
-        document.getElementById('rubrica-form-view').classList.add('hidden');
-        document.getElementById('nav-rubrica-historial').classList.add('hidden');
+        document.getElementById('rubrica-run-title').innerHTML = `<i class="fi fi-ss-clipboard-list-check"></i> ${rubricaState.examName}`;
 
-        rubricaState.examId = examId;
-        rubricaState.examName = examName;
-
-        try {
-            const examSnap = await getDoc(doc(db, "exams", examId));
-            if (!examSnap.exists()) throw new Error("La evaluación ya no existe.");
-            rubricaState.config = examSnap.data().config;
-        } catch (e) {
-            document.getElementById('rubrica-history-list').innerHTML = `<p style="text-align:center; color:var(--danger);">${e.message}</p>`;
-            return;
-        }
-
-        await renderRubricaHistoryList();
-    };
-
-    async function renderRubricaHistoryList() {
-        const box = document.getElementById('rubrica-history-list');
-        try {
-            const q = query(collection(db, "submissions"), where("examId", "==", rubricaState.examId));
-            const snap = await getDocs(q);
-            if (snap.empty) {
-                box.innerHTML = `<p style="text-align:center; color:var(--text-secondary); padding:20px 0;">Aún no has evaluado a ningún alumno con esta rúbrica.</p>`;
-                return;
-            }
-            const rows = [];
-            snap.forEach(d => rows.push(d.data()));
-            rows.sort((a, b) => new Date(b.metrics?.date || 0) - new Date(a.metrics?.date || 0));
-            box.innerHTML = rows.map(sub => {
-                const badge = sub.passed
-                    ? `<span class="badge badge-pass"><i class="fi fi-ss-check"></i> ${sub.rubricResult?.calificacion10 ?? '-'}</span>`
-                    : `<span class="badge badge-blocked"><i class="fi fi-ss-cross"></i> ${sub.rubricResult?.calificacion10 ?? '-'}</span>`;
-                const dateStr = sub.metrics?.date ? new Date(sub.metrics.date).toLocaleDateString('es-MX', { dateStyle: 'medium' }) : '';
-                return `<div class="prac-config-item">
-                    <div style="min-width:0;"><strong title="${(sub.student?.name || '').replace(/"/g, '&quot;')}">${sub.student?.name || 'Alumno'}</strong>
-                    <div style="font-size:0.8rem; color:var(--text-secondary);">${sub.rubricResult?.puntos ?? 0}/${sub.rubricResult?.maxPoints ?? 0} pts · ${dateStr}</div></div>
-                    ${badge}
-                </div>`;
-            }).join('');
-        } catch (e) {
-            box.innerHTML = `<p style="text-align:center; color:var(--danger);">Error al cargar el historial: ${e.message}</p>`;
-        }
-    }
-
-    window.startNewRubricaEvaluation = () => {
-        rubricaState.checkedItems = {};
-        rubricaState.checkedCritical = {};
         document.getElementById('rubrica-student-name').value = "";
         document.getElementById('rubrica-student-email').value = "";
         document.getElementById('rubrica-date').value = new Date().toISOString().split('T')[0];
         document.getElementById('rubrica-observaciones').value = "";
         renderRubricaForm();
         computeRubricaScore();
-        document.getElementById('rubrica-list-view').classList.add('hidden');
-        document.getElementById('rubrica-form-view').classList.remove('hidden');
-        document.getElementById('nav-rubrica-historial').classList.remove('hidden');
     };
 
     window.cancelRubricaForm = () => {
-        document.getElementById('rubrica-form-view').classList.add('hidden');
-        document.getElementById('rubrica-list-view').classList.remove('hidden');
         document.getElementById('nav-rubrica-historial').classList.add('hidden');
-        renderRubricaHistoryList();
+        window.viewExamGrades(rubricaState.examId, rubricaState.examName);
     };
 
     function renderRubricaForm() {

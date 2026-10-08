@@ -589,6 +589,32 @@
     </div>
 </div>
 
+<!-- MODAL PARA REACTIVAR / EXTENDER LA FECHA DE CIERRE DE UNA ACTIVIDAD -->
+<div id="reactivate-exam-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 480px; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;">
+                <i class="fi fi-ss-refresh"></i> Reactivar Actividad
+            </h2>
+            <button onclick="window.closeReactivateExamModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;">
+                <i class="fi fi-ss-cross"></i>
+            </button>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0; margin-bottom: 15px;">
+            "<strong id="reactivate-exam-name-text"></strong>"<br>
+            <span id="reactivate-exam-current-text"></span>
+        </p>
+        <div class="form-group" style="background: #FFF3E0; padding: 15px; border-left: 4px solid var(--warning); border-radius: 8px;">
+            <label style="color: #E65100;"><i class="fi fi-ss-calendar-clock"></i> Nueva Fecha y Hora de Cierre</label>
+            <input type="datetime-local" id="reactivate-exam-expiration">
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+            <button id="btn-reactivate-save" onclick="window.saveReactivateExam(false)" style="flex: 1;"><i class="fi fi-ss-disk"></i> Guardar Nueva Fecha</button>
+            <button id="btn-reactivate-nolimit" onclick="window.saveReactivateExam(true)" class="btn-secondary" style="flex: 1;"><i class="fi fi-ss-calendar-clock"></i> Sin Límite de Tiempo</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL PARA COMPARTIR UNA ACTIVIDAD CON OTRO INSTRUCTOR -->
 <div id="share-exam-modal" class="modal-overlay hidden">
     <div class="modal-content primary-top" style="max-width: 550px; max-height: 90vh; overflow-y: auto; text-align: left; padding: 25px; align-items: stretch;">
@@ -725,7 +751,7 @@
 
         <div class="grid-layout" style="grid-template-columns: 2fr 1fr 1fr;">
             <div class="form-group"><label><i class="fi fi-ss-text"></i> Título de la Evaluación</label><input type="text" id="rubrica_title" placeholder="Ej. Evaluación y Manejo del Paciente de Trauma"></div>
-            <div class="form-group"><label><i class="fi fi-ss-key"></i> Código de Clase</label><input type="text" id="rubrica_gen" placeholder="Ej. G30, GLOBAL"></div>
+            <div class="form-group"><label><i class="fi fi-ss-key"></i> Código de Clase <span style="color:var(--danger);">*</span></label><input type="text" id="rubrica_gen" placeholder="Ej. G30, GLOBAL" required></div>
             <div class="form-group"><label><i class="fi fi-ss-bullseye"></i> Mínimo Aprobatorio</label><input type="number" id="rubrica_min_scale" value="8.0" min="1" max="10" step="0.1"></div>
         </div>
 
@@ -1299,7 +1325,7 @@
         <div id="rubrica-form-view">
             <div class="grid-layout" style="grid-template-columns: 2fr 2fr 1fr;">
                 <div class="form-group" style="margin-bottom:10px;"><label><i class="fi fi-ss-graduation-cap"></i> Alumno Evaluado</label><input type="text" id="rubrica-student-name" placeholder="Nombre completo del aspirante"></div>
-                <div class="form-group" style="margin-bottom:10px;"><label><i class="fi fi-ss-envelope"></i> Correo (opcional)</label><input type="email" id="rubrica-student-email" placeholder="correo@ejemplo.com"></div>
+                <div class="form-group" style="margin-bottom:10px;"><label><i class="fi fi-ss-envelope"></i> Correo <span style="color:var(--danger);">*</span></label><input type="email" id="rubrica-student-email" placeholder="correo@ejemplo.com" required></div>
                 <div class="form-group" style="margin-bottom:10px;"><label><i class="fi fi-ss-calendar"></i> Fecha</label><input type="date" id="rubrica-date"></div>
             </div>
 
@@ -1917,7 +1943,7 @@
     }
 
     // IDs de todos los modal-overlay que pueden cerrarse con ESC o clic fuera del contenido.
-    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal', 'practica-modal', 'rubrica-modal'];
+    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'reactivate-exam-modal', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal', 'practica-modal', 'rubrica-modal'];
 
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1955,7 +1981,7 @@
     function hideAll() {
         ['loading-screen', 'role-selector', 'login-view', 'student-login-view', 'student-portal', 
          'instructor-dashboard', 'instructor-upload', 'instructor-grades', 'exam-view', 'course-view',
-         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal',
+         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'reactivate-exam-modal',
          'school-control-generations', 'school-control-students', 'school-control-student-detail', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal',
          'practica-modal', 'practica-view', 'practica-monitor', 'rubrica-modal', 'rubrica-run'].forEach(id => {
              const el = document.getElementById(id);
@@ -3136,6 +3162,7 @@
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button onclick="${actionCall}" style="width: auto;" title="Detalles"><i class="fi ${iconMain}"></i> ${textMain}</button>
+                    <button onclick="window.openReactivateExamModal('${docId}')" class="btn-secondary" style="width: auto; padding: 14px;" title="Reactivar / cambiar fecha de cierre"><i class="fi fi-ss-refresh"></i> </button>
                     <button onclick="window.openShareExamModal('${docId}', '${(exam.config.name || '').replace(/'/g, "\\'")}', ${isOwner})" class="btn-secondary" style="width: auto; padding: 14px;" title="Compartir"><i class="fi fi-ss-share"></i></button>
                     ${deleteBtn}
                 </div>
@@ -3288,6 +3315,74 @@
     window.closeDeleteModal = () => {
         examToDelete = null;
         document.getElementById('delete-modal').classList.add('hidden');
+    };
+
+    // --- Reactivar actividad: extender o modificar la fecha de cierre (expiración) ---
+    let reactivateExamState = { examId: null };
+
+    // datetime-local necesita "YYYY-MM-DDTHH:mm" en hora local
+    const toLocalDatetimeInputValue = (date) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    };
+
+    window.openReactivateExamModal = (examId) => {
+        const item = (window.allInstructorActivities || []).find(a => a.id === examId);
+        if (!item) return window.CustomDialog.alert("No se encontró la actividad. Recarga la lista e inténtalo de nuevo.");
+        reactivateExamState = { examId };
+
+        const exp = item.data.config.expiration;
+        const expDate = exp ? new Date(exp) : null;
+        const isClosed = !!(expDate && new Date() > expDate);
+
+        document.getElementById('reactivate-exam-name-text').innerText = item.data.config.name || '';
+        document.getElementById('reactivate-exam-current-text').innerHTML = expDate
+            ? (isClosed
+                ? `<span style="color:var(--danger);"><i class="fi fi-ss-time-delete"></i> Cerrada desde: ${expDate.toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })}</span>`
+                : `<span style="color:var(--warning);"><i class="fi fi-ss-time-fast"></i> Cierra actualmente: ${expDate.toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })}</span>`)
+            : 'Actualmente sin límite de tiempo.';
+
+        // Sugerencia: si ya venció (o no tiene fecha), proponer mañana a la misma hora; si no, conservar la fecha actual.
+        const suggested = (expDate && !isClosed) ? expDate : new Date(Date.now() + 24 * 60 * 60 * 1000);
+        document.getElementById('reactivate-exam-expiration').value = toLocalDatetimeInputValue(suggested);
+        document.getElementById('reactivate-exam-modal').classList.remove('hidden');
+    };
+
+    window.closeReactivateExamModal = () => {
+        document.getElementById('reactivate-exam-modal').classList.add('hidden');
+        reactivateExamState = { examId: null };
+    };
+
+    window.saveReactivateExam = async (noLimit) => {
+        const examId = reactivateExamState.examId;
+        if (!examId) return;
+
+        let newExpiration = "";
+        if (!noLimit) {
+            newExpiration = document.getElementById('reactivate-exam-expiration').value;
+            if (!newExpiration) return window.CustomDialog.alert("Selecciona la nueva fecha y hora de cierre.");
+            if (new Date(newExpiration) <= new Date()) {
+                return window.CustomDialog.alert("La nueva fecha de cierre debe ser posterior a la fecha y hora actuales para reactivar la actividad.");
+            }
+        }
+
+        const btnId = noLimit ? 'btn-reactivate-nolimit' : 'btn-reactivate-save';
+        const btnDefault = noLimit ? '<i class="fi fi-ss-calendar-clock"></i> Sin Límite de Tiempo' : '<i class="fi fi-ss-disk"></i> Guardar Nueva Fecha';
+        window.setLoading(btnId, true);
+        try {
+            await updateDoc(doc(db, "exams", examId), { "config.expiration": newExpiration });
+
+            const item = (window.allInstructorActivities || []).find(a => a.id === examId);
+            if (item) item.data.config.expiration = newExpiration;
+
+            window.setLoading(btnId, false, btnDefault);
+            window.closeReactivateExamModal();
+            window.filterActivities();
+            window.CustomDialog.alert(noLimit ? "La actividad ya no tiene fecha de cierre." : "Actividad reactivada con la nueva fecha de cierre.", "Éxito");
+        } catch (e) {
+            window.setLoading(btnId, false, btnDefault);
+            window.CustomDialog.alert("No fue posible reactivar la actividad: " + e.message);
+        }
     };
 
     // --- Compartir actividad con otro instructor (por correo) ---
@@ -7069,6 +7164,9 @@
         const title = document.getElementById('rubrica_title').value.trim();
         if (!title) return window.CustomDialog.alert("Ingresa un título para la evaluación.");
 
+        const rubricaGenCode = document.getElementById('rubrica_gen').value.trim().toUpperCase();
+        if (!rubricaGenCode) return window.CustomDialog.alert("El Código de Clase es obligatorio. Ingresa el código de la clase (ej. G30) o GLOBAL.");
+
         let sections, criticalItems;
         try {
             ({ sections, criticalItems } = parseRubricaJson());
@@ -7085,8 +7183,8 @@
                 config: {
                     type: 'rubrica',
                     name: title,
-                    gen: document.getElementById('rubrica_gen').value.trim().toUpperCase() || "GLOBAL",
-                    gens_string: document.getElementById('rubrica_gen').value.trim().toUpperCase(),
+                    gen: rubricaGenCode,
+                    gens_string: rubricaGenCode,
                     minScale: parseFloat(document.getElementById('rubrica_min_scale').value) || 8.0,
                     rubric: { maxPoints: rubricaComputeMaxPoints(sections), sections, criticalItems }
                 }
@@ -7249,6 +7347,10 @@
         const name = document.getElementById('rubrica-student-name').value.trim();
         if (!name) return window.CustomDialog.alert("Ingresa el nombre del alumno evaluado.");
 
+        const rubricaStudentEmail = document.getElementById('rubrica-student-email').value.trim().toLowerCase();
+        if (!rubricaStudentEmail) return window.CustomDialog.alert("El correo del alumno es obligatorio.");
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rubricaStudentEmail)) return window.CustomDialog.alert("Ingresa un correo electrónico válido.");
+
         const result = computeRubricaScore();
         const passed = result.calificacion >= result.minScale;
 
@@ -7261,7 +7363,7 @@
             await addDoc(collection(db, "submissions"), {
                 examId: rubricaState.examId,
                 examInfo: { name: rubricaState.examName, type: 'rubrica' },
-                student: { name, email: document.getElementById('rubrica-student-email').value.trim().toLowerCase() },
+                student: { name, email: rubricaStudentEmail },
                 status: 'COMPLETED',
                 graded: true,
                 percentage: result.porcentaje,

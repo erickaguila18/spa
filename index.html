@@ -589,6 +589,39 @@
     </div>
 </div>
 
+<!-- MODAL: SUBIR MATERIAL DIDÁCTICO (instructor) -->
+<div id="material-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 520px; max-height: 90vh; overflow-y: auto; text-align: left; padding: 25px; align-items: stretch;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+            <h2 style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;"><i class="fi fi-ss-book-open-cover"></i> Subir Material Didáctico</h2>
+            <button onclick="window.closeMaterialModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; margin: 0;"><i class="fi fi-ss-cross"></i></button>
+        </div>
+        <p style="font-size:0.9rem; color:var(--text-secondary); margin-top:0;">Presentaciones o infografías en JPG, PNG o PDF (máx. 10 MB). Solo los alumnos de la clase indicada podrán verlo y descargarlo.</p>
+        <div class="form-group"><label><i class="fi fi-ss-text"></i> Título del Material <span style="color:var(--danger);">*</span></label><input type="text" id="material-title" placeholder="Ej. Manejo de la vía aérea - Presentación"></div>
+        <div class="form-group"><label><i class="fi fi-ss-key"></i> Código de Clase <span style="color:var(--danger);">*</span></label><input type="text" id="material-gen" placeholder="Ej. G30, G31 o GLOBAL"></div>
+        <div class="form-group"><label><i class="fi fi-ss-comment-alt"></i> Descripción (Opcional)</label><input type="text" id="material-desc" placeholder="Ej. Repaso del tema 3"></div>
+        <div class="form-group"><label><i class="fi fi-ss-upload"></i> Archivo (JPG, PNG o PDF) <span style="color:var(--danger);">*</span></label>
+            <input type="file" id="material-file" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" style="font-size: 0.85rem; width: 100%; border: 1px solid #E0E0E0; padding: 8px; border-radius: 8px; background: white; cursor: pointer; box-sizing: border-box;">
+        </div>
+        <button id="btn-save-material" onclick="window.saveMaterial()"><i class="fi fi-ss-upload"></i> Subir Material</button>
+    </div>
+</div>
+
+<!-- MODAL: VISOR DE MATERIAL DIDÁCTICO (instructor y alumno) -->
+<div id="material-viewer-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 960px; width: 95%; max-height: 95vh; text-align: left; padding: 20px; align-items: stretch; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; width: 100%; flex-wrap: wrap;">
+            <h2 id="material-viewer-title" style="color: var(--primary); margin: 0; font-size: 1.15rem; min-width:0; word-break: break-word;"></h2>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a id="material-viewer-download" class="course-attachment" style="margin:0;" href="#"><i class="fi fi-ss-download"></i> Descargar</a>
+                <a id="material-viewer-newtab" class="course-attachment" style="margin:0;" href="#" target="_blank" rel="noopener"><i class="fi fi-ss-arrow-up-right-from-square"></i> Abrir en pestaña</a>
+                <button onclick="window.closeMaterialViewer()" class="btn-secondary btn-sm"><i class="fi fi-ss-cross"></i> Cerrar</button>
+            </div>
+        </div>
+        <div id="material-viewer-body" style="flex:1; min-height: 300px; overflow:auto; background:#F5F5F5; border:1px solid #E0E0E0; border-radius:8px; display:flex; align-items:center; justify-content:center;"></div>
+    </div>
+</div>
+
 <!-- MODAL PARA REACTIVAR / EXTENDER LA FECHA DE CIERRE DE UNA ACTIVIDAD -->
 <div id="reactivate-exam-modal" class="modal-overlay hidden">
     <div class="modal-content primary-top" style="max-width: 480px; text-align: left; padding: 25px; align-items: stretch;">
@@ -938,6 +971,9 @@
         <h3 style="border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-clipboard-list-check"></i> Actividades Pendientes</h3>
         <div id="pending-exams-list"></div>
 
+        <h3 style="margin-top: 30px; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-book-open-cover"></i> Material Didáctico</h3>
+        <div id="student-materials-list" style="display:flex; flex-direction:column; gap:10px; margin-top:15px;"></div>
+
         <h3 style="margin-top: 30px; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-folder-open"></i> Historial</h3>
         <div class="form-group" style="margin-top:15px; margin-bottom:0;">
             <input type="text" id="history-search-input" placeholder="Buscar actividad por nombre..." onkeyup="window.filterHistory()" style="padding: 10px; margin:0;">
@@ -997,6 +1033,7 @@
             <button onclick="window.showUploadPanel('survey')" class="btn-secondary"><i class="fi fi-ss-comment-alt"></i> Encuesta</button>
             <button onclick="window.openPracticaModal()" class="prac-accent-bg"><i class="fi fi-ss-ambulance"></i> Práctica</button>
             <button onclick="window.openRubricaModal()" class="btn-outline-brand"><i class="fi fi-ss-clipboard-list-check"></i> Evaluación</button>
+            <button onclick="window.openMaterialModal()" class="btn-outline-brand"><i class="fi fi-ss-book-open-cover"></i> Material</button>
         </div>
         
         <div class="activity-tabs" id="activity-tabs">
@@ -1023,6 +1060,9 @@
         </div>
 
         <div id="exams-list-container"></div>
+
+        <h3 style="margin-top: 35px; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;"><i class="fi fi-ss-book-open-cover"></i> Material Didáctico</h3>
+        <div id="instructor-materials-list" style="display:flex; flex-direction:column; gap:10px; margin-top:15px;"></div>
     </div>
 
     <div id="admin-settings" class="card hidden">
@@ -1937,13 +1977,15 @@
             window.closeModal();
         } else if (id === 'severe-modal') {
             window.exitActivity();
+        } else if (id === 'material-viewer-modal') {
+            window.closeMaterialViewer();
         } else {
             el.classList.add('hidden');
         }
     }
 
     // IDs de todos los modal-overlay que pueden cerrarse con ESC o clic fuera del contenido.
-    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'reactivate-exam-modal', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal', 'practica-modal', 'rubrica-modal'];
+    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'reactivate-exam-modal', 'material-modal', 'material-viewer-modal', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal', 'practica-modal', 'rubrica-modal'];
 
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1981,7 +2023,7 @@
     function hideAll() {
         ['loading-screen', 'role-selector', 'login-view', 'student-login-view', 'student-portal', 
          'instructor-dashboard', 'instructor-upload', 'instructor-grades', 'exam-view', 'course-view',
-         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'reactivate-exam-modal',
+         'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'reactivate-exam-modal', 'material-modal', 'material-viewer-modal',
          'school-control-generations', 'school-control-students', 'school-control-student-detail', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal',
          'practica-modal', 'practica-view', 'practica-monitor', 'rubrica-modal', 'rubrica-run'].forEach(id => {
              const el = document.getElementById(id);
@@ -2938,6 +2980,7 @@
                 }
             });
             document.getElementById('pending-exams-list').innerHTML = pendingHTML || "<p style='text-align:center; padding: 20px; color: var(--text-secondary);'>No tienes evaluaciones ni encuestas pendientes.</p>";
+            window.loadStudentMaterials(student.gen);
 
         } catch(e) { 
             console.error(e);
@@ -3075,6 +3118,7 @@
         container.innerHTML = window.allInstructorActivities.length === 0 ? "<p style='text-align:center;'>No has creado ni tienes actividades compartidas contigo.</p>" : "";
         
         window.filterActivities();
+        window.loadInstructorMaterials();
     };
 
     window.setActivityStatusFilter = (status) => {
@@ -3162,7 +3206,7 @@
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button onclick="${actionCall}" style="width: auto;" title="Detalles"><i class="fi ${iconMain}"></i> ${textMain}</button>
-                    <button onclick="window.openReactivateExamModal('${docId}')" class="btn-secondary" style="width: auto; padding: 14px;" title="Reactivar / cambiar fecha de cierre"><i class="fi fi-ss-refresh"></i> </button>
+                    <button onclick="window.openReactivateExamModal('${docId}')" class="btn-secondary" style="width: auto; padding: 14px;" title="Reactivar / cambiar fecha de cierre"><i class="fi fi-ss-refresh"></i> Reactivar</button>
                     <button onclick="window.openShareExamModal('${docId}', '${(exam.config.name || '').replace(/'/g, "\\'")}', ${isOwner})" class="btn-secondary" style="width: auto; padding: 14px;" title="Compartir"><i class="fi fi-ss-share"></i></button>
                     ${deleteBtn}
                 </div>
@@ -3315,6 +3359,211 @@
     window.closeDeleteModal = () => {
         examToDelete = null;
         document.getElementById('delete-modal').classList.add('hidden');
+    };
+
+    // ==================== MATERIAL DIDÁCTICO ====================
+    // Colección "materials/{id}": { instructorId, title, description, gens_string, gens:[...],
+    //   fileName, mimeType, size, chunks, createdAt }
+    // El contenido del archivo (base64) se guarda en "materials/{id}/chunks/{n}" en trozos de ~700 KB
+    // porque Firestore limita cada documento a 1 MB.
+    const MATERIAL_MAX_BYTES = 10 * 1024 * 1024;
+    const MATERIAL_CHUNK_CHARS = 700000;
+    const MATERIAL_ALLOWED = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png' };
+    const escHtml = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const parseGenCodes = (str) => [...new Set(String(str || '').toUpperCase().split(/[,;\s]+/).map(x => x.trim()).filter(Boolean))];
+    const formatBytes = (b) => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+    let materialCache = {};
+    let materialViewerUrl = null;
+
+    window.openMaterialModal = () => {
+        ['material-title', 'material-gen', 'material-desc'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('material-file').value = '';
+        document.getElementById('material-modal').classList.remove('hidden');
+    };
+    window.closeMaterialModal = () => document.getElementById('material-modal').classList.add('hidden');
+
+    window.saveMaterial = async () => {
+        const title = document.getElementById('material-title').value.trim();
+        const gens = parseGenCodes(document.getElementById('material-gen').value);
+        const desc = document.getElementById('material-desc').value.trim();
+        const file = document.getElementById('material-file').files[0];
+
+        if (!title) return window.CustomDialog.alert("Ingresa un título para el material.");
+        if (!gens.length) return window.CustomDialog.alert("El Código de Clase es obligatorio. Indica la clase que podrá ver este material (ej. G30) o GLOBAL.");
+        if (!file) return window.CustomDialog.alert("Selecciona un archivo JPG, PNG o PDF.");
+        const mime = file.type || ({ pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png' }[(file.name.split('.').pop() || '').toLowerCase()]);
+        if (!MATERIAL_ALLOWED[mime]) return window.CustomDialog.alert("Formato no permitido. Solo se aceptan archivos JPG, PNG o PDF.");
+        if (file.size > MATERIAL_MAX_BYTES) return window.CustomDialog.alert(`El archivo pesa ${formatBytes(file.size)}. El máximo permitido es 10 MB.`);
+
+        const btnDefault = '<i class="fi fi-ss-upload"></i> Subir Material';
+        window.setLoading('btn-save-material', true);
+        let newDocRef = null;
+        try {
+            const dataUrl = await readFileAsDataURL(file);
+            const base64 = dataUrl.substring(dataUrl.indexOf(',') + 1);
+            const parts = [];
+            for (let i = 0; i < base64.length; i += MATERIAL_CHUNK_CHARS) parts.push(base64.substring(i, i + MATERIAL_CHUNK_CHARS));
+
+            newDocRef = await addDoc(collection(db, "materials"), {
+                instructorId: currentUser.uid,
+                instructorEmail: (currentUser.email || "").toLowerCase(),
+                title, description: desc,
+                gens, gens_string: gens.join(', '),
+                fileName: file.name, mimeType: mime, size: file.size,
+                chunks: parts.length, status: 'uploading',
+                createdAt: new Date().toISOString()
+            });
+            for (let i = 0; i < parts.length; i++) {
+                await setDoc(doc(db, "materials", newDocRef.id, "chunks", String(i).padStart(4, '0')), { index: i, data: parts[i] });
+            }
+            await updateDoc(doc(db, "materials", newDocRef.id), { status: 'ready' });
+
+            window.setLoading('btn-save-material', false, btnDefault);
+            window.closeMaterialModal();
+            await window.CustomDialog.alert("Material subido con éxito. Ya está disponible para los alumnos de la clase " + gens.join(', ') + ".", "Éxito");
+            window.loadInstructorMaterials();
+        } catch (e) {
+            // Si falló a medias, limpiar lo que alcanzó a subirse
+            if (newDocRef) { try { await window.deleteMaterialFiles(newDocRef.id); } catch (_) {} }
+            window.setLoading('btn-save-material', false, btnDefault);
+            window.CustomDialog.alert("No fue posible subir el material: " + e.message);
+        }
+    };
+
+    window.deleteMaterialFiles = async (id) => {
+        const chunkSnap = await getDocs(collection(db, "materials", id, "chunks"));
+        await Promise.all(chunkSnap.docs.map(c => deleteDoc(c.ref)));
+        await deleteDoc(doc(db, "materials", id));
+    };
+
+    const materialRowHtml = (id, m, isInstructor) => {
+        const isPdf = m.mimeType === 'application/pdf';
+        const icon = isPdf ? 'fi-ss-file-pdf' : 'fi-ss-picture';
+        return `<div class="exam-item">
+            <div style="display:flex; align-items:center; gap:12px; min-width:0; flex:1;">
+                <div style="width:46px; height:46px; border-radius:8px; background:#ECEFF1; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><i class="fi ${icon}" style="font-size:1.3rem; color:var(--primary);"></i></div>
+                <div style="min-width:0;">
+                    <h3 style="margin:0; word-break:break-word;">${escHtml(m.title)}</h3>
+                    <p style="margin:4px 0 0 0; color:var(--text-secondary); font-size:0.85rem;">${m.description ? escHtml(m.description) + ' | ' : ''}Clase(s): ${escHtml(m.gens_string)} | ${isPdf ? 'PDF' : 'Imagen'} · ${formatBytes(m.size || 0)}</p>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button onclick="window.openMaterialViewer('${id}')" style="width:auto;"><i class="fi fi-ss-eye"></i> Ver</button>
+                <button onclick="window.downloadMaterial('${id}')" class="btn-secondary" style="width:auto;" title="Descargar"><i class="fi fi-ss-download"></i></button>
+                ${isInstructor ? `<button onclick="window.promptDeleteMaterial('${id}')" class="btn-danger" style="width:auto; padding:14px;" title="Eliminar"><i class="fi fi-ss-trash"></i></button>` : ''}
+            </div>
+        </div>`;
+    };
+
+    window.loadInstructorMaterials = async () => {
+        const box = document.getElementById('instructor-materials-list');
+        if (!box) return;
+        box.innerHTML = "<p style='text-align:center; color:var(--text-secondary);'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando material...</p>";
+        try {
+            const snap = await getDocs(query(collection(db, "materials"), where("instructorId", "==", currentUser.uid)));
+            const items = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.status === 'ready')
+                .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            items.forEach(m => materialCache[m.id] = m);
+            box.innerHTML = items.length
+                ? items.map(m => materialRowHtml(m.id, m, true)).join('')
+                : "<p style='text-align:center; color:var(--text-secondary); padding:10px;'>Aún no has subido material didáctico.</p>";
+        } catch (e) {
+            console.error(e);
+            box.innerHTML = "<p style='text-align:center; color:var(--danger);'>Error al cargar el material didáctico.</p>";
+        }
+    };
+
+    window.loadStudentMaterials = async (gen) => {
+        const box = document.getElementById('student-materials-list');
+        if (!box) return;
+        box.innerHTML = "<p style='text-align:center; color:var(--text-secondary);'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Buscando material...</p>";
+        try {
+            const myGen = String(gen || '').trim().toUpperCase();
+            const snap = await getDocs(query(collection(db, "materials"), where("gens", "array-contains-any", [myGen, "GLOBAL"])));
+            const items = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.status === 'ready')
+                .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            items.forEach(m => materialCache[m.id] = m);
+            box.innerHTML = items.length
+                ? items.map(m => materialRowHtml(m.id, m, false)).join('')
+                : "<p style='text-align:center; color:var(--text-secondary); padding:10px;'>Tu instructor aún no ha publicado material para tu clase.</p>";
+        } catch (e) {
+            console.error(e);
+            box.innerHTML = "<p style='text-align:center; color:var(--danger);'>No fue posible cargar el material didáctico.</p>";
+        }
+    };
+
+    // Reconstruye el archivo a partir de sus trozos y devuelve un Blob
+    const fetchMaterialBlob = async (id) => {
+        let m = materialCache[id];
+        if (!m) { const d = await getDoc(doc(db, "materials", id)); if (!d.exists()) throw new Error("El material ya no existe."); m = { id, ...d.data() }; materialCache[id] = m; }
+        const snap = await getDocs(collection(db, "materials", id, "chunks"));
+        const parts = snap.docs.map(d => d.data()).sort((a, b) => a.index - b.index);
+        if (!parts.length || parts.length !== m.chunks) throw new Error("El archivo está incompleto. Pide al instructor que lo suba de nuevo.");
+        const bin = atob(parts.map(p => p.data).join(''));
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return { meta: m, blob: new Blob([bytes], { type: m.mimeType }) };
+    };
+
+    const safeDownloadName = (m) => {
+        const ext = MATERIAL_ALLOWED[m.mimeType] || 'bin';
+        const base = (m.title || 'material').replace(/[\\/:*?"<>|]+/g, '').trim() || 'material';
+        return base.toLowerCase().endsWith('.' + ext) ? base : base + '.' + ext;
+    };
+
+    window.openMaterialViewer = async (id) => {
+        const modal = document.getElementById('material-viewer-modal');
+        const body = document.getElementById('material-viewer-body');
+        const m0 = materialCache[id];
+        document.getElementById('material-viewer-title').innerText = m0?.title || 'Material';
+        body.innerHTML = "<p style='color:var(--text-secondary);'><i class='fi fi-ss-spinner' style='animation: spin 1s linear infinite;'></i> Cargando archivo...</p>";
+        modal.classList.remove('hidden');
+        try {
+            const { meta, blob } = await fetchMaterialBlob(id);
+            if (materialViewerUrl) URL.revokeObjectURL(materialViewerUrl);
+            materialViewerUrl = URL.createObjectURL(blob);
+            document.getElementById('material-viewer-title').innerText = meta.title;
+            const dl = document.getElementById('material-viewer-download');
+            dl.href = materialViewerUrl; dl.setAttribute('download', safeDownloadName(meta));
+            document.getElementById('material-viewer-newtab').href = materialViewerUrl;
+            body.innerHTML = meta.mimeType === 'application/pdf'
+                ? `<iframe src="${materialViewerUrl}" title="${escHtml(meta.title)}" style="width:100%; height:75vh; border:0; background:#fff;"></iframe>`
+                : `<img src="${materialViewerUrl}" alt="${escHtml(meta.title)}" style="max-width:100%; max-height:75vh; object-fit:contain;">`;
+        } catch (e) {
+            body.innerHTML = `<p style='color:var(--danger); padding:20px; text-align:center;'>${escHtml(e.message)}</p>`;
+        }
+    };
+
+    window.closeMaterialViewer = () => {
+        document.getElementById('material-viewer-modal').classList.add('hidden');
+        document.getElementById('material-viewer-body').innerHTML = '';
+        if (materialViewerUrl) { URL.revokeObjectURL(materialViewerUrl); materialViewerUrl = null; }
+    };
+
+    window.downloadMaterial = async (id) => {
+        try {
+            const { meta, blob } = await fetchMaterialBlob(id);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = safeDownloadName(meta);
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible descargar el archivo: " + e.message);
+        }
+    };
+
+    window.promptDeleteMaterial = async (id) => {
+        const m = materialCache[id];
+        const ok = await window.CustomDialog.confirm(`¿Eliminar el material "${m?.title || ''}"? Los alumnos dejarán de verlo.`, "Eliminar Material");
+        if (!ok) return;
+        try {
+            await window.deleteMaterialFiles(id);
+            delete materialCache[id];
+            window.loadInstructorMaterials();
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible eliminar el material: " + e.message);
+        }
     };
 
     // --- Reactivar actividad: extender o modificar la fecha de cierre (expiración) ---

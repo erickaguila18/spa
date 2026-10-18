@@ -3723,7 +3723,9 @@
     // ==================== CONTROL ESCOLAR ====================
     // Colecciones nuevas en Firestore (creadas sobre la marcha, sin necesidad de backfill):
     //   school_generations/{genId}                          -> { instructorId, name, code, image, createdAt }
-    //   school_students/{studentId}                         -> { instructorId, genId, name, email, createdAt }
+    //   school_students/{studentId}                         -> { instructorId, genId, name, email, createdAt, genCode?, autoRegistered? }
+    //     (autoRegistered: lo creó el alumno al resolver una actividad; genId queda en null hasta que el instructor abre
+    //      Control Escolar y se vincula/crea la generación G-NN correspondiente a genCode)
     //   school_students/{studentId}/debts/{id}               -> { concept, amount, paid, createdAt }
     //   school_students/{studentId}/task_grades/{id}         -> { task, score, createdAt }
     //   school_students/{studentId}/absences/{id}            -> { type: 'falta'|'justificante', date, note, createdAt }
@@ -3762,6 +3764,71 @@
         window.loadSchoolGenerations();
     };
 
+    // --- Registro automático en Control Escolar al resolver una actividad ---
+    // Código de clase válido: "G" + número (G1, G01, G-01, g-1 ...) -> se normaliza a "G-01", "G-02" ... "G-N".
+    // Cualquier otro valor (GLOBAL, texto libre) NO se registra, para no generar datos innecesarios.
+    const canonGenCode = (raw) => {
+        const m = String(raw || '').trim().toUpperCase().match(/^G\s*-?\s*0*(\d+)$/);
+        if (!m) return null;
+        const n = parseInt(m[1], 10);
+        return n > 0 ? 'G-' + String(n).padStart(2, '0') : null;
+    };
+
+    // Lo llama el alumno (sin sesión de Firebase) cuando se guarda el resultado de una actividad.
+    // Nunca debe interrumpir ni retrasar el flujo del alumno: todo va dentro de try/catch.
+    window.registerStudentInSchool = async (examId, student) => {
+        try {
+            const genCode = canonGenCode(student && student.gen);
+            const email = String((student && student.email) || '').trim().toLowerCase();
+            const name = String((student && student.name) || '').trim();
+            if (!genCode || !email || !name || !examId) return;
+
+            const exSnap = await getDoc(doc(db, "exams", examId));
+            const instructorId = exSnap.exists() ? exSnap.data().instructorId : null;
+            if (!instructorId) return;
+
+            // Evitar duplicados: mismo instructor + mismo correo en esa clase (o alumno agregado a mano, que no tiene genCode)
+            const existing = await getDocs(query(collection(db, "school_students"), where("email", "==", email)));
+            const already = existing.docs.some(d => {
+                const x = d.data();
+                return x.instructorId === instructorId && (!x.genCode || x.genCode === genCode);
+            });
+            if (already) return;
+
+            await addDoc(collection(db, "school_students"), {
+                instructorId, genId: null, genCode,
+                name, email, active: true, autoRegistered: true,
+                createdAt: new Date().toISOString()
+            });
+        } catch (e) {
+            console.warn("No se pudo registrar al alumno en Control Escolar:", e);
+        }
+    };
+
+    // Lo ejecuta el instructor al abrir Control Escolar: vincula a los alumnos auto-registrados
+    // con su generación G-NN (existente, o la crea si todavía no existe).
+    async function reconcileAutoRegisteredStudents() {
+        const pending = schoolState.students.filter(st => !st.genId && st.genCode);
+        if (!pending.length) return;
+        const byCode = {};
+        pending.forEach(st => { (byCode[st.genCode] = byCode[st.genCode] || []).push(st); });
+
+        for (const code of Object.keys(byCode)) {
+            let gen = schoolState.generations.find(g => canonGenCode(g.code) === code || canonGenCode(g.name) === code);
+            if (!gen) {
+                const data = { instructorId: currentUser.uid, name: code, code, image: null, autoCreated: true, createdAt: new Date().toISOString() };
+                const ref = await addDoc(collection(db, "school_generations"), data);
+                gen = { id: ref.id, ...data };
+                schoolState.generations.push(gen);
+            }
+            await Promise.all(byCode[code].map(async st => {
+                await updateDoc(doc(db, "school_students", st.id), { genId: gen.id, updatedAt: new Date().toISOString() });
+                st.genId = gen.id;
+            }));
+        }
+        schoolState.generations.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'es', { numeric: true }));
+    }
+
     // --- Generaciones ---
     window.loadSchoolGenerations = async () => {
         hideAll();
@@ -3778,10 +3845,13 @@
 
             schoolState.generations = [];
             gensSnap.forEach(d => schoolState.generations.push({ id: d.id, ...d.data() }));
-            schoolState.generations.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            schoolState.generations.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'es', { numeric: true }));
 
             schoolState.students = [];
             studentsSnap.forEach(d => schoolState.students.push({ id: d.id, ...d.data() }));
+
+            try { await reconcileAutoRegisteredStudents(); }
+            catch (reErr) { console.warn("No se pudieron vincular alumnos auto-registrados:", reErr); }
 
             renderGenerationsGrid();
         } catch (e) {
@@ -3972,11 +4042,36 @@
                     <button onclick="window.openGradeModal('${s.id}')" class="btn-brand-action" title="Calificar Tarea"><i class="fi fi-ss-clipboard-list-check"></i></button>
                     <button onclick="window.openAbsenceModal('${s.id}')" class="btn-danger" title="Falta/Justificante"><i class="fi fi-ss-ban"></i></button>
                     <button onclick="window.openMessageModal('${s.id}')" class="btn-secondary" title="Enviar Mensaje"><i class="fi fi-ss-envelope"></i></button>
+                    <button onclick="window.deleteStudent('${s.id}')" title="Eliminar Alumno" style="background:#fff; color:var(--danger); border:1px solid var(--danger); margin-left:6px;"><i class="fi fi-ss-trash"></i></button>
                 </div>
             </div>
         `;
         }).join('');
     }
+
+    // Elimina por completo al alumno de la generación (por ejemplo, si resolvió con un correo equivocado
+    // y se registró duplicado). Borra también sus adeudos, tareas, faltas y mensajes.
+    // Los resultados de sus actividades (submissions) NO se tocan: siguen en las calificaciones de cada actividad.
+    window.deleteStudent = async (sid) => {
+        const st = schoolState.students.find(x => x.id === sid);
+        if (!st) return;
+        const confirmed = await window.CustomDialog.confirm(
+            `¿Eliminar a "${st.name}" (${st.email || 'sin correo'}) de esta generación?\n\nSe borrarán también sus adeudos, tareas calificadas, faltas y mensajes. Esta acción no se puede deshacer. Los resultados de sus exámenes y actividades no se eliminan.`,
+            "Eliminar Alumno"
+        );
+        if (!confirmed) return;
+        try {
+            for (const sub of ['debts', 'task_grades', 'absences', 'messages']) {
+                const snap = await getDocs(collection(db, "school_students", sid, sub));
+                await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+            }
+            await deleteDoc(doc(db, "school_students", sid));
+            schoolState.students = schoolState.students.filter(x => x.id !== sid);
+            renderStudentsList();
+        } catch (e) {
+            window.CustomDialog.alert("No fue posible eliminar al alumno: " + e.message);
+        }
+    };
 
     window.editCurrentStudent = () => window.openStudentModal(schoolState.currentStudentId);
 
@@ -5891,6 +5986,7 @@
         document.getElementById('loading-text').innerText = "Enviando respuestas...";
         
         await setDoc(doc(db, "submissions", sessionData.docId), payload, { merge: true });
+        window.registerStudentInSchool(window.currentExamId, { name: sessionData.studentName, email: sessionData.studentEmail, gen: sessionData.studentGen });
         
         hideAll(); 
         document.getElementById('success-view').classList.remove('hidden');
@@ -5988,6 +6084,7 @@
         };
         
         await setDoc(doc(db, "submissions", sessionData.docId), payload, { merge: true });
+        window.registerStudentInSchool(window.currentExamId, std);
         
         window.viewCertificateLocal(examConfig.name, std.name, std.gen);
     };
@@ -6488,6 +6585,7 @@
         try {
             const studentStr = localStorage.getItem('tumb_student');
             const gen = studentStr ? (JSON.parse(studentStr).gen || "") : "";
+            pracState.studentInfo = { name, email, gen };
 
             const existingQ = query(collection(db, "submissions"), where("examId", "==", pracState.examId), where("student.email", "==", email), where("status", "==", "IN_PROGRESS"));
             const existingSnap = await getDocs(existingQ);
@@ -6872,6 +6970,7 @@
                 clinical_state: { vitals: pracState.vitals, rhythm: pracState.rhythmKey },
                 metrics: { endTime: new Date().toISOString() }
             }, { merge: true });
+            if (pracState.studentInfo) window.registerStudentInSchool(pracState.examId, pracState.studentInfo);
         } catch (e) { /* si falla el guardado final, igual dejamos salir al alumno */ }
 
         await window.CustomDialog.alert(`Simulación finalizada. Calificación: ${Math.round(percentage)}%`, passed ? "¡Aprobado!" : "No Aprobado");

@@ -3206,7 +3206,7 @@
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button onclick="${actionCall}" style="width: auto;" title="Detalles"><i class="fi ${iconMain}"></i> ${textMain}</button>
-                    <button onclick="window.openReactivateExamModal('${docId}')" class="btn-secondary" style="width: auto; padding: 14px;" title="Reactivar / cambiar fecha de cierre"><i class="fi fi-ss-refresh"></i> Reactivar</button>
+                    ${isClosed ? `<button onclick="window.openReactivateExamModal('${docId}')" class="btn-secondary" style="width: auto; padding: 14px;" title="Reactivar / cambiar fecha de cierre"><i class="fi fi-ss-refresh"></i> Reactivar</button>` : ''}
                     <button onclick="window.openShareExamModal('${docId}', '${(exam.config.name || '').replace(/'/g, "\\'")}', ${isOwner})" class="btn-secondary" style="width: auto; padding: 14px;" title="Compartir"><i class="fi fi-ss-share"></i></button>
                     ${deleteBtn}
                 </div>

@@ -281,6 +281,64 @@
             #certificate-modal { background: transparent; }
             .dialog-actions, .navbar, .app-footer { display: none !important; }
         }
+
+        /* --- Módulo: Tienda (catálogo público + inventario del instructor) --- */
+        .store-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
+        .store-toolbar .store-search { flex: 1 1 220px; margin: 0; }
+        .store-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; white-space: nowrap; margin: 0; }
+        .store-toggle input { width: 18px; height: 18px; margin: 0; accent-color: var(--primary-dark); }
+        .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+        .store-card { position: relative; background: #fff; border: 1px solid #E0E0E0; border-radius: 12px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .store-card:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.10); }
+        .store-card.soldout .store-card-img img { filter: grayscale(0.85); opacity: 0.7; }
+        .store-card-img { position: relative; aspect-ratio: 1 / 1; background: #F1F5F9; display: flex; align-items: center; justify-content: center; color: #CBD5E1; font-size: 3rem; overflow: hidden; }
+        .store-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .store-card-status { position: absolute; top: 10px; left: 10px; }
+        .store-card-photos { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
+        .store-card-body { padding: 12px 14px 14px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .store-card-name { font-weight: 700; font-size: 0.95rem; color: var(--text-main); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .store-card-price { font-size: 1.15rem; font-weight: 800; color: var(--primary-dark); }
+        .store-detail { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; width: 100%; text-align: left; }
+        .store-gallery-main { position: relative; aspect-ratio: 1 / 1; background: #F1F5F9; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: zoom-in; color: #CBD5E1; font-size: 4rem; }
+        .store-gallery-main img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .store-gallery-hint { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.72rem; padding: 4px 10px; border-radius: 20px; pointer-events: none; }
+        .store-thumbs { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 4px; }
+        .store-thumbs button { flex: 0 0 64px; width: 64px; height: 64px; padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: #F1F5F9; cursor: pointer; opacity: 0.7; }
+        .store-thumbs button.active { border-color: var(--primary-dark); opacity: 1; }
+        .store-thumbs button:hover:not(:disabled) { background: #F1F5F9; opacity: 1; }
+        .store-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .store-info h2 { display: block; text-align: left; margin: 0 0 8px 0; overflow-wrap: anywhere; font-size: 1.4rem; }
+        .store-info .store-price-big { font-size: 1.9rem; font-weight: 800; color: var(--primary-dark); margin: 6px 0 12px 0; }
+        .store-info .store-desc { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-main); font-size: 0.95rem; line-height: 1.5; margin-top: 15px; }
+        .store-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.94); z-index: 2500; display: flex; flex-direction: column; user-select: none; }
+        .store-lb-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; color: #fff; flex-shrink: 0; }
+        .store-lb-bar .store-lb-tools { display: flex; gap: 8px; align-items: center; }
+        .store-lb-bar button, .store-lb-nav { background: rgba(255,255,255,0.14) !important; color: #fff !important; border: none; width: 42px; height: 42px; padding: 0 !important; border-radius: 50%; font-size: 1.3rem; line-height: 1; box-shadow: none !important; }
+        .store-lb-bar button:hover:not(:disabled), .store-lb-nav:hover:not(:disabled) { background: rgba(255,255,255,0.28) !important; }
+        .store-lb-stage { position: relative; flex: 1; overflow: hidden; touch-action: none; display: flex; align-items: center; justify-content: center; cursor: grab; }
+        .store-lb-stage.dragging { cursor: grabbing; }
+        .store-lb-stage img { max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center center; will-change: transform; pointer-events: none; -webkit-user-drag: none; }
+        .store-lb-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; }
+        .store-lb-nav.prev { left: 12px; } .store-lb-nav.next { right: 12px; }
+        .store-inv-pills { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .store-inv-pills .rubrica-pill { text-align: left; }
+        .store-inv-thumb { width: 52px; height: 52px; border-radius: 8px; background: #F1F5F9; object-fit: cover; display: flex; align-items: center; justify-content: center; color: #CBD5E1; flex-shrink: 0; overflow: hidden; }
+        .store-inv-row { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #E0E0E0; border-radius: 10px; background: #FAFAFA; margin-bottom: 10px; flex-wrap: wrap; }
+        .store-inv-main { flex: 1 1 200px; min-width: 0; }
+        .store-inv-name { font-weight: 700; overflow-wrap: anywhere; }
+        .store-inv-meta { font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 3px; }
+        .store-inv-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .store-inv-actions input[type="number"] { width: 64px; margin: 0; padding: 8px; }
+        .store-edit-imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; margin-top: 10px; }
+        .store-edit-img { position: relative; border: 2px solid #E0E0E0; border-radius: 8px; overflow: hidden; background: #F1F5F9; }
+        .store-edit-img.cover { border-color: var(--primary-dark); }
+        .store-edit-img img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+        .store-edit-img .store-edit-tag { position: absolute; top: 4px; left: 4px; background: var(--primary-dark); color: #fff; font-size: 0.62rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+        .store-edit-img .store-edit-btns { display: flex; }
+        .store-edit-img .store-edit-btns button { flex: 1; width: auto; border-radius: 0; padding: 5px 0 !important; font-size: 0.7rem; text-transform: none; box-shadow: none; }
+        @media (max-width: 720px) { .store-detail { grid-template-columns: 1fr; gap: 16px; } .store-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; } }
+        @media (max-width: 480px) { .store-inv-row { flex-direction: column; align-items: stretch; } .store-inv-actions { justify-content: flex-start; } }
+
     </style>
 
     <script>
@@ -344,6 +402,7 @@
         <button id="nav-school-control" class="icon-btn hidden" onclick="window.showSchoolControlPanel()" title="Control Escolar">
             <i class="fi fi-ss-graduation-cap"></i>
         </button>
+        <button id="nav-store" onclick="window.openStore()" title="Tienda"><i class="fi fi-ss-shopping-bag"></i> Tienda</button>
         <button onclick="window.showInstructorLogin()" id="nav-ingresar" class="hidden"><i class="fi fi-ss-sign-in-alt"></i> Ingresar</button>
     </div>
 </nav>
@@ -799,6 +858,65 @@
     </div>
 </div>
 
+<!-- MÓDULO: TIENDA — DETALLE DEL OBJETO (galería, precio, existencia) -->
+<div id="store-detail-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 920px; max-height: 92vh; overflow-y: auto; padding: 22px 24px 28px 24px; align-items: stretch; justify-content: flex-start; display: flex; flex-direction: column; text-align: left;">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+            <button onclick="window.closeStoreDetail()" style="background:none; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer; padding:0; width:auto; margin:0;" title="Cerrar"><i class="fi fi-ss-cross"></i></button>
+        </div>
+        <div id="store-detail-body" class="store-detail"></div>
+    </div>
+</div>
+
+<!-- MÓDULO: TIENDA — ALTA / EDICIÓN DE OBJETO (instructor) -->
+<div id="store-item-modal" class="modal-overlay hidden">
+    <div class="modal-content primary-top" style="max-width: 680px; max-height: 92vh; overflow-y: auto; text-align: left; padding: 30px 25px 35px 25px; align-items: stretch; justify-content: flex-start; display: flex; flex-direction: column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; width:100%;">
+            <h2 id="store-item-modal-title" style="color:var(--primary); margin:0; display:flex; align-items:center; gap:10px; font-size:1.3rem; text-align:left; width:auto;"><i class="fi fi-ss-shopping-bag"></i> Nuevo Objeto</h2>
+            <button onclick="window.closeStoreItemModal()" style="background:none; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer; padding:0; width:auto; margin:0;"><i class="fi fi-ss-cross"></i></button>
+        </div>
+
+        <div class="form-group"><label><i class="fi fi-ss-text"></i> Nombre del objeto</label><input type="text" id="store-f-name" maxlength="120" placeholder="Ej. Estetoscopio Littmann Classic III"></div>
+        <div class="form-group"><label><i class="fi fi-ss-document-signed"></i> Descripción</label><textarea id="store-f-desc" rows="4" placeholder="Características, medidas, materiales, qué incluye..."></textarea></div>
+
+        <div class="grid-layout">
+            <div class="form-group"><label>Precio al público</label><input type="number" id="store-f-price" min="0" step="0.01" placeholder="0.00" oninput="window.storeUpdateProfitHint()"></div>
+            <div class="form-group"><label>Costo (solo instructores)</label><input type="number" id="store-f-cost" min="0" step="0.01" placeholder="0.00" oninput="window.storeUpdateProfitHint()"></div>
+            <div class="form-group"><label>Existencia (piezas)</label><input type="number" id="store-f-stock" min="0" step="1" placeholder="0"></div>
+        </div>
+        <div id="store-profit-hint" style="font-size:0.85rem; color:var(--text-secondary); margin:-8px 0 15px 0;"></div>
+
+        <label class="store-toggle" style="margin-bottom:15px;"><input type="checkbox" id="store-f-active" checked> Visible en la tienda</label>
+
+        <div style="background:#FAFAFA; border:1px solid #E0E0E0; border-radius:8px; padding:15px; margin-bottom:20px;">
+            <label style="font-weight:bold; color:var(--primary-dark); display:flex; align-items:center; gap:8px; margin-bottom:6px;"><i class="fi fi-ss-picture"></i> Imágenes</label>
+            <div style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:10px;">Hasta 8 imágenes. La primera es la portada. Se optimizan automáticamente.</div>
+            <input type="file" id="store-f-files" accept="image/*" multiple onchange="window.storeHandleImageFiles(this.files); this.value='';" style="font-size:0.85rem; width:100%; border:1px solid #E0E0E0; padding:8px; border-radius:8px; background:white; cursor:pointer; box-sizing:border-box;">
+            <div id="store-edit-imgs" class="store-edit-imgs"></div>
+        </div>
+
+        <button id="btn-save-store-item" onclick="window.saveStoreItem()"><i class="fi fi-ss-disk"></i> Guardar Objeto</button>
+    </div>
+</div>
+
+<!-- MÓDULO: TIENDA — VISOR CON ZOOM -->
+<div id="store-lightbox" class="store-lightbox hidden">
+    <div class="store-lb-bar">
+        <span id="store-lb-counter" style="font-size:0.9rem; font-weight:600;"></span>
+        <div class="store-lb-tools">
+            <button type="button" onclick="window.storeLbZoom(1/1.4)" title="Alejar">&minus;</button>
+            <button type="button" onclick="window.storeLbReset()" title="Restablecer" id="store-lb-level" style="font-size:0.72rem; font-weight:700;">100%</button>
+            <button type="button" onclick="window.storeLbZoom(1.4)" title="Acercar">+</button>
+            <button type="button" onclick="window.storeLbClose()" title="Cerrar"><i class="fi fi-ss-cross"></i></button>
+        </div>
+    </div>
+    <div id="store-lb-stage" class="store-lb-stage">
+        <button type="button" class="store-lb-nav prev" id="store-lb-prev" onclick="window.storeLbNav(-1)" title="Anterior">&lsaquo;</button>
+        <img id="store-lb-img" alt="">
+        <button type="button" class="store-lb-nav next" id="store-lb-next" onclick="window.storeLbNav(1)" title="Siguiente">&rsaquo;</button>
+    </div>
+</div>
+
 <!-- CONTROL ESCOLAR: MODAL NUEVA GENERACIÓN -->
 <div id="school-gen-modal" class="modal-overlay hidden">
     <div class="modal-content primary-top" style="max-width: 480px; text-align: left; padding: 25px; align-items: stretch;">
@@ -1011,6 +1129,32 @@
                 <h4 style="margin-top:0;"><i class="fi fi-ss-envelope"></i> Mensajes</h4>
                 <div id="std-message-list"><p style="text-align:center; color:var(--text-secondary); font-size:0.9rem;">Sin mensajes.</p></div>
             </div>
+        </div>
+    </div>
+
+    <!-- MÓDULO: TIENDA (catálogo público + inventario del instructor) -->
+    <div id="store-view" class="card hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+            <h2 style="margin:0;"><i class="fi fi-ss-shopping-bag"></i> Tienda</h2>
+            <button id="store-new-btn" class="hidden" onclick="window.openStoreItemModal()" style="width:auto;"><i class="fi fi-ss-plus"></i> Nuevo Objeto</button>
+        </div>
+
+        <div id="store-tabs" class="activity-tabs hidden">
+            <button type="button" class="activity-tab active" data-tab="catalog" onclick="window.storeSetTab('catalog')"><i class="fi fi-ss-shopping-bag"></i> Catálogo</button>
+            <button type="button" class="activity-tab" data-tab="inventory" onclick="window.storeSetTab('inventory')"><i class="fi fi-ss-pencil"></i> Inventario</button>
+        </div>
+
+        <div id="store-catalog-pane">
+            <div class="store-toolbar">
+                <input type="text" id="store-search" class="store-search" placeholder="Buscar objeto..." oninput="window.renderStoreCatalog()">
+                <label class="store-toggle"><input type="checkbox" id="store-only-stock" onchange="window.renderStoreCatalog()"> Solo en existencia</label>
+            </div>
+            <div id="store-grid" class="store-grid"></div>
+        </div>
+
+        <div id="store-inventory-pane" class="hidden">
+            <div id="store-inv-pills" class="store-inv-pills"></div>
+            <div id="store-inv-list"></div>
         </div>
     </div>
 
@@ -1553,7 +1697,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, deleteDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, deleteDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     // Configuración predeterminada (de fábrica) del proyecto Firebase.
@@ -1985,7 +2129,7 @@
     }
 
     // IDs de todos los modal-overlay que pueden cerrarse con ESC o clic fuera del contenido.
-    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'reactivate-exam-modal', 'material-modal', 'material-viewer-modal', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal', 'practica-modal', 'rubrica-modal'];
+    const DISMISSABLE_MODAL_IDS = ['certificate-modal', 'student-feedback-modal', 'details-modal', 'delete-modal', 'reset-modal', 'custom-dialog', 'warning-modal', 'severe-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'reactivate-exam-modal', 'material-modal', 'material-viewer-modal', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal', 'practica-modal', 'rubrica-modal', 'store-detail-modal', 'store-item-modal'];
 
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -2025,7 +2169,7 @@
          'instructor-dashboard', 'instructor-upload', 'instructor-grades', 'exam-view', 'course-view',
          'blocked-view', 'success-view', 'severe-modal', 'admin-settings', 'delete-modal', 'reset-modal', 'details-modal', 'student-feedback-modal', 'instructor-survey-analytics', 'certificate-modal', 'json-upload-modal', 'builder-modal', 'qr-modal', 'firebase-account-modal', 'share-exam-modal', 'reactivate-exam-modal', 'material-modal', 'material-viewer-modal',
          'school-control-generations', 'school-control-students', 'school-control-student-detail', 'school-gen-modal', 'school-student-modal', 'school-debt-modal', 'school-grade-modal', 'school-absence-modal', 'school-message-modal',
-         'practica-modal', 'practica-view', 'practica-monitor', 'rubrica-modal', 'rubrica-run'].forEach(id => {
+         'practica-modal', 'practica-view', 'practica-monitor', 'rubrica-modal', 'rubrica-run', 'store-view', 'store-detail-modal', 'store-item-modal', 'store-lightbox'].forEach(id => {
              const el = document.getElementById(id);
              if (el) el.classList.add('hidden');
          });
@@ -2745,7 +2889,7 @@
             } else if (user) {
                 currentUser = user;
                 await loadBranding(user.uid);
-                window.goHome(); 
+                if (urlParams.get('tienda') === '1') window.openStore(); else window.goHome(); 
             } else {
                 currentUser = null;
                 applyStoredBranding();
@@ -2759,6 +2903,8 @@
                     document.getElementById('nav-volver').classList.add('hidden');
                     document.getElementById('nav-ingresar').innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
                     document.getElementById('nav-ingresar').onclick = () => window.location.href = window.location.pathname;
+                } else if (urlParams.get('tienda') === '1') {
+                    window.openStore();
                 } else {
                     window.goHome();
                 }
@@ -7737,6 +7883,556 @@
             window.setLoading('btn-save-rubrica-eval', false, '<i class="fi fi-ss-disk"></i> Guardar Evaluación');
             window.CustomDialog.alert("No fue posible guardar la evaluación: " + e.message);
         }
+    };
+
+    // ============================================================
+    // MÓDULO: TIENDA
+    // Catálogo de consulta abierto a todos (alumnos, instructores y público en general) e
+    // inventario que solo administra el instructor. El COSTO vive en una colección aparte
+    // (store_costs) para que nunca viaje en las lecturas públicas del catálogo.
+    // Las imágenes completas van en la subcolección store_items/{id}/images (se leen solo
+    // al abrir el objeto); el documento principal solo guarda una miniatura ligera.
+    // ============================================================
+    const STORE_MAX_IMAGES = 8;
+    const storeState = { items: [], inventory: [], costs: {}, imagesCache: {}, tab: 'catalog' };
+    const storeMoney = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(n) || 0);
+    const storeEsc = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const storeErrMsg = (e, action) => (e && e.code === 'permission-denied')
+        ? `No fue posible ${action}: Firestore no tiene reglas publicadas para la tienda (colecciones store_items y store_costs). Pide al administrador del proyecto que las agregue.`
+        : `No fue posible ${action}: ${storeEsc(e && e.message)}`;
+    const storeByName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'es');
+
+    window.openStore = async () => {
+        if (isExamActive) return;
+        hideAll();
+        document.getElementById('store-view').classList.remove('hidden');
+        ['nav-settings', 'nav-school-control', 'nav-sc-back', 'nav-volver', 'nav-rubrica-historial'].forEach(id => {
+            const el = document.getElementById(id); if (el) el.classList.add('hidden');
+        });
+        document.getElementById('nav-actions').classList.remove('hidden');
+        const navBtn = document.getElementById('nav-ingresar');
+        navBtn.classList.remove('hidden');
+        navBtn.innerHTML = `<i class="fi fi-ss-home"></i> Inicio`;
+        navBtn.onclick = window.goHome;
+
+        document.getElementById('store-tabs').classList.toggle('hidden', !currentUser);
+        document.getElementById('store-search').value = '';
+        document.getElementById('store-only-stock').checked = false;
+        await window.storeSetTab('catalog');
+    };
+
+    window.storeSetTab = async (tab) => {
+        if (tab === 'inventory' && !currentUser) tab = 'catalog';
+        storeState.tab = tab;
+        document.querySelectorAll('#store-tabs .activity-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        document.getElementById('store-catalog-pane').classList.toggle('hidden', tab !== 'catalog');
+        document.getElementById('store-inventory-pane').classList.toggle('hidden', tab !== 'inventory');
+        document.getElementById('store-new-btn').classList.toggle('hidden', !(currentUser && tab === 'inventory'));
+        if (tab === 'catalog') await loadStoreCatalog(); else await loadStoreInventory();
+    };
+
+    // ---------- Catálogo (consulta) ----------
+    async function loadStoreCatalog() {
+        const grid = document.getElementById('store-grid');
+        grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--text-secondary);"><i class="fi fi-ss-spinner" style="display:inline-block; animation: spin 1s linear infinite;"></i> Cargando tienda...</p>`;
+        try {
+            const snap = await getDocs(query(collection(db, 'store_items'), where('active', '==', true)));
+            storeState.items = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort(storeByName);
+            window.renderStoreCatalog();
+        } catch (e) {
+            grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--danger);">${storeErrMsg(e, 'cargar la tienda')}</p>`;
+        }
+    }
+
+    window.renderStoreCatalog = () => {
+        const grid = document.getElementById('store-grid');
+        const q = document.getElementById('store-search').value.toLowerCase().trim();
+        const onlyStock = document.getElementById('store-only-stock').checked;
+        const list = storeState.items.filter(it => {
+            if (onlyStock && !(it.stock > 0)) return false;
+            if (q && !(`${it.name || ''} ${it.description || ''}`.toLowerCase().includes(q))) return false;
+            return true;
+        });
+        if (!list.length) {
+            grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--text-secondary); padding:30px 0;">${storeState.items.length ? 'Ningún objeto coincide con tu búsqueda.' : 'La tienda aún no tiene objetos publicados.'}</p>`;
+            return;
+        }
+        grid.innerHTML = list.map(it => {
+            const inStock = it.stock > 0;
+            const status = inStock
+                ? `<span class="badge badge-pass">En existencia</span>`
+                : `<span class="badge badge-blocked">Agotado</span>`;
+            const photos = (it.imageCount || 0) > 1 ? `<span class="store-card-photos"><i class="fi fi-ss-picture"></i> ${it.imageCount}</span>` : '';
+            const img = it.thumb ? `<img src="${it.thumb}" alt="${storeEsc(it.name)}" loading="lazy">` : `<i class="fi fi-ss-picture"></i>`;
+            return `<div class="store-card ${inStock ? '' : 'soldout'}" onclick="window.openStoreDetail('${it.id}')">
+                <div class="store-card-img">${img}<span class="store-card-status">${status}</span>${photos}</div>
+                <div class="store-card-body">
+                    <div class="store-card-name" title="${storeEsc(it.name)}">${storeEsc(it.name)}</div>
+                    <div class="store-card-price">${storeMoney(it.price)}</div>
+                </div>
+            </div>`;
+        }).join('');
+    };
+
+    // ---------- Detalle + galería ----------
+    const storeGallery = { id: null, images: [], idx: 0 };
+
+    async function storeGetImages(id) {
+        if (storeState.imagesCache[id]) return storeState.imagesCache[id];
+        const snap = await getDocs(collection(db, 'store_items', id, 'images'));
+        const imgs = snap.docs.map(d => ({ docId: d.id, ...d.data() })).sort((a, b) => (a.order || 0) - (b.order || 0));
+        storeState.imagesCache[id] = imgs;
+        return imgs;
+    }
+
+    window.openStoreDetail = async (id) => {
+        const it = storeState.items.find(x => x.id === id) || storeState.inventory.find(x => x.id === id);
+        if (!it) return;
+        storeGallery.id = id;
+        storeGallery.images = it.thumb ? [it.thumb] : [];
+        storeGallery.idx = 0;
+        renderStoreDetail(it);
+        document.getElementById('store-detail-modal').classList.remove('hidden');
+
+        if ((it.imageCount || 0) > 0) {
+            try {
+                const imgs = await storeGetImages(id);
+                if (storeGallery.id !== id) return; // el usuario ya abrió otro objeto
+                if (imgs.length) { storeGallery.images = imgs.map(i => i.data); renderStoreDetail(it); }
+            } catch (e) { /* se queda la miniatura */ }
+        }
+    };
+
+    function renderStoreDetail(it) {
+        const imgs = storeGallery.images;
+        const cur = imgs[storeGallery.idx];
+        const inStock = it.stock > 0;
+        const isOwner = currentUser && it.instructorId === currentUser.uid;
+        const cost = storeState.costs[it.id];
+        const ownerBlock = isOwner ? `
+            <div style="margin-top:18px; padding:12px 14px; background:#FFF8E1; border:1px dashed var(--warning); border-radius:8px; font-size:0.85rem;">
+                <strong><i class="fi fi-ss-lock"></i> Solo visible para ti (instructor)</strong>
+                <div style="margin-top:6px;">Existencia: <strong>${it.stock || 0}</strong> pzas · Costo: <strong>${storeMoney(cost)}</strong> · Ganancia por pieza: <strong>${storeMoney((it.price || 0) - (cost || 0))}</strong></div>
+                ${it.active ? '' : '<div style="margin-top:4px; color:var(--danger);">Este objeto está oculto para el público.</div>'}
+            </div>` : '';
+        const thumbs = imgs.length > 1 ? `<div class="store-thumbs">${imgs.map((src, i) => `<button type="button" class="${i === storeGallery.idx ? 'active' : ''}" onclick="window.storeSelectImage(${i})"><img src="${src}" alt=""></button>`).join('')}</div>` : '';
+        document.getElementById('store-detail-body').innerHTML = `
+            <div>
+                <div class="store-gallery-main" onclick="${cur ? 'window.storeLbOpen(' + storeGallery.idx + ')' : ''}" ${cur ? '' : 'style="cursor:default;"'}>
+                    ${cur ? `<img src="${cur}" alt="${storeEsc(it.name)}"><span class="store-gallery-hint"><i class="fi fi-ss-search"></i> Toca para ampliar</span>` : `<i class="fi fi-ss-picture"></i>`}
+                </div>
+                ${thumbs}
+            </div>
+            <div class="store-info">
+                <h2>${storeEsc(it.name)}</h2>
+                <div class="store-price-big">${storeMoney(it.price)}</div>
+                <div>${inStock ? '<span class="badge badge-pass" style="font-size:0.85rem; padding:6px 12px;"><i class="fi fi-ss-check"></i> En existencia</span>' : '<span class="badge badge-blocked" style="font-size:0.85rem; padding:6px 12px;"><i class="fi fi-ss-cross"></i> Agotado</span>'}</div>
+                ${it.description ? `<div class="store-desc">${storeEsc(it.description)}</div>` : ''}
+                ${ownerBlock}
+            </div>`;
+    }
+
+    window.storeSelectImage = (i) => {
+        storeGallery.idx = i;
+        const it = storeState.items.find(x => x.id === storeGallery.id) || storeState.inventory.find(x => x.id === storeGallery.id);
+        if (it) renderStoreDetail(it);
+    };
+
+    window.closeStoreDetail = () => {
+        document.getElementById('store-detail-modal').classList.add('hidden');
+        storeGallery.id = null;
+    };
+
+    // ---------- Visor con zoom (rueda, doble toque, pellizco, arrastre, teclado) ----------
+    const lb = { idx: 0, scale: 1, tx: 0, ty: 0, pointers: new Map(), pinchDist: 0, pinchScale: 1, start: null, lastTap: 0 };
+    const LB_MIN = 1, LB_MAX = 6;
+    const lbEls = () => ({ stage: document.getElementById('store-lb-stage'), img: document.getElementById('store-lb-img') });
+
+    function lbClamp() {
+        const { stage, img } = lbEls();
+        const maxX = Math.max(0, (img.clientWidth * lb.scale - stage.clientWidth) / 2);
+        const maxY = Math.max(0, (img.clientHeight * lb.scale - stage.clientHeight) / 2);
+        lb.tx = Math.min(maxX, Math.max(-maxX, lb.tx));
+        lb.ty = Math.min(maxY, Math.max(-maxY, lb.ty));
+    }
+    function lbApply() {
+        const { img } = lbEls();
+        if (lb.scale <= LB_MIN) { lb.scale = LB_MIN; lb.tx = 0; lb.ty = 0; } else lbClamp();
+        img.style.transform = `translate(${lb.tx}px, ${lb.ty}px) scale(${lb.scale})`;
+        document.getElementById('store-lb-level').innerText = Math.round(lb.scale * 100) + '%';
+    }
+    function lbZoomAt(factor, cx = 0, cy = 0) {
+        const next = Math.min(LB_MAX, Math.max(LB_MIN, lb.scale * factor));
+        const k = next / lb.scale;
+        lb.tx = cx - (cx - lb.tx) * k;
+        lb.ty = cy - (cy - lb.ty) * k;
+        lb.scale = next;
+        lbApply();
+    }
+    function lbShow() {
+        const src = storeGallery.images[lb.idx];
+        const { img } = lbEls();
+        img.src = src || '';
+        lb.scale = 1; lb.tx = 0; lb.ty = 0;
+        lbApply();
+        const many = storeGallery.images.length > 1;
+        document.getElementById('store-lb-counter').innerText = many ? `${lb.idx + 1} / ${storeGallery.images.length}` : '';
+        document.getElementById('store-lb-prev').classList.toggle('hidden', !many);
+        document.getElementById('store-lb-next').classList.toggle('hidden', !many);
+    }
+
+    window.storeLbOpen = (idx) => {
+        if (!storeGallery.images.length) return;
+        lb.idx = idx || 0;
+        document.getElementById('store-lightbox').classList.remove('hidden');
+        lbShow();
+    };
+    window.storeLbClose = () => {
+        document.getElementById('store-lightbox').classList.add('hidden');
+        lb.pointers.clear();
+    };
+    window.storeLbNav = (d) => {
+        const n = storeGallery.images.length;
+        if (n < 2) return;
+        lb.idx = (lb.idx + d + n) % n;
+        storeGallery.idx = lb.idx;
+        lbShow();
+        const it = storeState.items.find(x => x.id === storeGallery.id) || storeState.inventory.find(x => x.id === storeGallery.id);
+        if (it) renderStoreDetail(it);
+    };
+    window.storeLbZoom = (factor) => lbZoomAt(factor);
+    window.storeLbReset = () => { lb.scale = 1; lb.tx = 0; lb.ty = 0; lbApply(); };
+
+    (function initStoreLightbox() {
+        const stage = document.getElementById('store-lb-stage');
+        if (!stage) return;
+        const center = () => { const r = stage.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
+
+        stage.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const c = center();
+            lbZoomAt(e.deltaY < 0 ? 1.2 : 1 / 1.2, e.clientX - c.x, e.clientY - c.y);
+        }, { passive: false });
+
+        stage.addEventListener('pointerdown', (e) => {
+            if (e.target.closest('.store-lb-nav')) return;
+            stage.setPointerCapture(e.pointerId);
+            lb.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (lb.pointers.size === 1) {
+                lb.start = { x: e.clientX, y: e.clientY, tx: lb.tx, ty: lb.ty, t: Date.now(), moved: false };
+                stage.classList.add('dragging');
+            } else if (lb.pointers.size === 2) {
+                const [a, b] = [...lb.pointers.values()];
+                lb.pinchDist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+                lb.pinchScale = lb.scale;
+            }
+        });
+
+        stage.addEventListener('pointermove', (e) => {
+            if (!lb.pointers.has(e.pointerId)) return;
+            lb.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (lb.pointers.size === 2) {
+                const [a, b] = [...lb.pointers.values()];
+                const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+                const c = center();
+                const mx = (a.x + b.x) / 2 - c.x, my = (a.y + b.y) / 2 - c.y;
+                lbZoomAt((lb.pinchScale * dist / lb.pinchDist) / lb.scale, mx, my);
+            } else if (lb.pointers.size === 1 && lb.start) {
+                const dx = e.clientX - lb.start.x, dy = e.clientY - lb.start.y;
+                if (Math.abs(dx) > 4 || Math.abs(dy) > 4) lb.start.moved = true;
+                if (lb.scale > 1) { lb.tx = lb.start.tx + dx; lb.ty = lb.start.ty + dy; lbApply(); }
+            }
+        });
+
+        const end = (e) => {
+            if (!lb.pointers.has(e.pointerId)) return;
+            const wasSingle = lb.pointers.size === 1;
+            lb.pointers.delete(e.pointerId);
+            stage.classList.remove('dragging');
+            if (wasSingle && lb.start) {
+                const dx = e.clientX - lb.start.x, dy = e.clientY - lb.start.y;
+                const isTap = !lb.start.moved && (Date.now() - lb.start.t) < 300;
+                if (isTap) {
+                    const now = Date.now();
+                    if (now - lb.lastTap < 320) {
+                        const c = center();
+                        if (lb.scale > 1) window.storeLbReset(); else lbZoomAt(2.5, e.clientX - c.x, e.clientY - c.y);
+                        lb.lastTap = 0;
+                    } else lb.lastTap = now;
+                } else if (lb.scale <= 1 && Math.abs(dx) > 60 && Math.abs(dy) < 70) {
+                    window.storeLbNav(dx < 0 ? 1 : -1); // deslizar para cambiar de imagen
+                }
+            }
+            if (lb.pointers.size === 1) { // al soltar un dedo del pellizco, seguir arrastrando con el otro
+                const p = [...lb.pointers.values()][0];
+                lb.start = { x: p.x, y: p.y, tx: lb.tx, ty: lb.ty, t: Date.now(), moved: true };
+            }
+            if (lb.pointers.size === 0) lb.start = null;
+        };
+        stage.addEventListener('pointerup', end);
+        stage.addEventListener('pointercancel', end);
+
+        // En fase de captura para que ESC cierre solo el visor y no también el detalle del objeto.
+        window.addEventListener('keydown', (e) => {
+            const box = document.getElementById('store-lightbox');
+            if (!box || box.classList.contains('hidden')) return;
+            if (e.key === 'Escape') { e.stopPropagation(); window.storeLbClose(); }
+            else if (e.key === 'ArrowLeft') window.storeLbNav(-1);
+            else if (e.key === 'ArrowRight') window.storeLbNav(1);
+            else if (e.key === '+' || e.key === '=') window.storeLbZoom(1.4);
+            else if (e.key === '-') window.storeLbZoom(1 / 1.4);
+            else if (e.key === '0') window.storeLbReset();
+        }, true);
+        window.addEventListener('resize', () => { if (!document.getElementById('store-lightbox').classList.contains('hidden')) lbApply(); });
+    })();
+
+    // ---------- Inventario (solo instructor) ----------
+    async function loadStoreInventory() {
+        if (!currentUser) return;
+        const list = document.getElementById('store-inv-list');
+        list.innerHTML = `<p style="text-align:center; color:var(--text-secondary);"><i class="fi fi-ss-spinner" style="display:inline-block; animation: spin 1s linear infinite;"></i> Cargando inventario...</p>`;
+        try {
+            const [itemsSnap, costsSnap] = await Promise.all([
+                getDocs(query(collection(db, 'store_items'), where('instructorId', '==', currentUser.uid))),
+                getDocs(query(collection(db, 'store_costs'), where('instructorId', '==', currentUser.uid)))
+            ]);
+            storeState.inventory = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort(storeByName);
+            storeState.costs = {};
+            costsSnap.forEach(d => { storeState.costs[d.id] = d.data().cost; });
+            renderStoreInventory();
+        } catch (e) {
+            list.innerHTML = `<p style="text-align:center; color:var(--danger);">${storeErrMsg(e, 'cargar el inventario')}</p>`;
+        }
+    }
+
+    function renderStoreInventory() {
+        const inv = storeState.inventory;
+        let pieces = 0, invested = 0, retail = 0;
+        inv.forEach(it => {
+            const st = it.stock || 0;
+            pieces += st;
+            invested += st * (storeState.costs[it.id] || 0);
+            retail += st * (it.price || 0);
+        });
+        const pill = (val, lbl, color) => `<div class="rubrica-pill"><span class="val" ${color ? `style="color:${color};"` : ''}>${val}</span><span class="lbl">${lbl}</span></div>`;
+        document.getElementById('store-inv-pills').innerHTML =
+            pill(inv.length, 'Objetos') + pill(pieces, 'Piezas en existencia') + pill(storeMoney(invested), 'Inversión (costo)') +
+            pill(storeMoney(retail), 'Valor al público') + pill(storeMoney(retail - invested), 'Ganancia potencial', (retail - invested) < 0 ? 'var(--danger)' : '');
+
+        const list = document.getElementById('store-inv-list');
+        if (!inv.length) {
+            list.innerHTML = `<p style="text-align:center; color:var(--text-secondary); padding:25px 0;">Aún no has dado de alta ningún objeto. Usa "Nuevo Objeto" para empezar.</p>`;
+            return;
+        }
+        list.innerHTML = inv.map(it => {
+            const cost = storeState.costs[it.id];
+            const profit = (it.price || 0) - (cost || 0);
+            const pct = it.price > 0 ? Math.round((profit / it.price) * 100) : 0;
+            const thumb = it.thumb ? `<img class="store-inv-thumb" src="${it.thumb}" alt="">` : `<div class="store-inv-thumb"><i class="fi fi-ss-picture"></i></div>`;
+            const stockBadge = (it.stock || 0) > 0 ? `<span class="badge badge-pass">${it.stock} en existencia</span>` : `<span class="badge badge-blocked">Agotado</span>`;
+            return `<div class="store-inv-row">
+                <div style="cursor:pointer;" onclick="window.openStoreDetail('${it.id}')">${thumb}</div>
+                <div class="store-inv-main">
+                    <div class="store-inv-name" title="${storeEsc(it.name)}">${storeEsc(it.name)}</div>
+                    <div class="store-inv-meta">
+                        <span>Precio: <strong>${storeMoney(it.price)}</strong></span>
+                        <span>Costo: <strong>${storeMoney(cost)}</strong></span>
+                        <span style="color:${profit < 0 ? 'var(--danger)' : 'inherit'};">Ganancia: <strong>${storeMoney(profit)}</strong> (${pct}%)</span>
+                        <span>${stockBadge}</span>
+                    </div>
+                </div>
+                <div class="store-inv-actions">
+                    <input type="number" id="store-add-${it.id}" value="1" min="1" step="1" title="Piezas a agregar">
+                    <button type="button" class="btn-brand-action" onclick="window.storeAddStock('${it.id}')" title="Agregar existencia"><i class="fi fi-ss-plus"></i> Existencia</button>
+                    <button type="button" class="btn-secondary btn-sm" onclick="window.storeToggleActive('${it.id}')" title="Mostrar u ocultar en la tienda">${it.active ? 'Visible' : 'Oculto'}</button>
+                    <button type="button" class="btn-sm" onclick="window.openStoreItemModal('${it.id}')" title="Editar"><i class="fi fi-ss-pencil"></i></button>
+                    <button type="button" class="btn-danger btn-sm" onclick="window.deleteStoreItem('${it.id}')" title="Eliminar"><i class="fi fi-ss-trash"></i></button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    window.storeAddStock = async (id) => {
+        const n = parseInt(document.getElementById('store-add-' + id).value);
+        if (!n || n < 1) return window.CustomDialog.alert("Escribe cuántas piezas quieres agregar (mínimo 1).");
+        try {
+            await updateDoc(doc(db, 'store_items', id), { stock: increment(n), updatedAt: new Date().toISOString() });
+            const it = storeState.inventory.find(x => x.id === id);
+            if (it) it.stock = (it.stock || 0) + n;
+            renderStoreInventory();
+        } catch (e) { window.CustomDialog.alert("No fue posible actualizar la existencia: " + e.message); }
+    };
+
+    window.storeToggleActive = async (id) => {
+        const it = storeState.inventory.find(x => x.id === id);
+        if (!it) return;
+        try {
+            await updateDoc(doc(db, 'store_items', id), { active: !it.active, updatedAt: new Date().toISOString() });
+            it.active = !it.active;
+            renderStoreInventory();
+        } catch (e) { window.CustomDialog.alert("No fue posible cambiar la visibilidad: " + e.message); }
+    };
+
+    // ---------- Alta / edición ----------
+    const storeEdit = { id: null, images: [], originalIds: [] };
+
+    window.storeUpdateProfitHint = () => {
+        const price = parseFloat(document.getElementById('store-f-price').value);
+        const cost = parseFloat(document.getElementById('store-f-cost').value);
+        const el = document.getElementById('store-profit-hint');
+        if (isNaN(price) || isNaN(cost)) { el.innerHTML = ''; return; }
+        const profit = price - cost;
+        const pct = price > 0 ? Math.round((profit / price) * 100) : 0;
+        el.style.color = profit < 0 ? 'var(--danger)' : 'var(--text-secondary)';
+        el.innerHTML = `Ganancia por pieza: <strong>${storeMoney(profit)}</strong> (${pct}% del precio)${profit < 0 ? ' — el costo supera al precio' : ''}`;
+    };
+
+    window.openStoreItemModal = async (id) => {
+        if (!currentUser) return;
+        storeEdit.id = id || null; storeEdit.images = []; storeEdit.originalIds = [];
+        const it = id ? storeState.inventory.find(x => x.id === id) : null;
+        document.getElementById('store-item-modal-title').innerHTML = `<i class="fi fi-ss-shopping-bag"></i> ${it ? 'Editar Objeto' : 'Nuevo Objeto'}`;
+        document.getElementById('store-f-name').value = it ? (it.name || '') : '';
+        document.getElementById('store-f-desc').value = it ? (it.description || '') : '';
+        document.getElementById('store-f-price').value = it ? it.price : '';
+        document.getElementById('store-f-cost').value = it ? (storeState.costs[it.id] ?? '') : '';
+        document.getElementById('store-f-stock').value = it ? (it.stock || 0) : '';
+        document.getElementById('store-f-active').checked = it ? !!it.active : true;
+        document.getElementById('store-f-files').value = '';
+        storeUpdateProfitHint();
+        document.getElementById('store-edit-imgs').innerHTML = it && it.imageCount ? `<span style="grid-column:1/-1; font-size:0.85rem; color:var(--text-secondary);">Cargando imágenes...</span>` : '';
+        document.getElementById('store-item-modal').classList.remove('hidden');
+
+        if (it && it.imageCount) {
+            try {
+                const imgs = await storeGetImages(it.id);
+                if (storeEdit.id !== it.id) return;
+                storeEdit.images = imgs.map(i => ({ docId: i.docId, data: i.data }));
+                storeEdit.originalIds = imgs.map(i => i.docId);
+            } catch (e) { window.CustomDialog.alert("No fue posible cargar las imágenes: " + e.message); }
+        }
+        renderStoreEditImages();
+    };
+
+    window.closeStoreItemModal = () => document.getElementById('store-item-modal').classList.add('hidden');
+
+    function renderStoreEditImages() {
+        const box = document.getElementById('store-edit-imgs');
+        box.innerHTML = storeEdit.images.map((im, i) => `
+            <div class="store-edit-img ${i === 0 ? 'cover' : ''}">
+                ${i === 0 ? '<span class="store-edit-tag">Portada</span>' : ''}
+                <img src="${im.data}" alt="">
+                <div class="store-edit-btns">
+                    ${i === 0 ? '' : `<button type="button" class="btn-secondary" onclick="window.storeMakeCover(${i})">Portada</button>`}
+                    <button type="button" class="btn-danger" onclick="window.storeRemoveEditImage(${i})">Quitar</button>
+                </div>
+            </div>`).join('');
+    }
+    window.storeMakeCover = (i) => { const [im] = storeEdit.images.splice(i, 1); storeEdit.images.unshift(im); renderStoreEditImages(); };
+    window.storeRemoveEditImage = (i) => { storeEdit.images.splice(i, 1); renderStoreEditImages(); };
+
+    function storeLoadImage(src) {
+        return new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = reject; img.src = src; });
+    }
+    async function storeCompress(file, maxSide, quality) {
+        let bmp;
+        try { bmp = await createImageBitmap(file); }
+        catch (e) { const url = URL.createObjectURL(file); bmp = await storeLoadImage(url); URL.revokeObjectURL(url); }
+        const w = bmp.width || bmp.naturalWidth, h = bmp.height || bmp.naturalHeight;
+        const ratio = Math.min(1, maxSide / Math.max(w, h));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(w * ratio)); canvas.height = Math.max(1, Math.round(h * ratio));
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+        let q = quality, data = canvas.toDataURL('image/jpeg', q);
+        while (data.length > 700000 && q > 0.4) { q -= 0.1; data = canvas.toDataURL('image/jpeg', q); } // tope por documento de Firestore
+        return data;
+    }
+    async function storeMakeThumb(dataUrl) {
+        const img = await storeLoadImage(dataUrl);
+        const ratio = Math.min(1, 420 / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * ratio)); canvas.height = Math.max(1, Math.round(img.height * ratio));
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.7);
+    }
+
+    window.storeHandleImageFiles = async (fileList) => {
+        const files = Array.from(fileList || []).filter(f => f.type.startsWith('image/'));
+        if (!files.length) return;
+        const room = STORE_MAX_IMAGES - storeEdit.images.length;
+        if (room <= 0) return window.CustomDialog.alert(`Ya tienes el máximo de ${STORE_MAX_IMAGES} imágenes. Quita alguna para agregar otra.`);
+        const toAdd = files.slice(0, room);
+        const box = document.getElementById('store-edit-imgs');
+        box.insertAdjacentHTML('beforeend', `<span id="store-img-busy" style="grid-column:1/-1; font-size:0.85rem; color:var(--text-secondary);">Procesando imágenes...</span>`);
+        try {
+            for (const f of toAdd) storeEdit.images.push({ docId: null, data: await storeCompress(f, 1100, 0.78) });
+        } catch (e) { window.CustomDialog.alert("No fue posible procesar una de las imágenes."); }
+        renderStoreEditImages();
+        if (files.length > room) window.CustomDialog.alert(`Solo se agregaron ${room} imagen(es): el límite es de ${STORE_MAX_IMAGES} por objeto.`);
+    };
+
+    window.saveStoreItem = async () => {
+        if (!currentUser) return;
+        const name = document.getElementById('store-f-name').value.trim();
+        const price = parseFloat(document.getElementById('store-f-price').value);
+        const cost = parseFloat(document.getElementById('store-f-cost').value);
+        const stock = parseInt(document.getElementById('store-f-stock').value);
+        if (!name) return window.CustomDialog.alert("Escribe el nombre del objeto.");
+        if (isNaN(price) || price < 0) return window.CustomDialog.alert("Escribe un precio al público válido.");
+        if (isNaN(cost) || cost < 0) return window.CustomDialog.alert("Escribe el costo del objeto (puede ser 0).");
+        if (isNaN(stock) || stock < 0) return window.CustomDialog.alert("Escribe la existencia en piezas (puede ser 0).");
+
+        const btnHtml = '<i class="fi fi-ss-disk"></i> Guardar Objeto';
+        window.setLoading('btn-save-store-item', true);
+        try {
+            const isEdit = !!storeEdit.id;
+            const itemRef = isEdit ? doc(db, 'store_items', storeEdit.id) : doc(collection(db, 'store_items'));
+            const id = itemRef.id;
+            const now = new Date().toISOString();
+            const thumb = storeEdit.images.length ? await storeMakeThumb(storeEdit.images[0].data) : '';
+
+            const payload = {
+                name, description: document.getElementById('store-f-desc').value.trim(),
+                price, stock, active: document.getElementById('store-f-active').checked,
+                thumb, imageCount: storeEdit.images.length,
+                instructorId: currentUser.uid, updatedAt: now
+            };
+            if (!isEdit) payload.createdAt = now;
+            await setDoc(itemRef, payload, { merge: true });
+            await setDoc(doc(db, 'store_costs', id), { cost, instructorId: currentUser.uid, updatedAt: now });
+
+            const keep = new Set(storeEdit.images.filter(i => i.docId).map(i => i.docId));
+            for (const oldId of storeEdit.originalIds) if (!keep.has(oldId)) await deleteDoc(doc(db, 'store_items', id, 'images', oldId));
+            for (let i = 0; i < storeEdit.images.length; i++) {
+                const im = storeEdit.images[i];
+                if (im.docId) await updateDoc(doc(db, 'store_items', id, 'images', im.docId), { order: i });
+                else await addDoc(collection(db, 'store_items', id, 'images'), { data: im.data, order: i });
+            }
+            delete storeState.imagesCache[id];
+
+            window.setLoading('btn-save-store-item', false, btnHtml);
+            window.closeStoreItemModal();
+            await loadStoreInventory();
+        } catch (e) {
+            window.setLoading('btn-save-store-item', false, btnHtml);
+            window.CustomDialog.alert("No fue posible guardar el objeto: " + e.message);
+        }
+    };
+
+    window.deleteStoreItem = async (id) => {
+        const it = storeState.inventory.find(x => x.id === id);
+        if (!it) return;
+        if (!await window.CustomDialog.confirm(`¿Eliminar "${it.name}" de la tienda? Se borrarán también sus imágenes y su costo. Esta acción no se puede deshacer.`, "Eliminar objeto")) return;
+        try {
+            const imgs = await getDocs(collection(db, 'store_items', id, 'images'));
+            for (const d of imgs.docs) await deleteDoc(d.ref);
+            await deleteDoc(doc(db, 'store_costs', id));
+            await deleteDoc(doc(db, 'store_items', id));
+            delete storeState.imagesCache[id];
+            await loadStoreInventory();
+        } catch (e) { window.CustomDialog.alert("No fue posible eliminar el objeto: " + e.message); }
     };
 </script>
 </body>
